@@ -1,3 +1,4 @@
+const assert = require('chai').assert
 const LocalExecutorClass = require('../lib/executors').local;
 const RemoteExecutorClass = require('../lib/executors').remote;
 
@@ -13,6 +14,9 @@ describe('executors',function(){
 	it('local',function(done){
     	
 		var executor = new LocalExecutorClass();
+		executor.exec('echo "hello!"', {}, function(err, stdout, stderr) {
+			assert.isNull( err );
+		})
     	done();
 	});
 	
@@ -24,6 +28,7 @@ describe('executors',function(){
 				password: 'world'
 		}
 		var executor = new RemoteExecutorClass( settings );
+		
     	done();
 	});
 	

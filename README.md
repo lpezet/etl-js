@@ -36,7 +36,7 @@ const { yamlParse } = require('yaml-cfn');
 const executorSettings = {
 	host: '1.2.3.4',
 	username: 'hello',
-	privateKey: fs.readFileSync('/here/is/my/key')
+	privateKey: Fs.readFileSync('/here/is/my/key')
 }
 
 const executor = new RemoteExecutorClass( settings );

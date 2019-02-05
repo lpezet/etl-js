@@ -7,12 +7,45 @@ With ETL JS, you define activities in YAML and run it to extract, transform, loa
 
 # Getting Started
 
-npm install etl-js
-
 ## Installation
+
+```nodejs
+npm i @lpezet/etl-js
+```
 
 ## TL;DR
 
+```yaml
+etl:
+	- sayhello
+
+sayhello:
+	commands:
+		001_hello:
+			command: echo "hello"
+```
+
+
+```nodejs
+const Fs = require('fs');
+const ETLClass = require('etl-js');
+const RemoteExecutorClass = require('etl-js/lib/executors').remote;
+// or any other yaml parser
+const { yamlParse } = require('yaml-cfn');
+
+const executorSettings = {
+	host: '1.2.3.4',
+	username: 'hello'
+	privateKey: fs.readFileSync('/here/is/my/key')
+}
+
+const executor = new RemoteExecutorClass( settings );
+const etl = new ETLClass( executor );
+
+const specs = yamlParse( Fs.readFileSync( '/somewhere/etl.yml', {encoding: 'utf8'} ) );
+
+etl.process( specs );
+```
 
 # Concepts
 
@@ -53,7 +86,7 @@ my_load:
 			failIfNoSourceFile: true
 ```
 In this new activity, we're loading (spraying, in HPCC *parlance*) a CSV file and giving it a logical name of `test::file1`.
-This define **my_load** activity.
+This defines **my_load** activity.
 
 Here's what the full ETL template then would look like with those two activities:
 

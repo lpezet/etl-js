@@ -16,8 +16,10 @@ describe('executors',function(){
 		var executor = new LocalExecutorClass();
 		executor.exec('echo "hello!"', {}, function(err, stdout, stderr) {
 			assert.isNull( err );
+			assert.equal( "hello!\n", stdout );
+			done();
 		})
-    	done();
+    	
 	});
 	
 	it('remote',function(done){

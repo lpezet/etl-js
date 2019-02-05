@@ -28,14 +28,14 @@ sayhello:
 
 ```nodejs
 const Fs = require('fs');
-const ETLClass = require('etl-js');
-const RemoteExecutorClass = require('etl-js/lib/executors').remote;
+const ETLClass = require('@lpezet/etl-js');
+const RemoteExecutorClass = require('@lpezet/etl-js/lib/executors').remote;
 // or any other yaml parser
 const { yamlParse } = require('yaml-cfn');
 
 const executorSettings = {
 	host: '1.2.3.4',
-	username: 'hello'
+	username: 'hello',
 	privateKey: fs.readFileSync('/here/is/my/key')
 }
 

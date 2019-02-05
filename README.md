@@ -17,12 +17,12 @@ npm i @lpezet/etl-js
 
 ```yaml
 etl:
-	- sayhello
+  - sayhello
 
 sayhello:
-	commands:
-		001_hello:
-			command: echo "hello"
+  commands:
+    001_hello:
+      command: echo "hello"
 ```
 
 
@@ -61,13 +61,13 @@ Take this snippet of an ETL template:
 
 ```yaml
 my_extract:
-	files:
-		"/downloads/file1.zip":
-			source: https://a.b.c/file1.zip
-	commands:
-		001_unzip;
-			command: unzip file1.zip
-			cwd: /downloads/
+  files:
+    "/downloads/file1.zip":
+      source: https://a.b.c/file1.zip
+  commands:
+    001_unzip;
+      command: unzip file1.zip
+      cwd: /downloads/
 ```
 
 This template will basically download a file from `https://a.b.c/file1.zip` to `/downloads/file1.zip`, and then run `unzip file1.zip` in the directory `/downloads/`.
@@ -77,13 +77,13 @@ Here's another example to load files into an HPCC Thor Cluster.
 
 ```yaml
 my_load:
-	sprays:
-		"test::file1"
-			format: csv
-			sourcePath: /downloads/file1.csv
-			destinationGroup: "mythor"
-			allowoverwrite: true
-			failIfNoSourceFile: true
+  sprays:
+    "test::file1"
+      format: csv
+      sourcePath: /downloads/file1.csv
+      destinationGroup: "mythor"
+      allowoverwrite: true
+      failIfNoSourceFile: true
 ```
 In this new activity, we're loading (spraying, in HPCC *parlance*) a CSV file and giving it a logical name of `test::file1`.
 This defines **my_load** activity.
@@ -92,26 +92,26 @@ Here's what the full ETL template then would look like with those two activities
 
 ```yaml
 etl:
-	- my_extract
-	- my_load
+  - my_extract
+  - my_load
 
 my_extract:
-	files:
-		"/downloads/file1.zip":
-			source: https://a.b.c/file1.zip
-	commands:
-		001_unzip;
-			command: unzip file1.zip
-			cwd: /downloads/
+  files:
+    "/downloads/file1.zip":
+      source: https://a.b.c/file1.zip
+  commands:
+    001_unzip;
+      command: unzip file1.zip
+      cwd: /downloads/
 
 my_load:
-	sprays:
-		"test::file1"
-			format: csv
-			sourcePath: /downloads/file1.csv
-			destinationGroup: "mythor"
-			allowoverwrite: true
-			failIfNoSourceFile: true
+  sprays:
+    "test::file1"
+      format: csv
+      sourcePath: /downloads/file1.csv
+      destinationGroup: "mythor"
+      allowoverwrite: true
+      failIfNoSourceFile: true
 ```
 
 # Executors (how to execute)

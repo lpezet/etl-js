@@ -1,5 +1,5 @@
 {
-  "name": "etl",
+  "name": "@lpezet/etl-js",
   "version": "1.0.0",
   "description": "ETL made simple and reproducible.",
   "main": "index.js",

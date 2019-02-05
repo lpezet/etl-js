@@ -1,0 +1,4 @@
+root:
+  000_file:
+    # example to just use a file from cluster
+    file: /var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.ecl

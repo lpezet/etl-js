@@ -1,0 +1,13 @@
+root:
+  000_content:
+    content: |
+        layout := RECORD
+            STRING station_id; // station identifier (GHCN Daily Identification Number)
+             STRING date; // (yyyymmdd; where yyyy=year; mm=month; and, dd=day)
+             STRING observation_type; // (see ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt for definitions)
+             STRING observation_value; // (see ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt for units)
+             STRING observation_time; // (if available, as hhmm where hh=hour and mm=minutes in local time)
+        END;
+        ds := DATASET('noaa::ghcn::daily::2018::raw', layout, CSV);
+        ASSERT(COUNT(ds) = 999);
+        // etc.

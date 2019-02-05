@@ -1,0 +1,26 @@
+root:
+    "noaa::ghcn::daily::2018::raw":
+        format: csv
+        sourceIP: 192.168.0.10
+        sourcePath: /var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv
+        maxrecordsize: 4096
+        srcCSVseparator: "\\,"
+        srcCSVterminator: "\\n,\\r\\n"
+        srcCSVquote: "\""
+        destinationGroup: "mythor"
+        #destinationLogicalName: "ALREADY PROVIDED AS KEY, OR LET USER OVERWRITE HERE"
+        # -1 = never times out, 0 = execution control returns immediately to the ECL workunit without waiting for the DFU workunit to complete
+        timeout: -1
+        espserverIPport: "http://localhost:8010/"
+        maxConnections: 1
+        allowoverwrite: false
+        replicate: false
+        compress: false
+        sourceCsvEscape: ""
+        failIfNoSourceFile: false
+        recordStructurePresent: false
+        quotedTerminator: false
+        # possible values: ascii, utf8, utf8n, utf16, utf16le, utf16be, utf32, utf32le,utf32be
+        encoding: "ascii"
+        # -1 = never expires
+        expireDays: -1

@@ -1,0 +1,3 @@
+root:
+  "/tmp/file.txt":
+    source: https://abc.def.com/file.txt

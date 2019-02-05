@@ -1,0 +1,5 @@
+root:
+  001_unzip:
+    command: gunzip test.gz
+    cwd: /var/lib/somedir
+    test: "[ -f test.gz ]"

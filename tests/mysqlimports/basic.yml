@@ -1,0 +1,4 @@
+root:
+  mysqlimports:
+    "/downloads/test.csv":
+      db_name: testdb

@@ -17,6 +17,9 @@ describe('ecls',function(){
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		pCallback( null, "", "");
     	}
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		pCallback( null, "", "");
+    	}
     	
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
@@ -39,14 +42,17 @@ describe('ecls',function(){
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		pCallback( null, "", "");
     	}
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		pCallback( null, "", "");
+    	}
     	
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass( oExecutor );
     	
 		var oConfig = load_file( './ecls/content.yaml');
 		
-		oTested.handle( oConfig['root'] ).then(function() {
-			done();
+		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
+				done();
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );

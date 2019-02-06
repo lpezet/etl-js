@@ -28,7 +28,7 @@ describe('commands',function(){
     			assert.isNotEmpty( pCmdOpts );
     			assert.equal( pCmdOpts.cwd, "/var/lib/somedir");
     		} else {
-    			assert.equal(pCmd, "[ -f test.gz ]");
+    			assert.equal(pCmd, '([ -f test.gz ]) && echo "continue" || echo "stop"');
     			assert.isEmpty( pCmdOpts );
     		}
     		assert.isNotNull( pCallback );

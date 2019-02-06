@@ -46,7 +46,7 @@ describe('sprays',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass( { '*': { server: '1.2.3.4' }});
     	
-		var oConfig = load_file( "./sprays/delimited.yaml" );
+		var oConfig = load_file( "./sprays/delimited.yml" );
 		
 		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
 			done();

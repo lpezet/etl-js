@@ -24,7 +24,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/file.yaml');
+		var oConfig = load_file( './ecls/file.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
@@ -49,7 +49,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass( oExecutor );
     	
-		var oConfig = load_file( './ecls/content.yaml');
+		var oConfig = load_file( './ecls/content.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 				done();

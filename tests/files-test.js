@@ -24,7 +24,7 @@ describe('files',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( "./files/basic.yaml" );
+		var oConfig = load_file( "./files/basic.yml" );
 		
 		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
 			done();

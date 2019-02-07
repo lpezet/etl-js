@@ -1,6 +1,6 @@
 {
   "name": "@lpezet/etl-js",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "ETL made simple and reproducible.",
   "main": "index.js",
   "scripts": {

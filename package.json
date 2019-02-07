@@ -22,10 +22,8 @@
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "npm": "^6.7.0",
-    "promised-io": "^0.3.5",
-    "ssh2-client": "^1.3.2",
     "ssh2-utils": "^1.0.28",
-    "winston": "^2.4.4"
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",

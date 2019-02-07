@@ -1,5 +1,19 @@
 root:
-  001_unzip:
+  001_test:
     command: gunzip test.gz
     cwd: /var/lib/somedir
     test: "[ -f test.gz ]"
+  002_test_fail:
+    command: gunzip test.gz
+    cwd: /var/lib/somedir
+    test: "false"
+  003_say_hello:
+    command: echo "hello"
+  004_say_bye:
+    command: echo "bye"  
+  005_test_error:
+    command: echo "oops"
+    test: "something that'd throw an error"
+  006_making_sure:
+    command: echo "hello again"  
+  

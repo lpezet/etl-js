@@ -23,16 +23,30 @@ describe('commands',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		if ( pCmd.startsWith("gunzip") ) {
-    			assert.equal(pCmd, "gunzip test.gz");
-    			assert.isNotEmpty( pCmdOpts );
-    			assert.equal( pCmdOpts.cwd, "/var/lib/somedir");
-    		} else {
-    			assert.equal(pCmd, '([ -f test.gz ]) && echo "continue" || echo "stop"');
-    			assert.isEmpty( pCmdOpts );
-    		}
     		assert.isNotNull( pCallback );
-    		pCallback( null, "", "" );
+    		var error = null;
+    		var stdout = "";
+    		var stderr = "";
+    		switch( pCmdOpts.context ) {
+    			case "001_test":
+    				if ( pCmd.startsWith("gunzip") ) {
+	    				assert.equal(pCmd, "gunzip test.gz");
+	        			assert.isNotEmpty( pCmdOpts );
+	        			assert.equal( pCmdOpts.cwd, "/var/lib/somedir");
+    				} else {
+    					assert.equal(pCmd, '([ -f test.gz ]) && echo "continue" || echo "stop"');
+            			//assert.isEmpty( pCmdOpts );
+            			stdout="continue";
+    	    		}
+        			break;
+    			case "002_test_fail":
+    				stdout = "stop";
+    				break;
+    			case "005_test_error":
+    				error = { code: 1 };
+    				break;
+    		}
+    		pCallback( error, stdout, stderr );
     	}
     	
     	var oExecutor = new ExecutorClass();

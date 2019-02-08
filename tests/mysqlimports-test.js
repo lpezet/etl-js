@@ -24,7 +24,7 @@ describe('mysqlimports',function(){
     	}
     	
     	var oExecutor = new ExecutorClass();
-    	var oTested = new TestedClass( oExecutor );
+    	var oTested = new TestedClass();
     	
 		var oConfig = load_file( './mysqlimports/basic.yml');
 		

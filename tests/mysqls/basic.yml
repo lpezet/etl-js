@@ -1,0 +1,5 @@
+root:
+  mysqls:
+    "/a/b/c.txt":
+      db_name: testdb
+      execute: "SELECT * FROM test"

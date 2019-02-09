@@ -1,3 +1,4 @@
+const assert = require('chai').assert
 const TestedClass = require('../lib/ecls');
 const load_file = require('./load_file');
 
@@ -15,6 +16,11 @@ describe('ecls',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.indexOf('wget') < 0 ) {
+	    		assert.include( pCmd, "cluster=thor");
+	    		assert.notInclude( pCmd, "format=null");
+	    		assert.notInclude( pCmd, "output=null");
+    		}
     		pCallback( null, "", "");
     	}
     	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
@@ -40,6 +46,10 @@ describe('ecls',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, "cluster=thor");
+    		assert.notInclude( pCmd, "format=null");
+    		assert.notInclude( pCmd, "output=null");
+    		
     		pCallback( null, "", "");
     	}
     	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {

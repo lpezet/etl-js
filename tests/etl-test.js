@@ -1,6 +1,6 @@
 const TestedClass = require('../lib/etl');
 const load_file = require('./load_file');
-const assert = require('chai').assert
+const assert = require('chai').assert;
 
 describe('etl',function(){
 	
@@ -10,6 +10,22 @@ describe('etl',function(){
 	
 	after(function(done) {
 		done();
+	});
+	
+	var register_mod = function( pETL, pMod, pSettings) {
+		var Class = require( pMod );
+		var Factory = Class.bind.apply(Class, [ null, pETL, pSettings ] );
+		return new Factory();
+	}
+	
+	it('registering_mod_dynamically', function(done) {
+		var oExecutor = new function() {};
+    	var oSettings = {};
+    	var oTested = new TestedClass( oExecutor, oSettings );
+    	assert.equal( Object.keys( oTested.get_mods() ).length, 0);
+    	register_mod( oTested, './etl/mod' );
+    	assert.equal( Object.keys( oTested.get_mods() ).length, 1 );
+    	done();
 	});
 	
 	it('collect_results_across_step', function(done) {

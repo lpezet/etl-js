@@ -1,5 +1,6 @@
 root:
   000_content:
+    cluster: thor
     content: |
         layout := RECORD
             STRING station_id; // station identifier (GHCN Daily Identification Number)

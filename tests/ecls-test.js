@@ -47,7 +47,7 @@ describe('ecls',function(){
     	}
     	
     	var oExecutor = new ExecutorClass();
-    	var oTested = new TestedClass( oExecutor );
+    	var oTested = new TestedClass();
     	
 		var oConfig = load_file( './ecls/content.yml');
 		

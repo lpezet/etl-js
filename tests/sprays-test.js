@@ -44,7 +44,7 @@ describe('sprays',function(){
     	}
     	
     	var oExecutor = new ExecutorClass();
-    	var oTested = new TestedClass( { '*': { server: '1.2.3.4' }});
+    	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4' }});
     	
 		var oConfig = load_file( "./sprays/delimited.yml" );
 		

@@ -1,7 +1,7 @@
-const TestedClass = require('../lib/mysqlimports');
+const TestedClass = require('../lib/mysqls');
 const load_file = require('./load_file');
 
-describe('mysqlimports',function(){
+describe('mysqls',function(){
 	
 	before(function(done) {
 		done();
@@ -16,8 +16,8 @@ describe('mysqlimports',function(){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		switch ( pCmdOpts.context ) {
-    			case "/downloads/test.csv":
-    				assert.include( pCmd, "--db_name=testdb");
+    			case "/a/b/c.txt":
+    				assert.include( pCmd, "--execute='SELECT * FROM test'");
     				break;
     		}
     		pCallback( null, "", "");
@@ -26,7 +26,7 @@ describe('mysqlimports',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './mysqlimports/basic.yml');
+		var oConfig = load_file( './mysqls/basic.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();

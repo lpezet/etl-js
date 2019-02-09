@@ -17,7 +17,7 @@ describe('files',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		assert.equal( pCmd, '[ ! -d $(dirname "/tmp/file.txt") ] && mkdir -p $(dirname "/tmp/file.txt"); wget -O "/tmp/file.txt" "https://abc.def.com/file.txt"');
+    		assert.equal( pCmd, '[ ! -d $(dirname "/tmp/file.txt") ] && mkdir -p $(dirname "/tmp/file.txt"); wget -O "/tmp/file.txt" "https://abc.def.com/file.txt" 2>&1');
     		pCallback( null, "", "" );
     	}
     	
@@ -38,7 +38,7 @@ describe('files',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		assert.equal( pCmd, '[ ! -d $(dirname "/tmp/file.txt") ] && mkdir -p $(dirname "/tmp/file.txt"); wget -O "/tmp/file.txt" "https://abc.def.com/file.txt"');
+    		assert.equal( pCmd, '[ ! -d $(dirname "/tmp/file.txt") ] && mkdir -p $(dirname "/tmp/file.txt"); wget -O "/tmp/file.txt" "https://abc.def.com/file.txt" 2>&1');
     		pCallback( null, "", "" );
     	}
     	ExecutorClass.prototype.writeFile = function( pCmd, pCmdOpts, pCallback ) {

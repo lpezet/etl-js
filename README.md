@@ -88,13 +88,12 @@ var executor = new RemoteExecutorClass( settings );
 
 ```
 
-This executor will execute commands on a remote server (as defined in `settings`) through `ssh`.
+This executor will execute commands on a remote server (as defined in `settings`) through `ssh`. You only need to specify either `password` or `privateKey`.
 
 
-# Mods (Activities)
+# Mods (and Activities)
 
-Activities are carried by what's called "mods" here. For example, executing a command (e.g. "echo 'hello world!'") is done by the `commands` mod.
-Downloading a file is done by the `files` mod.
+Activities are carried by what's called "mods". For example, executing a command (e.g. "echo 'hello world!'") is done by the `commands` mod. Downloading a file is done by using the `files` mod.
 
 Take this snippet of an ETL template:
 
@@ -109,8 +108,8 @@ my_extract:
       cwd: /downloads/
 ```
 
-This template will basically download a file from `https://a.b.c/file1.zip` to `/downloads/file1.zip`, and then run `unzip file1.zip` in the directory `/downloads/`.
-All this defines the **my_extract** activity. You can of course define more activities.
+The template above will basically download a file from `https://a.b.c/file1.zip` to `/downloads/file1.zip`, and then run `unzip file1.zip` in the directory `/downloads/`.
+All this defines the **my_extract** activity. A template can have any arbitrary number of activities.
 
 Here's another example to load files into an HPCC Thor Cluster.
 
@@ -124,8 +123,7 @@ my_load:
       allowoverwrite: true
       failIfNoSourceFile: true
 ```
-In this new activity, we're loading (spraying, in HPCC *parlance*) a CSV file and giving it a logical name of `test::file1`.
-This defines **my_load** activity.
+In this new activity, we're loading (spraying, in HPCC *parlance*) a CSV file and giving it a logical name of `test::file1`. This defines **my_load** activity.
 
 Here's what the full ETL template then would look like with those two activities:
 
@@ -279,6 +277,91 @@ Use the HPCC Systems Distributed File Utility (DFU) (`dfuplus`) to load file int
 
 
 ## MySQL mods
+
+### mysqls
+
+#### Specs
+
+
+```yaml
+root:
+  mysqls:
+    auto_rehash: _auto_rehash_
+    auto_vertical_output: _auto_vertical_output_
+    batch: _batch_
+    binary_as_hex: _binary_as_hex_
+    binary_mode: _binary_mode_
+  	bind_address: _bind_address_
+    
+    v TODO v
+  	columns: _columns_
+    compress: _compress_
+    debug: _debug_
+    debug_check: _debug_check_
+    debug_info: _debug_info_
+    default_auth: _default_auth_
+    default_character_set: _default_character_set_
+    defaults_extra_file: _defaults_extra_file_
+    defaults_file: defaults_file_
+    defaults_group_suffix: _defaults_group_suffix_
+    delete: _delete_
+    enable_cleartext_plugin: _enable_cleartext_plugin_
+    fields_enclosed_by: _fields_enclosed_by_
+    fields_escaped_by: _fields_escaped_by_
+    fields_optionally_enclosed_by: _fields_optionally_enclosed_by_
+    fields_terminated_by: _fields_terminated_by_
+    force: _force_
+    get_server_public_key: _get_server_public_key_
+    host: _host_
+    ignore: _ignore_
+    ignore_lines: _ignore_lines_
+    lines_terminated_by: _lines_terminated_by_
+    local: _local_
+    lock_tables: _lock_tables_
+    login_path: _login_path_
+    low_priority: _low_priority_
+    no_defaults: _no_defaults_
+    password: _password_
+    pipe: _pipe_
+    plugin_dir: _plugin_dir_
+    port: _port_
+    protocol: _protocol_
+    replace: _replace_
+    secure_auth: _secure_auth_
+    server_public_key_path: _server_public_key_path_
+    shared_memory_base_name: _shared_memory_base_name_
+    silent: _silent_
+    ^ TODO ^
+    
+    skip_named_commands: _skip_named_commands_
+    skip_pager: _skip_pager_
+    skip_reconnect: _skip_reconnect_
+    socket: _socket_
+    ssl_ca: _ssl_ca_
+    ssl_capath: _ssl_capath_
+    ssl_cert: _ssl_cert_
+    ssl_cipher: _ssl_cipher_
+    ssl_crl: _ssl_crl_
+    ssl_crlpath: _ssl_crlpath_
+    ssl_fips_mode: _ssl_fips_mode_
+    ssl_key: _ssl_key_
+    ssl_mode: _ssl_mode_
+    syslog: _syslog_
+    table: _table_
+    tee: _tee_
+    tls_cipheruites: _tls_ciphersuites_
+    tls_version: _tls_version_
+    unbuffered: _unbuffered_
+    user: _user_
+    vertical: _vertical_
+    wait: _wait_
+    xml: _xml_
+```
+
+#### Description
+
+This mod can be used to query a MySQL database.
+
 
 ### mysqlimports
 

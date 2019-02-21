@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
-    "npm": "^6.7.0",
+    "npm": "^6.8.0",
     "ssh2-utils": "^1.0.28",
     "winston": "^2.4.4"
   },

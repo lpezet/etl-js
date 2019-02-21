@@ -27,7 +27,7 @@ describe('etl',function(){
     	assert.equal( Object.keys( oTested.get_mods() ).length, 1 );
     	done();
 	});
-	
+	/*
 	it('collect_results_across_step', function(done) {
 		var oExecutor = new function() {};
     	var oSettings = {};
@@ -37,7 +37,7 @@ describe('etl',function(){
     	var oETL = {
     			etl: ['step1','step2'],
     			step1: {
-    				collector: {
+    				collects: {
     					doSomething: {
     						result: "a"
     					},
@@ -50,7 +50,7 @@ describe('etl',function(){
     				}
     			},
     			step2: {
-    				collector: {
+    				collects: {
     					doSomething: {
     						result: "d"
     					},
@@ -64,6 +64,7 @@ describe('etl',function(){
     			}
     	};
 		oTested.process( oETL ).then(function( pData ) {
+			console.dir( pData );
 			assert.sameOrderedMembers(['a','b','c','d','e','f'], pData);
 			done();
 		}, function( pError ) {
@@ -71,7 +72,48 @@ describe('etl',function(){
 			done( pError );
 		});
 	});
-	
+	*/
+	it('results', function(done) {
+		var oExecutor = new function() {};
+    	var oSettings = {};
+    	var oTested = new TestedClass( oExecutor, oSettings );
+    	var oReporter = new (require('./etl/collect'))( oTested );
+    	
+    	var oETL = {
+    			etl: ['step1','step2'],
+    			step1: {
+    				collects: {
+    					doSomething: {
+    						result: "a"
+    					},
+    					doSomethingElse: {
+    						result: "b"
+    					},
+    					andSomethingElse: {
+    						result: "c"
+    					}
+    				}
+    			}
+    	};
+		oTested.process( oETL ).then(function( pData ) {
+			//console.dir( pData );
+			assert.exists( pData );
+			assert.exists( pData['etl'] );
+			assert.exists( pData['step1'] );
+			assert.exists( pData['step1']['collects'] );
+			assert.exists( pData['step1']['collects']['doSomething'] );
+			assert.equal( pData['step1']['collects']['doSomething']['result'], 'a' );
+			assert.exists( pData['step1']['collects']['doSomethingElse'] );
+			assert.equal( pData['step1']['collects']['doSomethingElse']['result'], 'b' );
+			assert.exists( pData['step1']['collects']['andSomethingElse'] );
+			assert.equal( pData['step1']['collects']['andSomethingElse']['result'], 'c' );
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
+	/*
 	it('collect_results_within_step', function(done) {
 		var oExecutor = new function() {};
     	var oSettings = {};
@@ -102,7 +144,7 @@ describe('etl',function(){
 			done( pError );
 		});
 	});
-
+	*/
 	it('basic',function(done){
     	var oExecutor = new function() {};
     	var oSettings = {

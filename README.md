@@ -52,6 +52,9 @@ etl.process( specs );
 If you're familiar with CloudFormation templates, then you will feel right at home here!
 If not, don't worry, it's easy.
 
+# Examples and tutorials
+
+For more examples and tutorials, have a look at [etl-js-cli](https://github.com/lpezet/etl-js-cli).
 
 # Executors (how to execute)
 

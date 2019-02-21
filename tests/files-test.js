@@ -26,7 +26,7 @@ describe('files',function(){
     	
 		var oConfig = load_file( "./files/basic.yml" );
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
 			done();
 		}, function( pError ) {
 			console.log( pError );

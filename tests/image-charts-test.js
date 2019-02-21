@@ -31,10 +31,16 @@ describe('image-charts',function(){
 				}
 		}
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
+			console.log("##### Result: ");
+			console.dir( pData );
 			if ( pData ) {
-				assert.isArray( pData );
-				assert.equal( 1, pData.length );
-				var oUrl = pData[0];
+				//assert.isArray( pData );
+				//assert.equal( 1, pData.length );
+				assert.exists( pData );
+				assert.exists( pData['image_charts' ] );
+				assert.exists( pData['image_charts' ][ '001_chart' ] );
+				
+				var oUrl = pData['image_charts' ][ '001_chart' ]['result'];
 				// https://image-charts.com/chart?chs=700x200&cht=bvg&chxt=x,y&chxs=1N*s* inches,000000&chxl=0:|PRCP|SNOW&chdl=US1|US2&chd=a:1,1|2,2
 				assert.include(oUrl, "https://image-charts.com/chart");
 				assert.include(oUrl, "chs=700x200");

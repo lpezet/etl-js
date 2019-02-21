@@ -61,8 +61,10 @@ describe('ecls',function(){
     	
 		var oConfig = load_file( './ecls/content.yml');
 		
-		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
-				done();
+		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
+			//console.log('#### ecls content: ');
+			//console.dir( pData );
+			done();
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );

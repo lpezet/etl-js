@@ -26,7 +26,7 @@ sayhello:
 ```
 
 
-```nodejs
+```js
 const Fs = require('fs');
 const ETLClass = require('@lpezet/etl-js');
 const RemoteExecutorClass = require('@lpezet/etl-js/lib/executors').remote;
@@ -65,7 +65,7 @@ Two Executors are provided in the `executors` module.
 
 ## Local
 
-```nodejs
+```js
 const LocalExecutorClass = require('etl-js/executors').local;
 
 var executor = new LocalExecutorClass();
@@ -77,7 +77,7 @@ This executor will simply delegate to `child_process` and execute commands local
 
 ## Remote
 
-```nodejs
+```js
 const RemoteExecutorClass = require('etl-js/executors').remote;
 
 settings = {

@@ -27,6 +27,10 @@ describe('files',function(){
 		var oConfig = load_file( "./files/basic.yml" );
 		
 		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
 			console.log( pError );
@@ -57,7 +61,11 @@ describe('files',function(){
 				}
 		}
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
 			console.log( pError );
@@ -81,11 +89,17 @@ describe('files',function(){
     	
 		var oConfig = {
 				'root': {
-					content: "Hello world"
+					"/tmp/file.txt": {
+						content: "Hello world"
+					}
 				}
 		}
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
 			console.log( pError );
@@ -125,7 +139,11 @@ describe('files',function(){
 				}
 		};
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function() {
+		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
 			console.log( pError );
@@ -137,12 +155,12 @@ describe('files',function(){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		//console.log('Cmd= ' + pCmd );
-    		if ( pCmd.indexOf("https://abc.def.com/toto.txt") > 0) {
+    		if ( pCmd.indexOf("https://abc.def.com/toto.txt") >= 0) {
     			assert.include( pCmd, "/tmp/toto.txt" );
-    		} else if ( pCmd.indexOf("https://abc.def.com/titi.txt") ) {
+    		} else if ( pCmd.indexOf("https://abc.def.com/titi.txt") >=0  ) {
     			assert.include( pCmd, "/tmp/titi.txt" );
     		} else {
-    			throw new Error("Boo");
+    			assert.include( pCmd, "https://a.b.c/static.txt" );
     		}
     		pCallback( null, "", "" );
     	}
@@ -158,6 +176,9 @@ describe('files',function(){
 				'root': {
 					"/tmp/{{ $.step1.commands.001_doit.result }}.txt": {
 						source: "https://abc.def.com/{{ $.step1.commands.001_doit.result }}.txt"
+					},
+					"/tmp/static.txt": {
+						source: "https://a.b.c/static.txt"
 					}
 				}
 		};
@@ -172,7 +193,15 @@ describe('files',function(){
 				}
 		};
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function() {
+		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/toto.txt'] );
+			assert.isNull( pData['files']['/tmp/toto.txt']['error'] );
+			assert.isNotNull( pData['files']['/tmp/titi.txt'] );
+			assert.isNull( pData['files']['/tmp/titi.txt']['error'] );
+			assert.isNotNull( pData['files']['/tmp/static.txt'] );
+			assert.isNull( pData['files']['/tmp/static.txt']['error'] );
 			done();
 		}, function( pError ) {
 			console.log( pError );

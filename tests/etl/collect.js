@@ -14,7 +14,7 @@ ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor) {
 			//var oResult = [];
 			winston.log('debug', '[%s:%s] previous data=[%s]', pParent, pKey, pData);
 			if ( pData != null ) {
-				pData[ pKey ] = pConfig;
+				pData.collects[ pKey ] = pConfig;
 				/*
 				if ( Array.isArray( pData ) ) {
 					oResult = pData.slice();
@@ -30,17 +30,17 @@ ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor) {
 	}
 }
 
-ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pData ) {
+ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityContext, pContext ) {
 	var that = this;
 	return new Promise( function( resolve, reject ) {
-		winston.log('debug', '[%s] In report mod. Previous data=[%s]', pParent, pData);
+		winston.log('debug', '[%s] In report mod. Activity context=[%s], Global context=[%s]', pParent, pActivityContext, pContext);
 		try {
 			var oData = { 'collects' : {} };
 			var oPromises = [];
 			for (var i in pConfig) {
 				oPromises.push( that._do( pParent, i, pConfig[i], pExecutor ));
 			}
-			Promises.seq( oPromises, oData.collects ).then(function( pData ) {
+			Promises.seq( oPromises, oData ).then(function( pData ) {
 				winston.log('debug', '[%s] Done processing commands. Data=[%s]', pParent, oData);
 				resolve( oData );
 			}, function( pError ) {

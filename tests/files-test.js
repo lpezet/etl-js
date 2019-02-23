@@ -92,4 +92,92 @@ describe('files',function(){
 			done( pError );
 		})
 	});
+	
+	it('templateSingleValue',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, "https://abc.def.com/toto.txt" );
+    		pCallback( null, "", "" );
+    	}
+    	ExecutorClass.prototype.writeFile = function( pCmd, pCmdOpts, pCallback ) {
+    		done("Not expected executor.writeFile() call.");
+    		pCallback( null, "", "" );
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				'root': {
+					"/tmp/file.txt": {
+						source: "https://abc.def.com/{{ $.step1.commands.001_doit.result }}.txt"
+					}
+				}
+		};
+		
+		var oContext = {
+				step1: {
+					commands: {
+						"001_doit": {
+							result: "toto"
+						}
+					}
+				}
+		};
+		
+		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
+	it('templateMultipleValues',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		//console.log('Cmd= ' + pCmd );
+    		if ( pCmd.indexOf("https://abc.def.com/toto.txt") > 0) {
+    			assert.include( pCmd, "/tmp/toto.txt" );
+    		} else if ( pCmd.indexOf("https://abc.def.com/titi.txt") ) {
+    			assert.include( pCmd, "/tmp/titi.txt" );
+    		} else {
+    			throw new Error("Boo");
+    		}
+    		pCallback( null, "", "" );
+    	}
+    	ExecutorClass.prototype.writeFile = function( pCmd, pCmdOpts, pCallback ) {
+    		done("Not expected executor.writeFile() call.");
+    		pCallback( null, "", "" );
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				'root': {
+					"/tmp/{{ $.step1.commands.001_doit.result }}.txt": {
+						source: "https://abc.def.com/{{ $.step1.commands.001_doit.result }}.txt"
+					}
+				}
+		};
+		
+		var oContext = {
+				step1: {
+					commands: {
+						"001_doit": {
+							result: [ 'toto', 'titi' ]
+						}
+					}
+				}
+		};
+		
+		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
 });

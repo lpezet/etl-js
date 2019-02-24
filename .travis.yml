@@ -5,6 +5,11 @@ node_js:
 sudo: false
 script:
   # Run test script
-  - npm test
+  - npm run test-ci
   # Run linting
   - npm run lint
+after_script:
+  - |
+    # Upload coverage to coveralls
+    npm install --save-dev coveralls@2.13.3
+    coveralls < ./coverage/lcov.info

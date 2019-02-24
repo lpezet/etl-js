@@ -83,24 +83,22 @@ etl:
 executors:
   local1:
     type: local
-
 ```
 
   Create ETL template, hello.yml:
 
 ```yml
 etl:
-	- step1
-	- step2
+  - step1
+  - step2
 step1:
-	commands:
-		orion_pic:
-			command: printf "orion-nebula-xlarge_web.jpg"
-
+  commands:
+    orion_pic:
+      command: printf "orion-nebula-xlarge_web.jpg"
 step2:
-	files:
-		/tmp/orion-nebula.jpg:
-			source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
+  files:
+    /tmp/orion-nebula.jpg:
+      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
 ```
 
 WARNING: This template will effectively download a JPG file. Open it as your own risk.
@@ -108,7 +106,7 @@ WARNING: This template will effectively download a JPG file. Open it as your own
   Run template:
 
 ```bash
-$ etl-js hello.yaml
+$ etl-js run hello.yaml
 ```
 
 

@@ -4,6 +4,7 @@
   "description": "ETL made simple and reproducible.",
   "main": "index.js",
   "scripts": {
+  	"lint": "eslint .",
     "test": "mocha ./tests/*-test.js",
     "integration-test": "mocha ./integration-tests/*-test.js"
   },
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "eslint": "^5.14.1",
     "mocha": "^5.0.0",
     "sinon": "^4.1.6",
     "yaml-cfn": "^0.2.0"

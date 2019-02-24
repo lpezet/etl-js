@@ -20,6 +20,12 @@
   "bugs": {
     "url": "https://github.com/lpezet/etl-js/issues"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "lib/"
+  ],
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "JSONPath": "^0.11.2",

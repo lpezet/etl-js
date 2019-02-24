@@ -16,7 +16,7 @@ describe('executors',function(){
 		var executor = new LocalExecutorClass();
 		executor.exec('echo "hello!"', {}, function(err, stdout, stderr) {
 			assert.isNull( err );
-			assert.equal( "hello!\n", stdout );
+			assert.include( stdout, "hello!");
 			done();
 		})
     	

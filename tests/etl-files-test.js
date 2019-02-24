@@ -1,13 +1,7 @@
 const ETLClass = require('../lib/etl');
 const FilesClass = require('../lib/files');
 const CollectClass = require('./etl/collect');
-
-const load_file = require('./load_file');
 const assert = require('chai').assert;
-const sinon = require('sinon');
-const winston = require('winston');
-
-const util = require('util');
 
 describe('etl-files',function(){
 	

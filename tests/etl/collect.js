@@ -1,9 +1,7 @@
 const winston = require('winston');
 const Promises = require('../../lib/promises');
-const util = require('util');
 
 ModClass = function( pETL ) {
-	var that = this;
 	if( pETL ) pETL.mod( 'collects', this);
 }
 

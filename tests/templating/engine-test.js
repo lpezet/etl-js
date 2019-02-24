@@ -1,5 +1,4 @@
 const assert = require('chai').assert
-const sinon = require('sinon');
 const TestedClass = require('../../lib/templating/engine');
 
 describe('parser',function(){

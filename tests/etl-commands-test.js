@@ -1,12 +1,6 @@
 const ETLClass = require('../lib/etl');
 const CommandsClass = require('../lib/commands');
-
-const load_file = require('./load_file');
 const assert = require('chai').assert;
-const sinon = require('sinon');
-const winston = require('winston');
-
-const util = require('util');
 
 describe('etl-commands',function(){
 	

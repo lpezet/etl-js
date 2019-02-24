@@ -1,12 +1,11 @@
 const assert = require('chai').assert
-const sinon = require('sinon');
 const TestedClass = require('../../lib/templating/writer');
 
 describe('writer',function(){
 	before(function(done) {
 		done();
 	});
-	
+
 	after(function(done) {
 		done();
 	});
@@ -20,20 +19,19 @@ describe('writer',function(){
     	assert.deepEqual( [ 'hello world!' ], oActual);
     	done();
 	});
-	
+
 	it('simpleToken',function(done){
     	var oTested = new TestedClass();
     	var oTokens = [ [ 'text', 'hello ', 0, 6 ],
     		  [ 'name', 'firstName', 6, 21 ],
     		  [ 'text', '!', 21, 22 ] ];
-    	
     	var oActual = oTested.renderTokens( oTokens, { firstName: 'Mr. Anderson' } )
     	assert.isNotNull( oActual );
     	assert.isArray( oActual );
     	assert.deepEqual( [ 'hello Mr. Anderson!' ], oActual);
     	done();
 	});
-	
+
 	it('multipleTokens',function(done){
     	
     	var oTested = new TestedClass();
@@ -50,7 +48,6 @@ describe('writer',function(){
 	});
 	
 	it('arrayTokens',function(done){
-    	
     	var oTested = new TestedClass();
     	var oTokens = [ [ 'text', 'hello ', 0, 6 ],
     		  [ 'name', 'firstName', 6, 21 ],
@@ -66,7 +63,6 @@ describe('writer',function(){
 	});
 	
 	it('tokensArrayValue',function(done){
-    	
     	var oTested = new TestedClass();
     	var oTokens = [ [ 'text', 'hello ', 0, 6 ],
     		  [ 'name', 'firstName', 6, 21 ],
@@ -80,5 +76,4 @@ describe('writer',function(){
     	assert.deepEqual( [ 'hello Mr. Anderson 123 Street Drive!', 'hello Mr. Anderson 456 Camino Street!' ], oActual);
     	done();
 	});
-	
 });

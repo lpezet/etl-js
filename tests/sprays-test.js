@@ -1,5 +1,4 @@
 const assert = require('chai').assert
-const sinon = require('sinon');
 const load_file = require('./load_file');
 const TestedClass = require('../lib/sprays');
 

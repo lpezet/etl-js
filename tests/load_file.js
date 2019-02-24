@@ -1,6 +1,6 @@
 const Fs = require('fs');
 const path = require('path');
-const { yamlParse, yamlDump } = require('yaml-cfn');
+const { yamlParse } = require('yaml-cfn');
 
 
 

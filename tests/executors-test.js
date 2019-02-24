@@ -29,7 +29,7 @@ describe('executors',function(){
 				username: 'hello',
 				password: 'world'
 		}
-		var executor = new RemoteExecutorClass( settings );
+		new RemoteExecutorClass( settings );
 		
     	done();
 	});

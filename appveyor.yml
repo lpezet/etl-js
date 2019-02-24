@@ -1,0 +1,31 @@
+environment:
+  matrix:
+    - nodejs_version: "10.0"
+    - nodejs_version: "11.0"
+cache:
+  - node_modules
+install:
+  # Install Node.js
+  - ps: >-
+      try { Install-Product node $env:nodejs_version -ErrorAction Stop }
+      catch { Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) }
+  # Update Node.js modules
+  - ps: |
+      # Prune & rebuild node_modules
+      if (Test-Path -Path node_modules) {
+        npm prune
+        npm rebuild
+      }
+  # Install Node.js modules
+  - npm install
+build: off
+test_script:
+  # Output version data
+  - ps: |
+      node --version
+      npm --version
+  # Run test
+  - npm test
+  # Run linting
+  - npm run lint
+version: "{build}"

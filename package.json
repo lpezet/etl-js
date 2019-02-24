@@ -30,7 +30,6 @@
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "JSONPath": "^0.11.2",
-    "npm": "^6.8.0",
     "ssh2-utils": "^1.0.28",
     "winston": "^2.4.4"
   },

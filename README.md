@@ -16,7 +16,7 @@ var template = {
 	etl: [ step1 ],
 	step1: {
 		commands: {
-			001_say_hello: {
+			say_hello: {
 				command: printf 'hello world!'
 			}
 		}
@@ -94,13 +94,13 @@ etl:
 	- step2
 step1:
 	commands:
-		001_orion_pic:
+		orion_pic:
 			command: printf "orion-nebula-xlarge_web.jpg"
 
 step2:
 	files:
 		/tmp/orion-nebula.jpg:
-			source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.001_orion_pic.result }}
+			source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
 ```
 
 WARNING: This template will effectively download a JPG file. Open it as your own risk.

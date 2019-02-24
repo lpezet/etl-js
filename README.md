@@ -6,6 +6,8 @@ Extract, Transform, and Load sharable and repeatable.
 [![Linux Build][travis-image]][travis-url]
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
+[![Known Vulnerabilities][vulnerabilities-image]][vulnerabilities-url]
+
 
 ```js
 const ETLJS = require('@lpezet/etl-js');
@@ -123,4 +125,5 @@ $ etl-js run hello.yaml
 [coveralls-url]: https://coveralls.io/github/lpezet/etl-js?branch=master
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/lr513vvn3is4u7nd?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/lpezet/etl-js
-
+[vulnerabilities-image]: https://snyk.io/test/github/lpezet/etl-js/badge.svg
+[vulnerabilities-url]: https://snyk.io/test/github/lpezet/etl-js

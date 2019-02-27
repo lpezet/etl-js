@@ -39,6 +39,24 @@ describe('executors',function(){
 		})	
 	});
 	
+	//TODO: find way to get callback with "err" set to something. Here fs.writeFile in Local executor simply throws permission denied error.
+	it('localWriteFileError',function(done){	
+		var executor = new LocalExecutorClass();
+		const oFilePath = '/tmp/etl-js-test.txt';
+		try{
+		    fs.writeFileSync(oFilePath, "dont matter");
+		    fs.chmodSync(oFilePath,'000');
+		    executor.writeFile( oFilePath, "new content", function(err, stdout, stderr) {
+				assert.isNotNull( err );
+				fs.unlinkSync(oFilePath);
+				done();
+			})	
+		}catch (e){
+		    fs.unlinkSync(oFilePath);
+		    done(); //not exactly what we want, but that's all we have right now.
+		}
+	});
+	
 	it('remoteAuthRejected', function(done) {
 		var server = null;
 		try {

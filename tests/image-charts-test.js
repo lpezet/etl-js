@@ -10,6 +10,67 @@ describe('image-charts',function(){
 	after(function(done) {
 		done();
 	});
+	
+	it('mod', function(done) {
+		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
+			pCallback({"test":true});
+		} };
+		var oTested = new TestedClass( ETLMock );
+		assert.deepEqual( oTested.mSettings, {"test":true} );
+		done();
+	});
+	
+	it('invalidData',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "PRCP|SNOW", "");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				root: {
+					"001_chart": {
+						data: "test.csv",
+				        chs: "700x200",
+				        cht: "bvg",
+				        chxt: "x,y",
+				        chxs: "1N*s* inches,000000"
+					}
+				}
+		}
+		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
+			done('Excepting error.');
+		}, function( pError ) {
+			done();
+		})
+	});
+	
+	it('error',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				root: {
+					"001_chart": {
+						data: "test.csv",
+				        chs: "700x200",
+				        cht: "bvg",
+				        chxt: "x,y",
+				        chxs: "1N*s* inches,000000"
+					}
+				}
+		}
+		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
+			done('Excepting error.');
+		}, function( pError ) {
+			done();
+		})
+	});
 
 	it('basic',function(done){
     	var ExecutorClass = function() {};

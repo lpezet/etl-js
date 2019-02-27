@@ -1,47 +1,48 @@
 root:
-  mysqls:
-    "/a/b/c.txt":
-      db_name: testdb
-      execute: "SELECT * FROM test"
-      auto_rehash: true
-      auto_vertical_output: true
-      batch: true
-      binary_as_hex: true
-      binary_mode: true
-      bind_address: 127.0.0.1
-      column_names: id,field1,field2
-      comments: "Tis a comment"
-      compress: true
-      connect_expired_password: true
-      connect_timeout: 100
-      debug: true
-      debug_check: true
-      debug_info: true
-      default_auth: mysql_native_password
-      default_character_set: utf8
-      delimiter: ","
-      enable_cleartext_plugin: true
-      force: true
-      html: true
-      ignore_spaces: true
-      line_numbers: 1
-      no_beep: true
-      no_defaults: true
-      one_database: true
-      port: 3306
-      protocol: TCP
-      quick: true
-      raw: true
-      reconnect: true
-      select_limit: 1000
-      silent: true
-      skip_line_numbers: true
-      skip_named_commands: true
-      skip_column_names: true
-      ssl_mode: REQUIRED
-      syslog: true
-      tls_version: "TLSv1.1,TLSv1.2"
-      unbuffered: true
-      vertical: true
-      wait: true
-      xml: true
+  "/a/b/c.txt":
+    db_name: testdb
+    execute: "SELECT * FROM test"
+    auto_rehash: true
+    auto_vertical_output: true
+    batch: true
+    binary_as_hex: true
+    binary_mode: true
+    bind_address: 127.0.0.1
+    column_names: "id,field1,field2"
+    comments: "Tis a comment"
+    compress: true
+    connect_expired_password: true
+    connect_timeout: 100
+    debug: true
+    debug_check: true
+    debug_info: true
+    default_auth: mysql_native_password
+    default_character_set: utf8
+    delimiter: ","
+    enable_cleartext_plugin: true
+    force: true
+    html: true
+    ignore_spaces: true
+    line_numbers: 1
+    no_beep: true
+    no_defaults: true
+    one_database: true
+    port: 3306
+    protocol: TCP
+    quick: true
+    raw: true
+    reconnect: true
+    safe_updates: true
+    secure_auth: true
+    select_limit: 1000
+    silent: true
+    skip_line_numbers: true
+    skip_named_commands: true
+    skip_column_names: true
+    ssl_mode: REQUIRED
+    syslog: true
+    tls_version: "TLSv1.1,TLSv1.2"
+    unbuffered: true
+    vertical: true
+    wait: true
+    xml: true

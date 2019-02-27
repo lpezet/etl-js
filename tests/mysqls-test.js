@@ -124,12 +124,37 @@ describe('mysqls',function(){
 	});
 
 	it('basic',function(done){
-    	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		switch ( pCmdOpts.context ) {
     			case "/a/b/c.txt":
     				assert.include( pCmd, "--execute='SELECT * FROM test'");
+    				assert.include( pCmd, "--auto-rehash");
+    				assert.include( pCmd, "--binary-as-hex");
+    				assert.include( pCmd, "--binary-mode");
+    				assert.include( pCmd, "--columns=id,field1,field2");
+    				assert.include( pCmd, "--comments");
+    				assert.include( pCmd, "--compress");
+    				assert.include( pCmd, "--debug");
+    				assert.include( pCmd, "--debug-check");
+    				assert.include( pCmd, "--debug-info");
+    				assert.include( pCmd, "--default-auth=mysql_native_password");
+    				assert.include( pCmd, "--delimiter=,");
+    				assert.include( pCmd, "--force");
+    				assert.include( pCmd, "--html");
+    				assert.include( pCmd, "--ignore-spaces");
+    				assert.include( pCmd, "--line-numbers");
+    				assert.include( pCmd, "--no-beep");
+    				assert.include( pCmd, "--no-defaults");
+    				assert.include( pCmd, "--one-database");
+    				assert.include( pCmd, "--port=3306");
+    				assert.include( pCmd, "--protocol=TCP");
+    				assert.include( pCmd, "--quick");
+    				assert.include( pCmd, "--raw");
+    				assert.include( pCmd, "--reconnect");
+    				assert.include( pCmd, "--safe-updates");
+    				assert.include( pCmd, "--secure-auth");
+    				assert.include( pCmd, "--select_limit=1000");
     				break;
     		}
     		pCallback( null, "", "");

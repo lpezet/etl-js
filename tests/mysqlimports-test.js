@@ -151,7 +151,23 @@ describe('mysqlimports',function(){
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		switch ( pCmdOpts.context ) {
     			case "/downloads/test.csv":
-    				assert.include( pCmd, "--db_name=testdb");
+    				assert.include( pCmd, "testdb");
+    				assert.include( pCmd, "--columns=id,field1,field2");
+    				assert.include( pCmd, "--compress");
+    				assert.include( pCmd, "--debug");
+    				assert.include( pCmd, "--debug-check");
+    				assert.include( pCmd, "--debug-info");
+    				assert.include( pCmd, "--default-auth=mysql_native_password");
+    				assert.include( pCmd, "--fields-terminated-by=\"\t\"");
+    				assert.include( pCmd, "--force");
+    				assert.include( pCmd, "--ignore-lines");
+    				assert.include( pCmd, "--ignore");
+    				assert.include( pCmd, "--lines-terminated-by=\"\n\"");
+    				assert.include( pCmd, "--no-defaults");
+    				assert.include( pCmd, "--port=3306");
+    				assert.include( pCmd, "--protocol=TCP");
+    				assert.include( pCmd, "--replace");
+    				assert.include( pCmd, "--secure-auth");
     				break;
     		}
     		pCallback( null, "", "");

@@ -20,6 +20,40 @@ describe('mysqls',function(){
 		assert.deepEqual( oTested.mSettings, {} );
 		done();
 	});
+	
+	it('apply_settings',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, '--bind-address=127.0.0.1');
+    		assert.include( pCmd, '--silent');
+    		pCallback( null, "", "");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {
+				'*': {
+					bind_address: '127.0.0.1',
+					silent: true
+				}
+		};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test"
+				    }
+    			}
+    	};
+    	
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
 
 	it('basic',function(done){
     	

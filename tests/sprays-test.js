@@ -20,6 +20,40 @@ describe('sprays',function(){
 		assert.deepEqual( oTested.mSettings, {} );
 		done();
 	});
+	
+	it('apply_settings',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, 'server=127.0.0.1');
+    		assert.include( pCmd, 'username=foobar');
+    		pCallback( null, "", "");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {
+				'*': {
+					server: '127.0.0.1',
+					username: 'foobar'
+				}
+		};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"something": {
+    					format: "csv",
+    			        sourcePath: "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv"
+    				}
+    			}
+    	};
+    	
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
 
 	it('delimited',function(done){
     	

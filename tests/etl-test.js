@@ -17,6 +17,35 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('mod_throwing_error', function(done) {
+		var oExecutor = new function() {};
+		var oSettings = {};
+		var oTested = new TestedClass( oExecutor, oSettings );
+		var oAwesomeMod = function( pETL ) {
+			pETL.mod( 'awesome', this );
+		};
+		oAwesomeMod.prototype.handle = function() {
+			throw new Error('Awesome mod error.');
+		};
+		
+		new oAwesomeMod( oTested );
+		var oETL = {
+    			etl: ['step1','step2'],
+    			step1: {
+    				awesome: {
+    					doSomething: {
+    						result: "a"
+    					}
+    				}
+    			}
+    	};
+		oTested.process( oETL ).then(function( pData ) {
+			done('Expecting error');
+		}, function( pError ) {
+			done();
+		});
+	});
+	
 	it('missing_mod', function(done) {
 		var oExecutor = new function() {};
 		var oSettings = {};

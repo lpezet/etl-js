@@ -10,7 +10,7 @@ root:
         destinationGroup: "mythor"
         #destinationLogicalName: "ALREADY PROVIDED AS KEY, OR LET USER OVERWRITE HERE"
         # -1 = never times out, 0 = execution control returns immediately to the ECL workunit without waiting for the DFU workunit to complete
-        timeout: -1
+        timeout: 0
         espserverIPport: "http://localhost:8010/"
         maxConnections: 1
         allowoverwrite: false
@@ -24,3 +24,4 @@ root:
         encoding: "ascii"
         # -1 = never expires
         expireDays: -1
+        unknownProp: "dontmatter"

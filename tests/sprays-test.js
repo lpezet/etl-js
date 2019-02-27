@@ -21,6 +21,51 @@ describe('sprays',function(){
 		done();
 	});
 	
+	it('error', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff");
+    	};
+    	var oTemplate = {
+    			root: {
+    				"something": {
+    					format: "csv"
+    				}
+    			}
+    	};
+    	var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass( null, {} );
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expecting error.');
+		}, function( pError ) {
+			done();
+		})
+	});
+	
+	it('safe_parse_int', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, 'nowait=0');
+    		pCallback( null, "", "");
+    	};
+    	var oTemplate = {
+    			root: {
+    				"something": {
+    					format: "csv",
+    			        timeout: "abcd"
+    				}
+    			}
+    	};
+    	var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass( null, {} );
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
 	it('apply_settings',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -126,7 +171,7 @@ describe('sprays',function(){
     		assert.include( pCmd, "quote=\\\"");
     		assert.include( pCmd, "dstcluster=mythor");
     		assert.include( pCmd, "dstname=noaa::ghcn::daily::2018::raw");
-    		assert.include( pCmd, "nowait=0");
+    		assert.include( pCmd, "nowait=1");
     		assert.include( pCmd, "server=");
     		assert.include( pCmd, "connect=1");
     		assert.include( pCmd, "overwrite=0");

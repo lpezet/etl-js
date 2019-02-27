@@ -14,10 +14,10 @@ describe('files',function(){
 	
 	it('mod', function(done) {
 		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
-			pCallback({});
+			pCallback({"test":true});
 		} };
 		var oTested = new TestedClass( ETLMock );
-		assert.deepEqual( oTested.mSettings, {} );
+		assert.deepEqual( oTested.mSettings, {"test":true} );
 		done();
 	});
 	

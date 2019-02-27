@@ -21,6 +21,31 @@ describe('mysqlimports',function(){
 		done();
 	});
 	
+	it('enclose',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, "--fields-enclosed-by='\"'");
+    		pCallback( null, "", "");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+						fields_enclosed_by: '"'
+    				}
+    			}
+    	};
+    	
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
 	it('apply_settings',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

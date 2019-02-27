@@ -18,6 +18,15 @@ describe('commands',function(){
 		done();
 	});
 	
+	it('mod', function(done) {
+		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
+			pCallback({});
+		} };
+		var oTested = new TestedClass( ETLMock );
+		assert.deepEqual( oTested.mSettings, {} );
+		done();
+	});
+	
 	it('result_as_normal', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

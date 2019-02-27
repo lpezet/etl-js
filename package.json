@@ -30,11 +30,14 @@
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "JSONPath": "^0.11.2",
+    "ssh2": "^0.8.2",
     "ssh2-utils": "^1.0.28",
     "winston": "^2.4.4"
   },
   "devDependencies": {
+    "buffer-equal-constant-time": "^1.0.1",
     "chai": "^4.2.0",
+    "crypto": "^1.0.1",
     "eslint": "^5.14.1",
     "istanbul": "^0.4.5",
     "mocha": "^5.0.0",

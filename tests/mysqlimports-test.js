@@ -1,3 +1,4 @@
+const assert = require('chai').assert
 const TestedClass = require('../lib/mysqlimports');
 const load_file = require('./load_file');
 
@@ -8,6 +9,15 @@ describe('mysqlimports',function(){
 	});
 	
 	after(function(done) {
+		done();
+	});
+	
+	it('mod', function(done) {
+		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
+			pCallback({});
+		} };
+		var oTested = new TestedClass( ETLMock );
+		assert.deepEqual( oTested.mSettings, {} );
 		done();
 	});
 

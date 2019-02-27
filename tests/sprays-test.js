@@ -11,6 +11,15 @@ describe('sprays',function(){
 	after(function(done) {
 		done();
 	});
+	
+	it('mod', function(done) {
+		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
+			pCallback({});
+		} };
+		var oTested = new TestedClass( ETLMock );
+		assert.deepEqual( oTested.mSettings, {} );
+		done();
+	});
 
 	it('delimited',function(done){
     	

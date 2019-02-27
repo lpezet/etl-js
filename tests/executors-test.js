@@ -153,7 +153,7 @@ describe('executors',function(){
 		}
 	});
 	
-	it('remoteExec',function(done){	
+	it('remoteExecWithPrivateKey',function(done){	
 		var server = null;
 		try {
 			server = setup_ssh_server();
@@ -165,6 +165,37 @@ describe('executors',function(){
 					username: 'foo', 
 					privateKey: fs.readFileSync('tests/executors.key') } );
 				executor.exec('echo hello', {}, function( err, stdout, stderr ) {
+					try {
+						assert.include( ''+stdout, 'hello');
+						if ( err ) {
+							done( err );
+						} else {
+							done();
+						}
+					} catch (e) {
+						done(e);
+					} finally {
+						server.close();
+					}
+				});	
+			});
+		} catch (e) {
+			done(e);
+		}
+	});
+	
+	it('remoteExecWithUsernamePassword',function(done){	
+		var server = null;
+		try {
+			server = setup_ssh_server();
+			server.listen(0, '127.0.0.1', function() {
+				//console.log('Listening on port ' + this.address().port);
+				var executor = new RemoteExecutorClass( { 
+					host: '127.0.0.1', 
+					port: this.address().port, 
+					username: 'foo', 
+					password: 'bar' } );
+				executor.exec('echo hello', { cwd: "/tmp" }, function( err, stdout, stderr ) {
 					try {
 						assert.include( ''+stdout, 'hello');
 						if ( err ) {
@@ -347,8 +378,7 @@ describe('executors',function(){
 		var utils = ssh2.utils;
 		 
 		var allowedUser = Buffer.from('foo');
-		//var allowedPassword = Buffer.from('bar');
-		var allowedPassword = null;
+		var allowedPassword = Buffer.from('bar');
 		//var pubKey = utils.genPublicKey(utils.parseKey(fs.readFileSync('tests/executors.pub')));
 		var allowedPubKey = utils.parseKey(fs.readFileSync('tests/executors.pub'));
 		//console.dir( allowedPubKey );

@@ -39,6 +39,102 @@ describe('executors',function(){
 		})	
 	});
 	
+	it('remoteAuthRejected', function(done) {
+		var server = null;
+		try {
+			server = setup_ssh_server_reject_auth();
+			server.listen(0, '127.0.0.1', function() {
+				//console.log('Listening on port ' + this.address().port);
+				var executor = new RemoteExecutorClass( { 
+					host: '127.0.0.1', 
+					port: this.address().port, 
+					username: 'foo', 
+					privateKey: fs.readFileSync('tests/executors.key') } );
+				executor.exec('echo hello', {}, function( err, stdout, stderr ) {
+					
+					try {
+						assert.isNotNull( err );
+						if ( err ) {
+							done();
+						} else {
+							done("Error should have been raised and caught.");
+						}
+					} catch (e) {
+						done(e);
+					} finally {
+						server.close();
+					}
+				});	
+			});
+		} catch (e) {
+			done(e);
+		}
+	});
+	
+	it('remoteSessionRejected', function(done) {
+		var server = null;
+		try {
+			server = setup_ssh_server_reject_session();
+			server.listen(0, '127.0.0.1', function() {
+				//console.log('Listening on port ' + this.address().port);
+				var executor = new RemoteExecutorClass( { 
+					host: '127.0.0.1', 
+					port: this.address().port, 
+					username: 'foo', 
+					privateKey: fs.readFileSync('tests/executors.key') } );
+				executor.exec('echo hello', {}, function( err, stdout, stderr ) {
+					
+					try {
+						assert.isNotNull( err );
+						if ( err ) {
+							done();
+						} else {
+							done("Error should have been raised and caught.");
+						}
+					} catch (e) {
+						done(e);
+					} finally {
+						server.close();
+					}
+				});	
+			});
+		} catch (e) {
+			done(e);
+		}
+	});
+	
+	it('remoteStreamError', function(done) {
+		var server = null;
+		try {
+			server = setup_ssh_server_stream_error();
+			server.listen(0, '127.0.0.1', function() {
+				//console.log('Listening on port ' + this.address().port);
+				var executor = new RemoteExecutorClass( { 
+					host: '127.0.0.1', 
+					port: this.address().port, 
+					username: 'foo', 
+					privateKey: fs.readFileSync('tests/executors.key') } );
+				executor.exec('echo hello', {}, function( err, stdout, stderr ) {
+					
+					try {
+						assert.isNotNull( err );
+						if ( err ) {
+							done();
+						} else {
+							done("Error should have been raised and caught.");
+						}
+					} catch (e) {
+						done(e);
+					} finally {
+						server.close();
+					}
+				});	
+			});
+		} catch (e) {
+			done(e);
+		}
+	});
+	
 	it('remoteExec',function(done){	
 		var server = null;
 		try {
@@ -96,6 +192,138 @@ describe('executors',function(){
 		}
 	});
 	
+	it('remoteWriteFileWithSFTPError',function(done){	
+		var server = null;
+		try {
+			server = setup_ssh_server_sftp_error();
+			server.listen(0, '127.0.0.1', function() {
+				//console.log('Listening on port ' + this.address().port);
+				var executor = new RemoteExecutorClass( { 
+					host: '127.0.0.1', 
+					port: this.address().port, 
+					username: 'foo', 
+					privateKey: fs.readFileSync('tests/executors.key') } );
+				executor.writeFile('test.txt', "hello", function( err, stdout, stderr ) {
+					try {
+						//console.log('err=' + err + ', stdout=' + stdout + ', stderr=' + stderr);	
+						if ( err ) {
+							done();
+						} else {
+							done("Error should have been raised and caught.");
+						}
+					} finally {
+						server.close();
+					}
+				});	
+			});
+		} catch (e) {
+			done(e);
+		}
+	});
+	
+	
+	var setup_ssh_server_reject_auth = function() {
+		var server = new ssh2.Server({
+			  hostKeys: [fs.readFileSync('tests/executors.key')]
+		});
+		
+		server.on('connection', function(conn) {
+	        conn.on('authentication', function(ctx) {
+	        	return ctx.reject();
+	        });
+		});
+		
+		return server;
+	}
+	
+	var setup_ssh_server_reject_session = function() {
+		var server = new ssh2.Server({
+			  hostKeys: [fs.readFileSync('tests/executors.key')]
+		});
+		
+		server.on('connection', function(conn) {
+	        conn.on('authentication', function(ctx) {
+	        	return ctx.accept();
+	        }).on('ready', function() {
+	          conn.on('session', function(accept, reject) {
+	        	  reject();
+	          });
+	        });
+		});
+		
+		return server;
+	}
+	
+	var setup_ssh_server_stream_error = function() {
+		var server = new ssh2.Server({
+			  hostKeys: [fs.readFileSync('tests/executors.key')]
+		});
+		
+		server.on('connection', function(conn) {
+	        conn.on('authentication', function(ctx) {
+	        	return ctx.accept();
+	        }).on('ready', function() {
+	          conn.on('session', function(accept, reject) {
+	        	  var session = accept();
+	        	  session.on('exec', function(accept, reject, info) {
+				        var stream = accept();
+				        //stream.write('hello\n');
+				        stream.exit(123); // ERROR
+				        stream.end();
+				    });
+	          });
+	        });
+		});
+		
+		return server;
+	}
+	
+	var setup_ssh_server_sftp_error = function() {
+		var server = new ssh2.Server({
+			  hostKeys: [fs.readFileSync('tests/executors.key')]
+		});
+		
+		server.on('connection', function(conn) {
+	        conn.on('authentication', function(ctx) {
+	        	return ctx.accept();
+	        }).on('ready', function() {
+	          conn.on('session', function(accept, reject) {
+	        	  var session = accept();
+	        	  session.on('exec', function(accept, reject, info) {
+				        var stream = accept();
+				        //stream.write('hello\n');
+				        stream.exit(0);
+				        stream.end();
+				    });
+		            session.on('sftp', function(accept, reject) {
+		            	
+		            	var sftp = accept();
+		              
+		            	sftp.once('OPEN', function(id, filename, flags, attrs) {
+		            		// FAILURE code:
+		            		return sftp.status(id, 4);
+		            		/*
+		            		var handle = Buffer.alloc(4);
+		            		handle.writeUInt32BE(1, 0, true);
+		            		sftp.handle(id, handle);
+		            	  
+		            		sftp.once('WRITE', function(id, handle, offset, data) {
+		            			sftp.status(id, 0);
+		            		});
+		            	  	
+		            		sftp.once('CLOSE', function(id, handle) {
+		            			sftp.status(id, 0);
+		            			conn.end();
+		            		});
+		            		*/
+		              });
+		            });
+	          });
+	        });
+		});
+		
+		return server;
+	}
 	
 	var setup_ssh_server = function() {
 		var utils = ssh2.utils;

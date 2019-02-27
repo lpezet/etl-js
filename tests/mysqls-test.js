@@ -122,6 +122,50 @@ describe('mysqls',function(){
 			done( pError );
 		});
 	});
+	
+	it('nullExecutor',function(done){
+		var oSettings = {};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test"
+				    }
+    			}
+    	};
+    	oTested.handle( 'root', oTemplate['root'], null ).then(function() {
+			done('Expected error');
+		}, function( pError ) {
+			done();
+		});
+	});
+	
+	it('errorExecutingCmd',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test"
+				    }
+    			}
+    	};
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expected error');
+		}, function( pError ) {
+			done();
+		});
+	});
 
 	it('basic',function(done){
     	var ExecutorClass = function() {};

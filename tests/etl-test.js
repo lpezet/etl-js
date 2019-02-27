@@ -17,6 +17,28 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('missing_mod', function(done) {
+		var oExecutor = new function() {};
+		var oSettings = {};
+		var oTested = new TestedClass( oExecutor, oSettings );
+		var oETL = {
+    			etl: ['step1','step2'],
+    			step1: {
+    				collects: {
+    					doSomething: {
+    						result: "a"
+    					}
+    				}
+    			}
+    	};
+		oTested.process( oETL ).then(function( pData ) {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
+	
 	it('registering_mod_dynamically', function(done) {
 		var oExecutor = new function() {};
 		var oSettings = {};

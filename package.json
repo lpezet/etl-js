@@ -35,7 +35,6 @@
     "winston": "^2.4.4"
   },
   "devDependencies": {
-    "buffer-equal-constant-time": "^1.0.1",
     "chai": "^4.2.0",
     "crypto": "^1.0.1",
     "eslint": "^5.14.1",

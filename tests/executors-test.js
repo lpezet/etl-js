@@ -4,9 +4,6 @@ const RemoteExecutorClass = require('../lib/executors').remote;
 
 var fs = require('fs');
 var crypto = require('crypto');
-var inspect = require('util').inspect;
-var buffersEqual = require('buffer-equal-constant-time');
- 
 var ssh2 = require('ssh2');
 
 

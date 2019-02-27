@@ -9,24 +9,46 @@ root:
     debug_info: true
     default_auth: mysql_native_password
     default_character_set: utf8
+    defaults_extra_file: /tmp/defaults_extra.info
+    defaults_file: /tmp/defaults.info
+    defaults_group_suffix: info
     delete: true
+    enable_cleartext_plugin: true
     fields_enclosed_by: ""
     fields_escaped_by: "\\"
-    enable_cleartext_plugin: true
     fields_optionally_enclosed_by: "'"
     fields_terminated_by: "\t"
     force: true
+    get_server_public_key: true
+    host: 127.0.0.1
     ignore_lines: 1
     ignore: false
-    replace: true
+    login_path: mypath
     lines_terminated_by: "\n"
     lock_tables: true
     low_priority: true
     no_defaults: true
+    password: foobar
+    pipe: true
+    plugin_dir: /tmp/
     port: 3306
     protocol: TCP
+    replace: true
     secure_auth: true
+    server_public_key_path: /tmp
+    shared_memory_base_name: mem
     silent: true
+    socket: 123
+    ssl_ca: ca.cert
+    ssl_capath: /tmp
+    ssl_cert: server.cert
+    ssl_cipher: AES128-SHA
+    ssl_crl: crl.cert
+    ssl_crlpath: /tmp
+    ssl_fips_mode: ON
+    ssl_key: server.key
     ssl_mode: REQUIRED
+    tls_ciphersuites: "suite1:suite2:suite3"
     tls_version: "TLSv1.1,TLSv1.2"
     use_threads: 4
+    user: foobar

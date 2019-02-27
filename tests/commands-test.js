@@ -115,6 +115,100 @@ describe('commands',function(){
 			done( pError );
 		})
 	});
+	
+	it('invalidTestOutput',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, null, "" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz",
+					    test: "[ ! -f test.gz ]"
+					  }
+				}
+		};
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	//TODO: Somehow, right now, when a command fails, it will keep going...
+	it('nullExecutor',function(done){
+		var oSettings = {};
+		var oTested = new TestedClass( null, oSettings );
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz"
+					  }
+				}
+		};
+    	oTested.handle( 'root', oTemplate['root'], null ).then(function() {
+			done();
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	it('exitOnTestFailed',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, null, "" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz",
+					    test: "[ ! -f test.gz ]",
+					    exit_on_test_failed: true
+					  }
+				}
+		};
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expecting error');
+		}, function( pError ) {
+			done();
+		});
+	});
+	
+	//TODO: Somehow, right now, when a command fails, it will keep going...
+	it('errorExecutingCmd',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "stderr stuff" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz"
+					  }
+				}
+		};
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			done( pError );
+		})
+	});
 
 	it('basic',function(done){
     	

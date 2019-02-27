@@ -54,6 +54,62 @@ describe('sprays',function(){
 			done( pError );
 		})
 	});
+	
+	it('xml',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {	
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = load_file( "./sprays/xml.yml" );
+		
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
+			done("Update test (xml spray not supported before).");
+		}, function( pError ) {
+			done();
+		})
+	});
+	
+	it('fixed',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {	
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = load_file( "./sprays/fixed.yml" );
+		
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
+			done("Update test (f spray not supported before).");
+		}, function( pError ) {
+			done();
+		})
+	});
+
+	it('missingFormat',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		
+    	};
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4' }});
+    	
+    	var oTemplate = {
+				root: {
+				    "noaa::ghcn::daily::2018::raw": {
+				    	sourceIP: "192.168.0.10"
+				    }
+				}
+		};
+    	
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
+			done("Expected error due to missing format information in template.");
+		}, function( pError ) {
+			done();
+		})
+    	
+	});
 
 	it('delimited',function(done){
     	
@@ -88,9 +144,9 @@ describe('sprays',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4' }});
     	
-		var oConfig = load_file( "./sprays/delimited.yml" );
+		var oTemplate = load_file( "./sprays/delimited.yml" );
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function() {
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
 			console.log( pError );

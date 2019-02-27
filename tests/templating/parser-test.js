@@ -58,4 +58,17 @@ describe('parser',function(){
     	
     	done();
 	});
+	
+	it('missingClosingTag',function(done){
+    	
+    	var oTested = new TestedClass();
+    	try {
+    		oTested.parseToTokens( "hello {{ firstName !" );
+    		done("Expecting error because of missing end tag }}.")
+    	} catch (e) {
+    		done();
+    	}
+	});
+	
+	
 });

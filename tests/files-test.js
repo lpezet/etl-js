@@ -20,6 +20,84 @@ describe('files',function(){
 		assert.deepEqual( oTested.mSettings, {} );
 		done();
 	});
+	
+	it('mismatchSourcesAndTargets',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "", "" );
+    	};
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "/tmp/{{tag1}}/{{tag2}}.txt": {
+					    source: "https://abc.def.com/{{tags}}.txt"
+					  }
+				}
+		}
+		var oContext = {
+			tag1: "hello",
+			tag2: "world",
+			tags: [ "a", "b" ]
+		};
+		oTested.handle( 'root' , oTemplate['root'], oExecutor, {}, oContext).then(function( pData ) {
+			done("Expecting error.");
+		}, function( pError ) {
+			console.log( pError );
+			done();
+		})
+	});
+	
+	
+	it('downloadError',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff" );
+    	};
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = load_file( "./files/basic.yml" );
+		
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			done("Expecting error.");
+		}, function( pError ) {
+			done();
+		})
+	});
+	
+	it('contentError',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "", "");
+    	};
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff" );
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+    	var oTemplate = {
+				root: {
+					  "/tmp/toto.txt": {
+					    content: "some content"
+					  }
+				}
+		}
+		
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function( pData ) {
+			done("Expecting error.");
+		}, function( pError ) {
+			done();
+		})
+	});
 
 	it('basic',function(done){
     	

@@ -11,7 +11,6 @@ describe('parser',function(){
 	});
 
 	it('basic',function(done){
-    	
     	var oTested = new TestedClass();
     	var oActual = oTested.parseToTokens( "hello world!" );
     	console.dir( oActual );
@@ -25,7 +24,6 @@ describe('parser',function(){
 	});
 	
 	it('simpleToken',function(done){
-    	
     	var oTested = new TestedClass();
     	var oActual = oTested.parseToTokens( "hello {{ firstName }}!" );
     	console.dir( oActual );
@@ -40,7 +38,6 @@ describe('parser',function(){
 	});
 	
 	it('multipleTokens',function(done){
-    	
     	var oTested = new TestedClass();
     	var oActual = oTested.parseToTokens( "hello {{ firstName }} {{ lastName }}!" );
     	console.dir( oActual );
@@ -50,25 +47,32 @@ describe('parser',function(){
     	var t = oActual[1];
     	assert.equal( "name", t[0] );
     	assert.equal( "firstName", t[1] );
-    	
     	t = oActual[3];
     	assert.equal( "name", t[0] );
     	assert.equal( "lastName", t[1] );
-    	
-    	
     	done();
 	});
 	
 	it('missingClosingTag',function(done){
-    	
     	var oTested = new TestedClass();
     	try {
     		oTested.parseToTokens( "hello {{ firstName !" );
     		done("Expecting error because of missing end tag }}.")
     	} catch (e) {
+    		console.log(e);
     		done();
     	}
 	});
 	
-	
+	it('strippingSpaces',function(done){
+    	var oTested = new TestedClass();
+    	try {
+    		var oActual = oTested.parseToTokens( "hello {{ firstName }} \n {{ lastname }} !" );
+    		assert.isArray( oActual );
+    		done()
+    	} catch (e) {
+    		console.log(e);
+    		done(e);
+    	}
+	});
 });

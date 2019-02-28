@@ -168,6 +168,7 @@ describe('mysqlimports',function(){
     				assert.include( pCmd, "--protocol=TCP");
     				assert.include( pCmd, "--replace");
     				assert.include( pCmd, "--secure-auth");
+    				assert.include( pCmd, "--tls-ciphersuites=suite1:suite2:suite3");
     				break;
     		}
     		pCallback( null, "", "");

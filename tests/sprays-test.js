@@ -21,6 +21,27 @@ describe('sprays',function(){
 		done();
 	});
 	
+	it('executorThrowingError', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		throw new Error("error");
+    	};
+    	var oTemplate = {
+    			root: {
+    				"something": {
+    					format: "csv"
+    				}
+    			}
+    	};
+    	var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass( null, {} );
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expecting error.');
+		}, function( pError ) {
+			done();
+		})
+	});
+	
 	it('error', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -71,6 +92,7 @@ describe('sprays',function(){
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		assert.include( pCmd, 'server=127.0.0.1');
     		assert.include( pCmd, 'username=foobar');
+    		assert.include( pCmd, 'password=foobar');
     		pCallback( null, "", "");
     	}
     	
@@ -78,7 +100,8 @@ describe('sprays',function(){
     	var oSettings = {
 				'*': {
 					server: '127.0.0.1',
-					username: 'foobar'
+					username: 'foobar',
+					password: 'foobar'
 				}
 		};
 		var oTested = new TestedClass( null, oSettings );
@@ -155,6 +178,33 @@ describe('sprays',function(){
 		})
     	
 	});
+	
+	it('invalidFormat',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		
+    	};
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4' }});
+    	
+    	var oTemplate = {
+				root: {
+				    "noaa::ghcn::daily::2018::raw": {
+				    	sourceIP: "192.168.0.10",
+				    	format: "concrete"
+				    }
+				}
+		};
+    	
+		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			done( pError );
+		})
+    	
+	});
 
 	it('delimited',function(done){
     	
@@ -165,6 +215,7 @@ describe('sprays',function(){
     		assert.include( pCmd, "server=1.2.3.4");
     		assert.include( pCmd, "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv");
     		assert.include( pCmd, "format=csv");
+    		assert.include( pCmd, "srcip=192.168.0.10");
     		assert.include( pCmd, "maxrecordsize=4096");
     		assert.include( pCmd, "srccsvseparator=\\,");
     		assert.include( pCmd, "srccsvterminator=\\n,\\r\\n");
@@ -177,6 +228,8 @@ describe('sprays',function(){
     		assert.include( pCmd, "overwrite=0");
     		assert.include( pCmd, "replicate=0");
     		assert.include( pCmd, "compress=0");
+    		assert.include( pCmd, "username=foo");
+    		assert.include( pCmd, "password=bar");
     		assert.include( pCmd, "escape=");
     		assert.include( pCmd, "failifnosourcefile=0");
     		assert.include( pCmd, "recordstructurepresent=0");
@@ -187,7 +240,7 @@ describe('sprays',function(){
     	}
     	
     	var oExecutor = new ExecutorClass();
-    	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4' }});
+    	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4', username: 'foo', password: 'bar' }});
     	
 		var oTemplate = load_file( "./sprays/delimited.yml" );
 		

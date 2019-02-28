@@ -1,7 +1,7 @@
 const assert = require('chai').assert
 const TestedClass = require('../../lib/templating/engine');
 
-describe('parser',function(){
+describe('engine',function(){
 	before(function(done) {
 		done();
 	});

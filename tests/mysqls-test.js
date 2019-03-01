@@ -142,6 +142,60 @@ describe('mysqls',function(){
 		});
 	});
 	
+	it('internalRunError',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {};
+		var oTested = new TestedClass( null, oSettings );
+		oTested._run = function() {
+			throw new Error('error');
+		}
+		var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test"
+				    }
+    			}
+    	};
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expected error');
+		}, function( pError ) {
+			done();
+		});
+	});
+	
+	it('internalWrapRunError',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "some stderr stuff");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {};
+		var oTested = new TestedClass( null, oSettings );
+		oTested._wrap_run = function() {
+			throw new Error('error');
+		}
+		var oTemplate = {
+    			root: {
+    				"/downloads/test.csv": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test"
+				    }
+    			}
+    	};
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expected error');
+		}, function( pError ) {
+			done();
+		});
+	});
+	
 	it('errorExecutingCmd',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

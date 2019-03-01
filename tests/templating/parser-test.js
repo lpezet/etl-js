@@ -31,7 +31,7 @@ describe('parser',function(){
 			  'hello {{ firstName }} {{ lastName }}!'	: [ [ 'text', 'hello ', 0, 6 ], [ 'name', 'firstName', 6, 21 ], [ 'text', ' ', 21, 22 ], [ 'name', 'lastName', 22, 36 ], [ 'text', '!', 36, 37 ] ]
 	};
 	
-	it('invalidTags',function(done){
+	it('invalidArrayTags',function(done){
 		try {
 			new TestedClass(["{{"]);
 			done('Expected error.');
@@ -40,15 +40,31 @@ describe('parser',function(){
 		}
 	});
 	
-	it('stringTags',function(done){
+	it('invalidStringTags',function(done){
 		try {
-			var oTested = new TestedClass("{{ }}");
-			var oActual = oTested.parseToTokens( '{{hi}}'  );
-			assert.deepEqual( oActual, [ [ 'name', 'hi', 0, 6 ] ] );
-			done();
+			new TestedClass('{{');
+			done('Expected error.');
 		} catch( e ) {
-			done(e);
+			done();
 		}
+	});
+	
+	it('stringTags',function(){
+		var oTested = new TestedClass("{{ }}");
+		var oActual = oTested.parseToTokens( '{{hi}}'  );
+		assert.deepEqual( oActual, [ [ 'name', 'hi', 0, 6 ] ] );
+		
+		oTested = new TestedClass("<< >>");
+		oActual = oTested.parseToTokens( '<<hi>>'  );
+		assert.deepEqual( oActual, [ [ 'name', 'hi', 0, 6 ] ] );
+		
+		oTested = new TestedClass("(( ))");
+		oActual = oTested.parseToTokens( '((hi))'  );
+		assert.deepEqual( oActual, [ [ 'name', 'hi', 0, 6 ] ] );
+		
+		oTested = new TestedClass("[[ ]]");
+		oActual = oTested.parseToTokens( '[[hi]]'  );
+		assert.deepEqual( oActual, [ [ 'name', 'hi', 0, 6 ] ] );
 	});
 			  
 

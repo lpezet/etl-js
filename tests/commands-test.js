@@ -1,12 +1,6 @@
 const assert = require('chai').assert
 const load_file = require('./load_file');
 const TestedClass = require('../lib/commands');
-const winston = require('winston');
-
-winston.configure({
-	level: 'debug'
-});
-winston.add(winston.transports.Console);
 
 describe('commands',function(){
 	

@@ -8,14 +8,6 @@ const fs = require('fs');
 const crypto = require('crypto');
 const ssh2 = require('ssh2');
 
-
-const winston = require('winston');
-
-winston.configure({
-	level: 'debug'
-});
-winston.add(winston.transports.Console);
-
 describe('executors',function(){
 	
 	it('localExec',function(done){	

@@ -27,34 +27,6 @@ describe('commands',function(){
 		done();
 	});
 	
-	it('stdoutAsBuffer', function(done) {
-		var ExecutorClass = function() {};
-    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		pCallback( null, Buffer.from("continue"), "" );
-    	}
-    	var oExecutor = new ExecutorClass();
-    	var oTested = new TestedClass();
-    	
-		var oTemplate = {
-				root: {
-					  "001_test": {
-					    command: "gunzip test.gz",
-					    test: "[ ! -f test.gz ]"
-					  }
-				}
-		};
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
-			try {
-				assert.isNull( pData['commands']['001_test']['error'] );
-				done();
-			} catch(e) {
-				done(e);
-			}
-		}, function( pError ) {
-			done( pError );
-		});
-	});
-	
 	it('result_as_normal', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

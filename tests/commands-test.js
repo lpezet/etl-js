@@ -27,6 +27,34 @@ describe('commands',function(){
 		done();
 	});
 	
+	it('stdoutAsBuffer', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, Buffer.from("continue"), "" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz",
+					    test: "[ ! -f test.gz ]"
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+			try {
+				assert.isNull( pData['commands']['001_test']['error'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
 	it('result_as_normal', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -45,11 +73,14 @@ describe('commands',function(){
 		}
 		
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
-			//console.dir( pData );
-			assert.exists( pData['commands'] );
-			assert.exists( pData[ 'commands' ][ '001_json' ] );
-			assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
-			done();
+			try {
+				assert.exists( pData['commands'] );
+				assert.exists( pData[ 'commands' ][ '001_json' ] );
+				assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				done();
+			} catch(e) {
+				done(e);
+			}
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );
@@ -74,11 +105,14 @@ describe('commands',function(){
 		}
 		
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
-			//console.dir( pData );
-			assert.exists( pData['commands'] );
-			assert.exists( pData[ 'commands' ][ '001_json' ] );
-			assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
-			done();
+			try {
+				assert.exists( pData['commands'] );
+				assert.exists( pData[ 'commands' ][ '001_json' ] );
+				assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				done();
+			} catch(e) {
+				done(e);
+			}
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );
@@ -104,12 +138,15 @@ describe('commands',function(){
 		}
 		
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
-			//console.dir( pData );
-			assert.exists( pData['commands'] );
-			assert.exists( pData[ 'commands' ][ '001_json' ] );
-			assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
-			assert.equal( pData[ 'commands' ][ '001_json' ][ 'result' ], "[ 'Toto', 'Tutu' ]" );	
-			done();
+			try {
+				assert.exists( pData['commands'] );
+				assert.exists( pData[ 'commands' ][ '001_json' ] );
+				assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				assert.equal( pData[ 'commands' ][ '001_json' ][ 'result' ], "[ 'Toto', 'Tutu' ]" );	
+				done();
+			} catch(e) {
+				done(e);
+			}
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );

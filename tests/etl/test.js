@@ -1,10 +1,13 @@
-const winston = require('winston');
+const SimpleLogger = require('../../lib/logger');
+
+var logger = new SimpleLogger();
 
 ModClass = function( pETL, pSettings ) {
 	this.mSettings = pSettings || {};
 	var that = this;
-	if( pETL ) pETL.mod( 'tester', this, function( pSettings ) {
+	if( pETL ) pETL.mod( 'tester', this, function( pSettings, pLogger ) {
 		that.mSettings = pSettings;
+		if ( pLogger ) logger = pLogger;
 	});
 	this.mCalls = 0;
 }
@@ -17,7 +20,7 @@ ModClass.prototype.handle = function( pParent, pConfig, pExecutor ) {
 	var that = this;
 	return new Promise( function( resolve, reject ) {
 		that.mCalls++;
-		winston.log('debug', '[%s] In test mod. Settings: hello=%s', pParent, that.mSettings['hello']);
+		logger.debug('[%s] In test mod. Settings: hello=%s', pParent, that.mSettings['hello']);
 		resolve();
 	});
 }

@@ -31,8 +31,7 @@
   "dependencies": {
     "JSONPath": "^0.11.2",
     "ssh2": "^0.8.2",
-    "ssh2-utils": "^1.0.28",
-    "winston": "^2.4.4"
+    "ssh2-utils": "^1.0.28"
   },
   "devDependencies": {
     "chai": "^4.2.0",

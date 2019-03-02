@@ -1,8 +1,12 @@
-const winston = require('winston');
 const Promises = require('../../lib/promises');
+const SimpleLogger = require('../../lib/logger');
+
+var logger = new SimpleLogger();
 
 ModClass = function( pETL ) {
-	if( pETL ) pETL.mod( 'collects', this);
+	if( pETL ) pETL.mod( 'collects', this, function( pSettings, pLogger ) {
+		if ( pLogger ) logger = pLogger;
+	});
 }
 
 
@@ -10,7 +14,7 @@ ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor) {
 	return function( pData ) {
 		return new Promise( function( resolve, reject ) {
 			//var oResult = [];
-			winston.log('debug', '[%s:%s] previous data=[%s]', pParent, pKey, pData);
+			logger.debug('[%s:%s] previous data=[%s]', pParent, pKey, pData);
 			if ( pData != null ) {
 				pData.collects[ pKey ] = pConfig;
 				/*
@@ -31,7 +35,7 @@ ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor) {
 ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityContext, pContext ) {
 	var that = this;
 	return new Promise( function( resolve, reject ) {
-		winston.log('debug', '[%s] In report mod. Activity context=[%s], Global context=[%s]', pParent, pActivityContext, pContext);
+		logger.debug('[%s] In report mod. Activity context=[%s], Global context=[%s]', pParent, pActivityContext, pContext);
 		try {
 			var oData = { 'collects' : {} };
 			var oPromises = [];
@@ -39,14 +43,14 @@ ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityCont
 				oPromises.push( that._do( pParent, i, pConfig[i], pExecutor ));
 			}
 			Promises.seq( oPromises, oData ).then(function( pData ) {
-				winston.log('debug', '[%s] Done processing commands. Data=[%s]', pParent, oData);
+				logger.debug('[%s] Done processing commands. Data=[%s]', pParent, oData);
 				resolve( oData );
 			}, function( pError ) {
-				winston.log('error', '[%s] Unexpected error running commands.', pParent, pError);
+				logger.error('[%s] Unexpected error running commands.', pParent, pError);
 				reject( pError );
 			});
 		} catch (e) {
-			winston.log('error', '[%s] Unexpected error processing commands.', pParent, e);
+			logger.error('[%s] Unexpected error processing commands.', pParent, e);
 			reject( e );
 		}
 		

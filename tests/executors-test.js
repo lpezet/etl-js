@@ -1,10 +1,12 @@
 const assert = require('chai').assert
 const LocalExecutorClass = require('../lib/executors').local;
 const RemoteExecutorClass = require('../lib/executors').remote;
+const os = require('os');
+const path = require('path');
 
-var fs = require('fs');
-var crypto = require('crypto');
-var ssh2 = require('ssh2');
+const fs = require('fs');
+const crypto = require('crypto');
+const ssh2 = require('ssh2');
 
 
 const winston = require('winston');
@@ -27,7 +29,7 @@ describe('executors',function(){
 	
 	it('localWriteFile',function(done){	
 		var executor = new LocalExecutorClass();
-		const oFilePath = '/tmp/etl-js-test.txt';
+		const oFilePath = path.resolve(os.tmpdir(), 'etl-js-test.txt');
 		
 		const oExpectedContent = 'this is dummy content';
 		executor.writeFile( oFilePath, oExpectedContent, function(err, stdout, stderr) {
@@ -42,7 +44,7 @@ describe('executors',function(){
 	//TODO: find way to get callback with "err" set to something. Here fs.writeFile in Local executor simply throws permission denied error.
 	it('localWriteFileError',function(done){	
 		var executor = new LocalExecutorClass();
-		const oFilePath = '/tmp/etl-js-test.txt';
+		const oFilePath = path.resolve(os.tmpdir(), 'etl-js-test.txt');
 		try{
 		    fs.writeFileSync(oFilePath, "dont matter");
 		    fs.chmodSync(oFilePath,'000');

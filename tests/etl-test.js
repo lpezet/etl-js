@@ -17,6 +17,61 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('events', function(done) {
+		const EXPECTED_ACTIVITIES = ['step1','step2', 'step999', 'step3'];
+		
+		var oExecutor = new function() {};
+    	var oSettings = {};
+    	var oTested = new TestedClass( oExecutor, oSettings );
+    	new (require('./etl/collect'))( oTested );
+    	var oETL = {
+    			etl: EXPECTED_ACTIVITIES,
+    			step1: {
+    				collects: {
+    					doSomething: {
+    						result: "a"
+    					}
+    				}
+    			},
+    			step2: {
+    				collects: {
+    					doSomethingElse: {
+    						result: "b"
+    					}
+    				}
+    			},
+    			step3: {
+    				collects: {
+    					something: {
+    						result: "d"
+    					}
+    				}
+    			},
+    			step999: {
+    				collects: {
+    					andSomethingElse: {
+    						result: "c"
+    					}
+    				}
+    			}
+    	};
+    	const oActualActivitiesDone = [];
+    	oTested.on('activityDone', function( pId, pError, pData ) {
+    		oActualActivitiesDone.push( pId );
+    	});
+		oTested.process( oETL ).then(function( pData ) {
+			try {
+				assert.deepEqual( oActualActivitiesDone, EXPECTED_ACTIVITIES );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
+	
 	it('mod_throwing_error', function(done) {
 		var oExecutor = new function() {};
 		var oSettings = {};

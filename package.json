@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "mocha --bail --check-leaks --reporter spec ./tests/*-test.js",
-    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks ./tests/*-test.js",
+    "test": "mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
+    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks \"./tests/**/*-test.js\"",
     "integration-test": "mocha ./integration-tests/*-test.js"
   },
   "repository": {

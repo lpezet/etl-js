@@ -10,14 +10,13 @@ describe('engine',function(){
 		done();
 	});
 	
-	it('basic',function(done){
+	it('basic',function() {
     	var oTested = new TestedClass();
     	var oActual = oTested.evaluate( "hello {{ name }}!", { name: "world" } );
     	console.dir( oActual );
     	assert.isNotNull( oActual );
     	assert.isArray( oActual );
     	assert.deepEqual( [ 'hello world!' ], oActual );
-    	done();
 	});
 	
 	it('basicWithCallback',function(done){
@@ -26,10 +25,14 @@ describe('engine',function(){
     		if ( err ) {
     			done(err);
     		} else {
-	    		assert.isNotNull( oActual );
-	        	assert.isArray( oActual );
-	        	assert.deepEqual( [ 'hello world!' ], oActual );
-	        	done();
+    			try {
+		    		assert.isNotNull( results );
+		        	assert.isArray( results );
+		        	assert.deepEqual( [ 'hello world!' ], results );
+		        	done();
+    			} catch (e) {
+    				done(e);
+    			}
     		}
     	} );
 	});

@@ -1,5 +1,7 @@
 const assert = require('chai').assert
 const TestedClass = require('../lib/image-charts');
+const SimpleLogger = require('../lib/logger');
+
 
 describe('image-charts',function(){
 	
@@ -17,6 +19,14 @@ describe('image-charts',function(){
 		} };
 		var oTested = new TestedClass( ETLMock );
 		assert.deepEqual( oTested.mSettings, {"test":true} );
+		done();
+	});
+	
+	it('logger',function(done) {
+		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
+			pCallback({}, new SimpleLogger());
+		} };
+		var oTested = new TestedClass( ETLMock );
 		done();
 	});
 	

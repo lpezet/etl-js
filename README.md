@@ -167,6 +167,12 @@ var template = {
 
 In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each `file_to_download` result, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
 
+## Events
+
+ETL will emit some events during the ETL process.
+
+- *activityDone( activityId, error, data, activityIndex, totalActivities )* - An activity has been completed (with or without error). The **activityId** is the name of the activity as specified in the template, the **activityIndex** is the order number the activity has been executed and the **totalActivities** represent the total number of activities to be run.
+
 
 ## Results
 

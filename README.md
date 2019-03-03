@@ -111,7 +111,11 @@ WARNING: This template will effectively download a JPG file. Open it as your own
 $ etl-js run hello.yaml
 ```
 
+## Mods
 
+Mods are features of the ETL template. They execute code, download files, import data into MySQL database, etc.
+The idea is to leverage as much as possible of the existing and be as efficient as possible.
+For more details, see the [Mods](Mods.md) page.
 
 ## License
 

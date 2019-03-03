@@ -26,7 +26,7 @@ describe('image-charts',function(){
 		var ETLMock = { mod: function( pKey, pSource, pCallback ) {
 			pCallback({}, new SimpleLogger());
 		} };
-		var oTested = new TestedClass( ETLMock );
+		new TestedClass( ETLMock );
 		done();
 	});
 	

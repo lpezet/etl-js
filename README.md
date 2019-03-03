@@ -117,6 +117,75 @@ Mods are features of the ETL template. They execute code, download files, import
 The idea is to leverage as much as possible of the existing and be as efficient as possible.
 For more details, see the [Mods](Mods.md) page.
 
+## Results
+
+The ETL `process()` method returns a Promise. Upon success, the data **resolved** will contain the results of the process and each activity.
+Given the following snippet:
+
+```js
+var template = {
+	etl: [ 'step1', 'step2' ],
+	step1: {
+		commands: {
+			"file_to_download": {
+				command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
+				result_as_json: true
+			}
+		}
+	},
+	step2: {
+		files: {
+			"/tmp/{{ $.step1.commands.file_to_download.result }}": {
+				source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
+			}
+		}
+	}
+};
+ETL.process( template ).then(function( pResults ) {
+	console.log( util.inspect(pResults, false, null, true) );
+});
+```
+, the result would be (some omission for brevity):
+
+```json
+{ etl: { exit: false },
+  step1:
+   { commands:
+      { file_to_download:
+         { error: null,
+           result:
+            [ 'PIA08653/PIA08653~small.jpg', 'PIA21073/PIA21073~small.jpg' ],
+           message: null,
+           exit: false,
+           pass: true,
+           _stdout:
+            '["PIA08653/PIA08653~small.jpg","PIA21073/PIA21073~small.jpg"]',
+           _stderr: '' } } },
+  step2:
+   { files:
+      { '/tmp/PIA08653/PIA08653~small.jpg':
+         { error: null,
+           result:
+            "--2019-03-03 11:28:23--  https://images-assets.nasa.gov/image/PIA08653/PIA08653~small.jpg\nResolving images-assets.nasa.gov... 52.84.216.98, 52.84.216.44, 52.84.216.36, ...\nConnecting to images-assets.nasa.gov|52.84.216.98|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 21833 (21K) [image/jpeg]\nSaving to: '/tmp/PIA08653/PIA08653~small.jpg'\n\n     0K .......... .......... .                               100% 3.48M=0.006s\n\n2019-03-03 11:28:24 (3.48 MB/s) - '/tmp/PIA08653/PIA08653~small.jpg' saved [21833/21833]\n\n",
+           message: null,
+           exit: false,
+           pass: true,
+           _stdout:
+            "--2019-03-03 11:28:23--  https://images-assets.nasa.gov/image/PIA08653/PIA08653~small.jpg\nResolving images-assets.nasa.gov... 52.84.216.98, 52.84.216.44, 52.84.216.36, ...\nConnecting to images-assets.nasa.gov|52.84.216.98|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 21833 (21K) [image/jpeg]\nSaving to: '/tmp/PIA08653/PIA08653~small.jpg'\n\n     0K .......... .......... .                               100% 3.48M=0.006s\n\n2019-03-03 11:28:24 (3.48 MB/s) - '/tmp/PIA08653/PIA08653~small.jpg' saved [21833/21833]\n\n",
+           _stderr: '' },
+        '/tmp/PIA21073/PIA21073~small.jpg':
+         { error: null,
+           result:
+            "--2019-03-03 11:28:24--  https://images-assets.nasa.gov/image/PIA21073/PIA21073~small.jpg\nResolving images-assets.nasa.gov...(...)",
+           message: null,
+           exit: false,
+           pass: true,
+           _stdout:
+            "(...)",
+           _stderr: '' } } } }
+```
+
+
 ## License
 
   [MIT](LICENSE)

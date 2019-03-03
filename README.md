@@ -103,6 +103,7 @@ step2:
       source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
 ```
 
+This ETL template makes use of tags, which will be explained a little later.
 WARNING: This template will effectively download a JPG file. Open it as your own risk.
 
   Run template:
@@ -117,10 +118,61 @@ Mods are features of the ETL template. They execute code, download files, import
 The idea is to leverage as much as possible of the existing and be as efficient as possible.
 For more details, see the [Mods](Mods.md) page.
 
+## Tags
+
+Tags can be used to make the process more dynamic. You might want your ETL process to start with a step figuring out which files to ingest (e.g. only new ones). And you would want the next step to download those files and only those files.
+This means that, at the time of writing your ETL template, you do not know which files will be processed.
+That's where tags come in.
+You have seen those tags already in the [Getting Started](#getting-started) section. Here it is again:
+
+```yml
+etl:
+  - step1
+  - step2
+step1:
+  commands:
+    orion_pic:
+      command: printf "orion-nebula-xlarge_web.jpg"
+step2:
+  files:
+    /tmp/orion-nebula.jpg:
+      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
+```
+
+The tag here is `{{ $.step1.commands.orion_pic.result }}`. It basically refers to the `result` of the step1 command *orion_pic*.
+You can see the full JSON of the result of each activity and mod in the [Results](#results) section to help figure out attributes available to use in tags.
+
+Here's another example using tags and making use of the `result_as_json` attribute of the `commands` mod. The `result` of the command will be parsed and stored as JSON instead of a string. This allows us to, for example, use the result as an array to download multiple files. The `files` mod will interpret that array and download multiple files.
+
+```js
+var template = {
+  etl: [ 'step1', 'step2' ],
+  step1: {
+    commands: {
+      "file_to_download": {
+        command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
+        result_as_json: true
+      }
+    }
+  },
+  step2: {
+    files: {
+      "/tmp/{{ $.step1.commands.file_to_download.result }}": {
+        source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
+      }
+    }
+  }
+};
+```
+
+In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each `file_to_download` result, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
+
+
 ## Results
 
 The ETL `process()` method returns a Promise. Upon success, the data **resolved** will contain the results of the process and each activity.
-Given the following snippet:
+
+Reusing the advanced template from the [Tags](#tags) section:
 
 ```js
 var template = {
@@ -176,7 +228,7 @@ ETL.process( template ).then(function( pResults ) {
         '/tmp/PIA21073/PIA21073~small.jpg':
          { error: null,
            result:
-            "--2019-03-03 11:28:24--  https://images-assets.nasa.gov/image/PIA21073/PIA21073~small.jpg\nResolving images-assets.nasa.gov...(...)",
+            "(...)",
            message: null,
            exit: false,
            pass: true,

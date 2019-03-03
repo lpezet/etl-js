@@ -124,30 +124,30 @@ Given the following snippet:
 
 ```js
 var template = {
-	etl: [ 'step1', 'step2' ],
-	step1: {
-		commands: {
-			"file_to_download": {
-				command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
-				result_as_json: true
-			}
-		}
-	},
-	step2: {
-		files: {
-			"/tmp/{{ $.step1.commands.file_to_download.result }}": {
-				source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
-			}
-		}
-	}
+  etl: [ 'step1', 'step2' ],
+  step1: {
+    commands: {
+      "file_to_download": {
+        command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
+        result_as_json: true
+      }
+    }
+  },
+  step2: {
+    files: {
+      "/tmp/{{ $.step1.commands.file_to_download.result }}": {
+        source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
+      }
+    }
+  }
 };
 ETL.process( template ).then(function( pResults ) {
-	console.log( util.inspect(pResults, false, null, true) );
+  console.log( util.inspect(pResults, false, null, true) );
 });
 ```
 , the result would be (some omission for brevity):
 
-```json
+```js
 { etl: { exit: false },
   step1:
    { commands:

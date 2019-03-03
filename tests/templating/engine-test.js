@@ -21,7 +21,7 @@ describe('engine',function(){
 	
 	it('basicWithCallback',function(done){
     	var oTested = new TestedClass();
-    	var oActual = oTested.evaluate( "hello {{ name }}!", { name: "world" }, function( err, results ) {
+    	oTested.evaluate( "hello {{ name }}!", { name: "world" }, function( err, results ) {
     		if ( err ) {
     			done(err);
     		} else {

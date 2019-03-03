@@ -1,7 +1,6 @@
 const chai = require('chai');
 const spies = require('chai-spies');
 chai.use(spies);
-const assert = chai.assert;
 const expect = chai.expect;
 const Logger = require('../lib/logger');
 
@@ -15,8 +14,6 @@ describe('logger',function(){
 		{ level: 'error', msg: 'Hello world!', expected: 'ERROR: Hello world!'},
 		{ level: 'warn', msg: 'Hello world!', expected: 'WARN : Hello world!'}
 	];
-	
-	const MSG = 'Hello world!';
 	
 	beforeEach(function() {
 		//sinon.spy(console, 'log');
@@ -56,7 +53,7 @@ describe('logger',function(){
 			(function( pLevelIndex, pLevel ) {
 				it('with ' + pLevel, function() {
 					var logger = new Logger({ level: pLevel });
-					if (pLevelIndex == 0) {
+					if (pLevelIndex === 0) {
 						// debug, log all
 						for (j=0; j < levels.length; j++) {
 							var level2 = levels[j];

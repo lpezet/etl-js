@@ -17,6 +17,20 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('errorRegisteringModMoreThanOnce', function(done) {
+		var oExecutor = new function() {};
+    	var oSettings = {};
+    	var oTested = new TestedClass( oExecutor, oSettings );
+    	var oMod = require('./etl/collect');
+    	new oMod( oTested );
+    	try {
+    		new oMod( oTested );
+    		done('Expected error registering twice same mod.');
+    	} catch(e) {
+    		done();
+    	}
+	});
+	
 	it('events', function(done) {
 		const EXPECTED_ACTIVITIES = ['step1','step2', 'step999', 'step3'];
 		

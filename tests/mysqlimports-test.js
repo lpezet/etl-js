@@ -144,6 +144,24 @@ describe('mysqlimports',function(){
 			done( pError );
 		})
 	});
+	
+	it('erorExecutingCmd', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error('error'), null, "some stderr");
+    	};
+		var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass();
+		
+		var oTemplate = load_file( './mysqlimports/basic.yml');
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expected error');
+		}, function( pError ) {
+			//console.log( pError );
+			done();
+		})
+	});
 
 	it('basic',function(done){
     	
@@ -184,7 +202,7 @@ describe('mysqlimports',function(){
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );
-		})
+		});
 		
     	
 	});

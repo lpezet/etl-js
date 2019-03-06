@@ -15,11 +15,11 @@ const Executor = require('@lpezet/etl-js/lib/executors').local;
 const Commands = require('@lpezet/etl-js/lib/commands');
 
 var template = {
-	etl: [ step1 ],
+	etl: [ 'step1' ],
 	step1: {
 		commands: {
 			say_hello: {
-				command: printf 'hello world!'
+				command: "printf 'hello world!'"
 			}
 		}
 	}

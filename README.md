@@ -31,6 +31,25 @@ new Commands( ETL );
 ETL.process( template );
 ```
 
+# Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Installation](#installation)
+- [Features](#features)
+- [Concept](#concept)
+- [Security](#security)
+- [Usage](#usage)
+  - [Mods](#mods)
+  - [Tags](#tags)
+  - [Events](#events)
+  - [Results](#results)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Installation
 
 This is a [Node.js](https://nodejs.org/en/) module available through the [npm registry](https://www.npmjs.com/).
@@ -60,7 +79,7 @@ The idea is to be able to share and easily repeat activities over and over as ne
 Commands, scripts and more can be executed as part of the Mods defined in the template. Therefore, you should make sure to use only the Mods you trust in your ETL Template.
 
 
-# Getting Started
+# Usage
 
 The quickest way to get started is to use ETL-JS via command line, with [`ETL-JS CLI`](https://github.com/lpezet/etl-js-cli).
 
@@ -244,7 +263,7 @@ ETL.process( template ).then(function( pResults ) {
 ```
 
 
-## License
+# License
 
   [MIT](LICENSE)
 

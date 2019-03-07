@@ -4,10 +4,17 @@
   "description": "ETL made simple and reproducible.",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint .",
-    "test": "mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
-    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks \"./tests/**/*-test.js\"",
-    "integration-test": "mocha ./integration-tests/*-test.js"
+    "lint": "eslint lib/ tests/",
+    "fix": "eslint lib/ tests/ --fix",
+    "pretest": "npm run lint",
+    "test": "nyc mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
+    "posttest": "nyc check-coverage",
+    "integration-test": "mocha ./integration-tests/*-test.js",
+    "docs-gen": "doctoc README.md --github --no-title",
+    "test-watch": "mocha --watch --reporter=spec",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "test-bak": "mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
+    "test-ci-bak": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks \"./tests/**/*-test.js\""
   },
   "repository": {
     "type": "git",
@@ -27,19 +34,31 @@
     "index.js",
     "lib/"
   ],
+  "nyc": {
+    "check-coverage": true,
+    "lines": 90,
+    "statements": 90,
+    "functions": 90,
+    "branches": 80,
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ]
+  },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "JSONPath": "^0.11.2",
-    "ssh2": "^0.8.2",
-    "ssh2-utils": "^1.0.28"
+    "ssh2": "^0.8.2"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "crypto": "^1.0.1",
+    "doctoc": "^1.4.0",
     "eslint": "^5.15.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.0.0",
+    "nyc": "^13.3.0",
     "sinon": "^4.1.6",
     "yaml-cfn": "^0.2.0"
   }

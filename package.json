@@ -35,6 +35,7 @@
     "lib/"
   ],
   "nyc": {
+  	"include": "lib",
     "check-coverage": true,
     "lines": 90,
     "statements": 90,

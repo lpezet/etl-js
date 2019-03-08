@@ -2,22 +2,64 @@
 
 Each Mod provide some functionality useful to an ETL process. For examples, the Commands Mod will provide the ability to run commands on either the host or the client, to unzip files, run scripts, etc. The Files Mod is useful to download files from ftp servers, over http/https, etc.
 
-* [Basic](#basic-mods)
-    * [Files Mod](#files-mod)
-    * [Commands Mod](#commands-mod)
-    
-* [HPCC Systems](#hpcc-systems-mods)
-    * [ECLs Mod](#ecls-mod)
-    * [Sprays Mod](#sprays-mod)
-    
-* [MySQL](#mysql-mods)
-    * [MySQLs Mod](#mysqls-mod)
-    * [MySQLImports Mod](#mysqlimports-mod)
+# Table of contents
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Basic Mods](#basic-mods)
+  - [Interactives Mod](#interactives-mod)
+    - [Specs](#specs)
+    - [Examples](#examples)
+  - [Files Mod](#files-mod)
+    - [Specs](#specs-1)
+    - [Examples](#examples-1)
+  - [Commands Mod](#commands-mod)
+    - [Specs](#specs-2)
+    - [Examples](#examples-2)
+- [HPCC Systems mods](#hpcc-systems-mods)
+  - [ECLs Mod](#ecls-mod)
+    - [Specs](#specs-3)
+    - [Examples](#examples-3)
+  - [Sprays Mod](#sprays-mod)
+    - [Specs](#specs-4)
+    - [Examples](#examples-4)
+- [MySQL Mods](#mysql-mods)
+  - [MySQLs Mod](#mysqls-mod)
+    - [Specs](#specs-5)
+  - [MySQLImports Mod](#mysqlimports-mod)
+    - [Specs](#specs-6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Basic Mods
 
+## Interactives Mod
+
+This mod will prompt user to enter something.
+
+### Specs
+
+```yaml
+root:
+  interactives:
+    sayhello:
+      prompt: _prompt_ 
+```
+
+### Examples
+
+```yaml
+root:
+  interactives:
+    sayhello:
+      prompt: "Name please:" 
+```
+
 ## Files Mod
+
+This mod simply downloads files.
 
 ### Specs
 
@@ -28,9 +70,8 @@ root:
       source: _url_
 ```
 
-### Description
+### Examples
 
-This mod simply downloads files.
 The template below will simply downloads the file from `https://a.b.c/file1.zip` to `/downloads/file1.zip`.
 
 ```yaml
@@ -43,6 +84,8 @@ my_extract:
 
 ## Commands Mod
 
+This mod executes commands.
+
 ### Specs
 
 ```yaml
@@ -54,24 +97,23 @@ root:
       test: _test_
 ```
 
-### Description
-
-This mod execute commands.
+### Examples
 
 The template below runs `echo "hello"`.
 
 ```yaml
-my_commands:
+root:
   commands:
     000_say_hello:
       command: echo "hello"
 ```
 
 
-
 # HPCC Systems mods
 
 ## ECLs Mod
+
+This mod execute ECL code against an HPCC System cluster.
 
 ### Specs
 
@@ -82,7 +124,7 @@ root:
       # required
       cluster: _cluster_,
       # one or the other, required
-      ecl: _ecl_,
+      content: _ecl_,
       file: _file_,
       # optional
       queue: _queue_,
@@ -94,12 +136,43 @@ root:
       pagesize: _pagesize_
 ```
 
-### Description
+### Examples
 
-This mod execute ECL code against an HPCC System cluster.
+The following example runs `OUTPUT('Hello world!)` on the cluster:
+
+```yaml
+root:
+  ecls:
+    output_hello:
+      # required
+      cluster: thor,
+      content: |
+        OUTPUT('Hello world!')
+```
+
+The following example will generate a CSV file with headers:
+
+```yaml
+root:
+  ecls:
+    output_hello:
+      # required
+      cluster: thor,
+      output: /tmp/test.csv
+      format: csvh
+      content: |
+        layout := RECORD
+          STRING name;
+          STRING num;
+        END;
+        ds := DATASET([ { 'Toto', 4 }, { 'Titi', 4 }, ( 'Anderson', 8 } ], layout );
+        OUTPUT(ds);
+```
 
 
 ## Sprays Mod
+
+Use the HPCC Systems Distributed File Utility (DFU) (`dfuplus`) to load file into HPCC Systems Cluster.
 
 ### Specs
 
@@ -134,14 +207,25 @@ root:
     expiredays: _expiredays_
 ```
 
-### Description
+### Examples
 
-Use the HPCC Systems Distributed File Utility (DFU) (`dfuplus`) to load file into HPCC Systems Cluster.
+The following example sprays the file `/tmp/2018.csv` onto the cluster:
 
+```yaml
+load:
+  sprays:
+    "noaa::ghcn::daily::2018::raw":
+      format: csv
+      destinationGroup: "mythor"
+      allowoverwrite: true
+      sourcePath: /tmp/2018.csv
+```
 
 # MySQL Mods
 
 ## MySQLs Mod
+
+This mod can be used to query a MySQL database.
 
 ### Specs
 
@@ -221,12 +305,10 @@ root:
     xml: _xml_
 ```
 
-### Description
-
-This mod can be used to query a MySQL database.
-
 
 ## MySQLImports Mod
+
+Imports file into MySQL database through `mysqlimport`.
 
 ### Specs
 
@@ -286,8 +368,3 @@ root:
     use_threads: _use_threads_
     user: _user_
 ```
-
-### Description
-
-
-Imports file into MySQL database through `mysqlimport`.

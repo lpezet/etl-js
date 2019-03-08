@@ -10,7 +10,7 @@
     "test": "nyc mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
     "posttest": "nyc check-coverage",
     "integration-test": "mocha ./integration-tests/*-test.js",
-    "docs-gen": "doctoc README.md --github --no-title",
+    "docs-gen": "doctoc README.md Mods.md --github --no-title",
     "test-watch": "mocha --watch --reporter=spec",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test-bak": "mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",

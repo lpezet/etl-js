@@ -272,4 +272,51 @@ describe('mysqls',function(){
 		
     	
 	});
+	
+	it('basicFalse',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		switch ( pCmdOpts.context ) {
+    			case "/a/b/c.txt":
+    				assert.include( pCmd, "--execute='SELECT * FROM test'");
+    				assert.notInclude( pCmd, "--auto-rehash");
+    				assert.notInclude( pCmd, "--binary-as-hex");
+    				assert.notInclude( pCmd, "--binary-mode");
+    				assert.include( pCmd, "--columns=id,field1,field2");
+    				assert.notInclude( pCmd, "--comments");
+    				assert.notInclude( pCmd, "--compress");
+    				assert.notInclude( pCmd, "--debug");
+    				assert.notInclude( pCmd, "--debug-check");
+    				assert.notInclude( pCmd, "--debug-info");
+    				assert.include( pCmd, "--default-auth=mysql_native_password");
+    				assert.include( pCmd, "--delimiter=,");
+    				assert.notInclude( pCmd, "--force");
+    				assert.notInclude( pCmd, "--html");
+    				assert.notInclude( pCmd, "--ignore-spaces");
+    				assert.notInclude( pCmd, "--line-numbers");
+    				assert.notInclude( pCmd, "--no-beep");
+    				assert.notInclude( pCmd, "--no-defaults");
+    				assert.notInclude( pCmd, "--one-database");
+    				assert.include( pCmd, "--port=3306");
+    				assert.include( pCmd, "--protocol=TCP");
+    				assert.notInclude( pCmd, "--quick");
+    				assert.notInclude( pCmd, "--raw");
+    				assert.notInclude( pCmd, "--reconnect");
+    				assert.notInclude( pCmd, "--safe-updates");
+    				assert.notInclude( pCmd, "--secure-auth");
+    				assert.include( pCmd, "--select_limit=1000");
+    				break;
+    		}
+    		pCallback( null, "", "");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oConfig = load_file( './mysqls/basic_false.yml');
+		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
 });

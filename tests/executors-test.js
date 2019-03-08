@@ -92,7 +92,7 @@ describe('executors',function(){
 				var executor = new RemoteExecutorClass( { 
 					host: '127.0.0.1', 
 					port: this.address().port, 
-					username: 'foo', 
+					username: 'foo',
 					privateKey: fs.readFileSync('tests/executors.key') } );
 				executor.exec('echo hello', {}, function( err, stdout, stderr ) {
 					
@@ -189,7 +189,7 @@ describe('executors',function(){
 					port: this.address().port, 
 					username: 'foo', 
 					password: 'bar' } );
-				executor.exec('echo hello', { cwd: "/tmp" }, function( err, stdout, stderr ) {
+				executor.exec('echo hello', { cwd: "/tmp", env: { "TOTO": "TITI" } }, function( err, stdout, stderr ) {
 					try {
 						assert.include( ''+stdout, 'hello');
 						if ( err ) {
@@ -310,7 +310,7 @@ describe('executors',function(){
 	        	  var session = accept();
 	        	  session.on('exec', function(accept, reject, info) {
 				        var stream = accept();
-				        //stream.write('hello\n');
+				        stream.stderr.write('hello\n');
 				        stream.exit(123); // ERROR
 				        stream.end();
 				    });

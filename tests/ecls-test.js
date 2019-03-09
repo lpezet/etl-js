@@ -21,6 +21,55 @@ describe('ecls',function(){
 		done();
 	});
 	
+	it('errorThrownFromWritingContent', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "", "");
+    	};
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		throw new Error('error');
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "abc": {
+					    cluster: "thor",
+					    content: "OUTPUT(2018);",
+					    output: "/tmp/2018/test.csv"
+					  }
+				}
+		};
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+			done('Expecting error');
+		}, function( pError ) {
+			done();
+		})
+	});
+	
+	it('errorThrownFromCmdExecutor', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		throw new Error('error');
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "abc": {
+					    cluster: "thor",
+					    file: "/tmp/my.ecl",
+					    output: "/tmp/2018/test.csv"
+					  }
+				}
+		};
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+			done('Expecting error');
+		}, function( pError ) {
+			done();
+		})
+	});
+	
 	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -82,7 +131,6 @@ describe('ecls',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
 			done("Expecting error message saying file or content must be provided.");
 		}, function( pError ) {
-			console.log( pError );
 			done();
 		})
 	});
@@ -110,7 +158,6 @@ describe('ecls',function(){
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
 			done( pError );
 		});
 	});
@@ -189,7 +236,6 @@ describe('ecls',function(){
 			//console.dir( pData );
 			done();
 		}, function( pError ) {
-			console.log( pError );
 			done( pError );
 		})
 		
@@ -274,7 +320,6 @@ describe('ecls',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
 			done();
 		}, function( pError ) {
-			console.log( pError );
 			done( pError );
 		});
 	});

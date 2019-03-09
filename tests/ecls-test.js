@@ -21,6 +21,40 @@ describe('ecls',function(){
 		done();
 	});
 	
+	it('tagsInKeyAndContent', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "", "");
+    	};
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		assert.include( pContent, "OUTPUT(2018);");
+    		pCallback( null, "", "");
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "summary_{{ year }}": {
+					    cluster: "thor",
+					    content: "OUTPUT({{ year }});"
+					  }
+				}
+		};
+    	var oContext = {
+    			year: "2018"
+    	};
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext ).then(function( pData ) {
+			try {
+				assert.property( pData['ecls'], 'summary_2018' );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
 	it('mustSpecifyFileOrContent',function(done){
     	
     	var ExecutorClass = function() {};

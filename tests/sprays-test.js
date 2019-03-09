@@ -21,6 +21,39 @@ describe('sprays',function(){
 		done();
 	});
 	
+	it('tagsInTargetAndSourcePath', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, pCmd, "" );
+    	};
+    	var oTemplate = {
+    		root: {
+    		    "noaa::ghcn::daily::{{ year }}::raw": {
+    		        format: "csv",
+    		        sourceIP: "192.168.0.10",
+    		        sourcePath: "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ year }}.csv"
+    		    }
+    		}
+    	};
+    	var oContext = {
+    			year: "2018"
+    	};
+    	var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass( null, {} );
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext).then(function( pData ) {
+			console.dir( pData );
+			try {
+				assert.property( pData['sprays'],  "noaa::ghcn::daily::2018::raw" );
+				assert.include( pData['sprays']['noaa::ghcn::daily::2018::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv");
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	})
+	
 	it('executorThrowingError', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

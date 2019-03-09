@@ -21,6 +21,37 @@ describe('commands',function(){
 		done();
 	});
 	
+	it('tags', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback(null, pCmd, "");
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					"hello": {
+						command: "echo {{ tag1 }}"
+					}
+				}
+		}
+		var oContext = {
+				tag1: "hello"
+		}
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext ).then(function( pData ) {
+			try {
+				assert.equal( pData['commands']['hello']['result'], 'echo hello');
+				done();
+			} catch (e) {
+				done(e);
+			}
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	})
+	
 	it('result_as_normal', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

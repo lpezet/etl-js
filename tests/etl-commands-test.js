@@ -130,7 +130,7 @@ describe('etl-commands',function(){
     	//console.log(util.inspect(mETLTemplate, false, null, true /* enable colors */))
 		
     	oETL.process( mETLTemplate ).then(function( pData ) {
-    		//console.dir( pData );
+    		console.dir( pData );
     		//console.log('End result: (pData)');
     		//console.log(util.inspect(pData, false, null, true /* enable colors */))
 			//done( 'Should have exited with error (?)');

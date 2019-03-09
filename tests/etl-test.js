@@ -17,6 +17,45 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('envVariables', function(done) {
+		var ModClass = function( pETL, pEnvKey ) {
+			pETL.mod( 'enver', this );
+			this.mEnvKey = pEnvKey;
+			this.mEnvValue = undefined;
+		};
+		ModClass.prototype.envValue = function() {
+			return this.mEnvValue;
+		}
+		ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityResult, pGlobalResult, pContext ) {
+			var that = this;
+			return new Promise( function( resolve, reject ) {
+				resolve( { 'enver': { error: null, result: pContext['env'][ that.mEnvKey ] } } );
+			});
+		}
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+    	new ModClass( oTested, 'hello' );
+    	var oETL = {
+    			etl: [ "abc" ],
+    			abc: {
+    				enver: {
+    					dontmatter: true
+    				}
+    			}
+    	};
+    	process.env['hello'] = 'world';
+		oTested.process( oETL ).then(function( pData ) {
+			try {
+				assert.equal( pData['abc']['enver']['result'], 'world' );
+				done();
+			} catch (e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	})
+	
 	it('errorRegisteringModMoreThanOnce', function(done) {
 		var oExecutor = new function() {};
     	var oSettings = {};

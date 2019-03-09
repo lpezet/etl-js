@@ -21,13 +21,14 @@ describe('ecls',function(){
 		done();
 	});
 	
-	it('tagsInKeyAndContent', function(done) {
+	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.notInclude( pCmd, "{{ year }}");
     		pCallback( null, "", "");
     	};
     	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
-    		assert.include( pContent, "OUTPUT(2018);");
+    		assert.notInclude( pContent, "{{ year }}");
     		pCallback( null, "", "");
     	};
     	var oExecutor = new ExecutorClass();
@@ -36,7 +37,8 @@ describe('ecls',function(){
 				root: {
 					  "summary_{{ year }}": {
 					    cluster: "thor",
-					    content: "OUTPUT({{ year }});"
+					    content: "OUTPUT({{ year }});",
+					    output: "/tmp/{{ year }}/test.csv"
 					  }
 				}
 		};

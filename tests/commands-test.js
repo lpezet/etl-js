@@ -24,6 +24,9 @@ describe('commands',function(){
 	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.indexOf("echo \"continue\"") >= 0 ) {
+    			assert.notInclude( pCmd, "{{ tag1 }}");
+    		}
     		pCallback(null, pCmd, "");
     	};
     	var oExecutor = new ExecutorClass();
@@ -32,7 +35,8 @@ describe('commands',function(){
 		var oTemplate = {
 				root: {
 					"hello": {
-						command: "echo {{ tag1 }}"
+						command: "echo {{ tag1 }}",
+						test: '[ "{{ tag1 }}" == "hello"]'
 					}
 				}
 		}

@@ -22,7 +22,7 @@ describe('image-charts',function(){
 		done();
 	});
 	
-	it('tagsInData', function(done) {
+	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		assert.include( pCmd, 'snow_2018.csv')
@@ -38,6 +38,7 @@ describe('image-charts',function(){
 				        chs: "700x200",
 				        cht: "bvg",
 				        chxt: "x,y",
+				        chtt: "Title {{ year }}",
 				        chxs: "1N*s* inches,000000"
 					}
 				}
@@ -80,6 +81,7 @@ describe('image-charts',function(){
 				        chs: "700x200",
 				        cht: "bvg",
 				        chxt: "x,y",
+				        chtt: null,
 				        chxs: "1N*s* inches,000000"
 					}
 				}

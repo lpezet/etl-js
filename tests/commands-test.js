@@ -24,10 +24,15 @@ describe('commands',function(){
 	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		if ( pCmd.indexOf("echo \"continue\"") >= 0 ) {
-    			assert.notInclude( pCmd, "{{ tag1 }}");
+    		try {
+	    		assert.equal(typeof( pCmd ), 'string');
+	    		if ( pCmd.indexOf("echo \"continue\"") >= 0 ) {
+	    			assert.notInclude( pCmd, "{{ tag1 }}");
+	    		}
+	    		pCallback( null, pCmd, "");
+    		} catch (e) {
+    			pCallback( e, pCmd, "");
     		}
-    		pCallback(null, pCmd, "");
     	};
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();

@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 const assert = require('chai').assert
 var Scanner = require('../../lib/templating/scanner');
 
-describe('A new Mustache.Scanner', function () {
+describe('scanner', function () {
   describe('for an empty string', function () {
     it('is at the end', function () {
       var scanner = new Scanner('');

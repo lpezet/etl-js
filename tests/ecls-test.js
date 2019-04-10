@@ -21,6 +21,48 @@ describe('ecls',function(){
 		done();
 	});
 	
+	it('apply_settings_and_config',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include( pCmd, 'server=127.0.0.1');
+    		assert.include( pCmd, 'username=foobar');
+    		assert.include( pCmd, 'password=foobar');
+    		pCallback( null, "", "");
+    	}
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		pCallback( null, "", "");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {
+				'*': {
+					server: '127.0.0.2'
+				}
+		};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"000_content": {
+					    cluster: "thor",
+					    content: "something",
+					    format: "default",
+					    output: "test.txt",
+					    server: '127.0.0.1',
+						username: 'foobar',
+						password: 'foobar'
+					  }
+    			}
+    	};
+    	
+    	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
 	it('apply_settings',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

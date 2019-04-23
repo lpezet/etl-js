@@ -136,6 +136,7 @@ describe('executors',function(){
 							done("Error should have been raised and caught.");
 						}
 					} catch (e) {
+						console.log('Error: ' + e);
 						done(e);
 					} finally {
 						server.close();

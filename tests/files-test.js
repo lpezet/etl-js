@@ -158,6 +158,52 @@ describe('files',function(){
 			done( pError );
 		})
 	});
+	
+	it('source_with_perms',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.startsWith( '[ ! -d $(dirname "/tmp/file.txt") ]' )) {
+    			assert.equal( pCmd, '[ ! -d $(dirname "/tmp/file.txt") ] && mkdir -p $(dirname "/tmp/file.txt"); wget -O "/tmp/file.txt" "https://abc.def.com/file.txt" 2>&1');
+    		} else if ( pCmd.startsWith( '[ -f "/tmp/file.txt" ]' ) ) {
+    			assert.include(pCmd, 'chmod 600');
+        		assert.include(pCmd, 'chgrp titi');
+        		assert.include(pCmd, 'chown toto');
+    		} else {
+    			assert.fail('Unexpected command: ' + pCmd);
+    		}
+    		pCallback( null, "", "" );
+    	}
+    	ExecutorClass.prototype.writeFile = function( pCmd, pCmdOpts, pCallback ) {
+    		done("Not expected executor.writeFile() call.");
+    		pCallback( null, "", "" );
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				'root': {
+					"/tmp/file.txt": {
+						source: "https://abc.def.com/file.txt",
+						mode: '600',
+						owner: 'toto',
+						group: 'titi'
+					}
+				}
+		}
+		
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
 
 	it('content',function(done){
     	
@@ -177,6 +223,45 @@ describe('files',function(){
 				'root': {
 					"/tmp/file.txt": {
 						content: "Hello world"
+					}
+				}
+		}
+		
+		oTested.handle( 'root' , oConfig['root'], oExecutor ).then(function( pData ) {
+			assert.isNotNull( pData );
+			assert.isNotNull( pData['files'] );
+			assert.isNotNull( pData['files']['/tmp/file.txt'] );
+			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
+			done();
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
+	it('content_with_perms',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.include(pCmd, 'chmod 600');
+    		assert.include(pCmd, 'chgrp titi');
+    		assert.include(pCmd, 'chown toto');
+    		pCallback( null, "", "" );
+    	}
+    	ExecutorClass.prototype.writeFile = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, "", "" );
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oConfig = {
+				'root': {
+					"/tmp/file.txt": {
+						content: "Hello world",
+						mode: '600',
+						owner: 'toto',
+						group: 'titi'
 					}
 				}
 		}

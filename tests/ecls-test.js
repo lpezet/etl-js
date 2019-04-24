@@ -1,3 +1,4 @@
+const fs = require('fs');
 const assert = require('chai').assert
 const TestedClass = require('../lib/ecls');
 const load_file = require('./load_file');
@@ -217,6 +218,8 @@ describe('ecls',function(){
 			done();
 		})
 	});
+	
+	
 
 	it('file',function(done){
     	
@@ -293,6 +296,46 @@ describe('ecls',function(){
 		}, function( pError ) {
 			done();
 		});
+	});
+	
+	it('localFile',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		console.log( 'Command=' + pCmd );
+    		assert.include( pCmd, "cluster=thor");
+    		
+    		pCallback( null, "", "");
+    	}
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		assert.equal(pContent, 'hello world!');
+    		pCallback( null, "", "");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+    	fs.writeFileSync('test.ecl', 'hello world!');
+    	var oTemplate = {
+				root: {
+					  "000_local_file": {
+					    cluster: "thor",
+					    file: "file://./test.ecl"
+					  }
+				}
+		};
+    	
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+			//console.log('#### ecls content: ');
+			//console.dir( pData );
+			fs.unlinkSync('test.ecl');
+			done();
+		}, function( pError ) {
+			fs.unlinkSync('test.ecl');
+			done( pError );
+		})
+		
+    	
 	});
 	
 	it('content',function(done){

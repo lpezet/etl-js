@@ -1,9 +1,9 @@
 const fs = require('fs');
 const assert = require('chai').assert
-const TestedClass = require('../lib/ecls');
+const TestedClass = require('../lib/hpcc-ecls');
 const load_file = require('./load_file');
 
-describe('ecls',function(){
+describe('hpcc-ecls',function(){
 	
 	before(function(done) {
 		done();
@@ -180,7 +180,7 @@ describe('ecls',function(){
     	};
 		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext ).then(function( pData ) {
 			try {
-				assert.property( pData['ecls'], 'summary_2018' );
+				assert.property( pData['hpcc-ecls'], 'summary_2018' );
 				done();
 			} catch(e) {
 				done(e);
@@ -239,7 +239,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/file.yml');
+		var oConfig = load_file( './hpcc-ecls/file.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
@@ -264,7 +264,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/file.yml');
+		var oConfig = load_file( './hpcc-ecls/file.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done("Should have raised and caught error.");
@@ -289,7 +289,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/file.yml');
+		var oConfig = load_file( './hpcc-ecls/file.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done("Should have raised and caught error.");
@@ -355,7 +355,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/content.yml');
+		var oConfig = load_file( './hpcc-ecls/content.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
 			//console.log('#### ecls content: ');
@@ -381,7 +381,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/content.yml');
+		var oConfig = load_file( './hpcc-ecls/content.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
 			done("Should have raised and caught error.");
@@ -405,7 +405,7 @@ describe('ecls',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	
-		var oConfig = load_file( './ecls/content.yml');
+		var oConfig = load_file( './hpcc-ecls/content.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
 			done("Should have raised and caught error.");

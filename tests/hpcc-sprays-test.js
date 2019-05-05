@@ -1,8 +1,8 @@
 const assert = require('chai').assert
 const load_file = require('./load_file');
-const TestedClass = require('../lib/sprays');
+const TestedClass = require('../lib/hpcc-sprays');
 
-describe('sprays',function(){
+describe('hpcc-sprays',function(){
 	
 	before(function(done) {
 		done();
@@ -43,8 +43,8 @@ describe('sprays',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext).then(function( pData ) {
 			console.dir( pData );
 			try {
-				assert.property( pData['sprays'],  "noaa::ghcn::daily::2018::raw" );
-				assert.include( pData['sprays']['noaa::ghcn::daily::2018::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv");
+				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2018::raw" );
+				assert.include( pData['hpcc-sprays']['noaa::ghcn::daily::2018::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv");
 				done();
 			} catch(e) {
 				done(e);
@@ -162,7 +162,7 @@ describe('sprays',function(){
     	};
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
-    	var oTemplate = load_file( "./sprays/xml.yml" );
+    	var oTemplate = load_file( "./hpcc-sprays/xml.yml" );
 		
 		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done("Update test (xml spray not supported before).");
@@ -177,7 +177,7 @@ describe('sprays',function(){
     	};
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
-    	var oTemplate = load_file( "./sprays/fixed.yml" );
+    	var oTemplate = load_file( "./hpcc-sprays/fixed.yml" );
 		
 		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done("Update test (f spray not supported before).");
@@ -275,7 +275,7 @@ describe('sprays',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass( null, { '*': { server: '1.2.3.4', username: 'foo', password: 'bar' }});
     	
-		var oTemplate = load_file( "./sprays/delimited.yml" );
+		var oTemplate = load_file( "./hpcc-sprays/delimited.yml" );
 		
 		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done();

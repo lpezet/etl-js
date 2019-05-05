@@ -1,0 +1,10 @@
+root:
+    "noaa::ghcn::daily::2018::raw":
+        destinationIP: 192.168.0.10
+        destinationPath: /var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv
+        timeout: 0
+        maxConnections: 1
+        allowoverwrite: false
+        replicate: false
+        compress: false
+        unknownProp: "dontmatter"

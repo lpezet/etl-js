@@ -366,4 +366,72 @@ describe('commands',function(){
 		
     	
 	});
+	
+	it('executorThrowingExceptionInCmd',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		throw new Error("this is a dummy error");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip"
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done("Expected rejection.");
+		}, function( pError ) {
+			console.log( pError );
+			done();
+		})
+	});
+	
+	it('executorThrowingExceptionInTest',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		throw new Error("this is a dummy error");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "somethig"
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
+	it('errorInCmdAfterTestPassed',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		console.log('pCmd=' + pCmd);
+    		if ( pCmd.match(/something/g) ) pCallback(null, 'continue');
+    		throw new Error("this is a dummy error");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something"
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done("Expected rejection.");
+		}, function( pError ) {
+			done();
+		})
+	});
 });

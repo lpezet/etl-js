@@ -49,18 +49,18 @@
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
     "JSONPath": "^0.11.2",
-    "ssh2": "^0.8.2"
+    "ssh2": "^0.8.4"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "crypto": "^1.0.1",
     "doctoc": "^1.4.0",
-    "eslint": "^5.15.0",
+    "eslint": "^5.16.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.0.0",
     "nyc": "^13.3.0",
     "sinon": "^4.1.6",
-    "yaml-cfn": "^0.2.0"
+    "yaml-cfn": "^0.2.1"
   }
 }

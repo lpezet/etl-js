@@ -48,9 +48,19 @@ describe('commands',function(){
 		var oContext = {
 				tag1: "hello"
 		}
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
 			try {
-				assert.equal( pData['commands']['hello']['result'], 'echo hello');
+				console.log('Data=');
+				console.log(JSON.stringify( pData ));
+				assert.exists( pData );
+				assert.isFalse( pData['exit'] );
+				assert.isFalse( pData['skip'] );
+				assert.exists( pData['results'] );
+				assert.equal( pData['results'].length, 1);
+				var result = pData['results'][0];
+				assert.equal( result['command'], 'hello' );
+				assert.exists( result['results'] );
+				assert.deepEqual( result['results'], {"error":null,"result":"echo hello","message":null,"exit":false,"pass":true,"_stdout":"echo hello","_stderr":""} );
 				done();
 			} catch (e) {
 				done(e);
@@ -73,16 +83,18 @@ describe('commands',function(){
 				root: {
 					"001_json": {
 						command: "dontmatter",
-						result_as_json: false
+						result_as_json: false,
+						var: "myvar"
 					}
 				}
 		}
-		
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+		var oContext = { env: {}, vars: {} };
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
 			try {
-				assert.exists( pData['commands'] );
-				assert.exists( pData[ 'commands' ][ '001_json' ] );
-				assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				//assert.exists( pData['commands'] );
+				//assert.exists( pData[ 'commands' ][ '001_json' ] );
+				//assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				assert.deepEqual( oContext, { env: {}, vars: { myvar: '[ "Toto", "Tutu" ]'}});
 				done();
 			} catch(e) {
 				done(e);
@@ -105,16 +117,19 @@ describe('commands',function(){
 				root: {
 					"001_json": {
 						command: "dontmatter",
-						result_as_json: true
+						result_as_json: true,
+						var: "myvar"
 					}
 				}
 		}
 		
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+		var oContext = { env: {}, vars: {} };
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
 			try {
-				assert.exists( pData['commands'] );
-				assert.exists( pData[ 'commands' ][ '001_json' ] );
-				assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				//assert.exists( pData['commands'] );
+				//assert.exists( pData[ 'commands' ][ '001_json' ] );
+				//assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				assert.deepEqual( oContext, { env: {}, vars: { myvar: [ "Toto", "Tutu" ]}});
 				done();
 			} catch(e) {
 				done(e);
@@ -138,17 +153,20 @@ describe('commands',function(){
 				root: {
 					"001_json": {
 						command: "dontmatter",
-						result_as_json: true
+						result_as_json: true,
+						var: "myvar"
 					}
 				}
 		}
 		
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+		var oContext = { env: {}, vars: {} };
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
 			try {
-				assert.exists( pData['commands'] );
-				assert.exists( pData[ 'commands' ][ '001_json' ] );
-				assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
-				assert.equal( pData[ 'commands' ][ '001_json' ][ 'result' ], "[ 'Toto', 'Tutu' ]" );	
+				//assert.exists( pData['commands'] );
+				//assert.exists( pData[ 'commands' ][ '001_json' ] );
+				//assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );	
+				//assert.equal( pData[ 'commands' ][ '001_json' ][ 'result' ], "[ 'Toto', 'Tutu' ]" );	
+				assert.deepEqual( oContext, { env: {}, vars: { myvar: "[ 'Toto', 'Tutu' ]"}});
 				done();
 			} catch(e) {
 				done(e);
@@ -202,11 +220,11 @@ describe('commands',function(){
 		});
 	});
 	
-	it('exitOnTestFailed',function(done){
+	it('exitOnError',function(done){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		pCallback( null, null, "" );
+    		pCallback( new Error('test error'), null, null );
     	}
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
@@ -215,15 +233,18 @@ describe('commands',function(){
 				root: {
 					  "001_test": {
 					    command: "gunzip test.gz",
-					    test: "[ ! -f test.gz ]",
-					    exit_on_test_failed: true
+					    exit_on_error: true
 					  }
 				}
 		};
 		
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( data ) {
+			console.log('data=');
+			console.dir(data);
 			done('Expecting error');
 		}, function( pError ) {
+			console.log('Error:');
+			console.dir( pError );
 			done();
 		});
 	});
@@ -247,10 +268,58 @@ describe('commands',function(){
 		};
 		
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done('Expecting error');
+		}, function( pError ) {
+			done();
+		})
+	});
+	it('errorExecutingCmdIgnoreErrors',function(done){
+    	
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( new Error("error"), "", "stderr stuff" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip test.gz",
+					    ignore_errors: true
+					  }
+				}
+		};
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
+			done();
+		}, function( pError ) {
+			done('Not expecting an error! Should be ignoring the error.');
+		})
+	});
+	
+	it('tagsReal', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.equal( pCmd, "gunzip 2019.zip" );
+    		pCallback( null, null, "" );
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	
+		var oTemplate = {
+				root: {
+					  "001_test": {
+					    command: "gunzip {{ vars.myvar }}.zip"
+					  }
+				}
+		};
+		
+		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, { env: {}, vars: { myvar: "2019" } } ).then(function() {
 			done();
 		}, function( pError ) {
 			done( pError );
-		})
+		});
 	});
 
 	it('basic',function(done){

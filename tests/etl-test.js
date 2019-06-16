@@ -17,6 +17,99 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('skip', function(done) {
+		var SkipModClass = function( pETL ) {
+			pETL.mod( 'skipMod', this );
+		};
+		SkipModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityResult, pGlobalResult, pContext ) {
+			return new Promise( function( resolve, reject ) {
+				resolve( { skip: true } );
+			});
+		};
+		
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+		new SkipModClass( oTested );
+    	var oModer = new (require('./etl/mod'))( oTested );
+    	var oTester = new (require('./etl/test'))( oTested );
+		
+    	var oETL = {
+    			etl: [ "abc","def" ],
+    			abc: {
+    				tester: {
+    					dontmatter: true
+    				},
+    				skipMod: {
+    					dontmatter: true
+    				},
+    				moder: {}
+    			},
+    			def: {
+    				tester: {
+    					dontmatteragain: true
+    				}
+    			}
+    	};
+    	
+    	oTested.process( oETL ).then(function() {
+    		try {
+				assert.equal(2, oTester.calls());
+				assert.equal(0, oModer.calls());
+				done();
+    		} catch ( pError ) {
+    			done( pError );
+    		}
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
+	
+	it('exit', function(done) {
+		var ModClass = function( pETL ) {
+			pETL.mod( 'exitMod', this );
+		};
+		ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityResult, pGlobalResult, pContext ) {
+			return new Promise( function( resolve, reject ) {
+				resolve( { exit: true } );
+			});
+		};
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+    	new ModClass( oTested );
+    	var oModer = new (require('./etl/mod'))( oTested );
+    	var oTester = new (require('./etl/test'))( oTested );
+		
+    	var oETL = {
+    			etl: [ "abc","def" ],
+    			abc: {
+    				tester: {
+    					dontmatter: true
+    				},
+    				exitMod: {
+    					dontmatter: true
+    				},
+    				moder: {}
+    			},
+    			def: {
+    				tester: {
+    					dontmatteragain: true
+    				}
+    			}
+    	};
+    	oTested.process( oETL ).then(function( pData ) {
+			try {
+				assert.equal(1, oTester.calls());
+				assert.equal(0, oModer.calls());
+				done();
+			} catch (e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
 	it('envVariables', function(done) {
 		var ModClass = function( pETL, pEnvKey ) {
 			pETL.mod( 'enver', this );
@@ -29,7 +122,15 @@ describe('etl',function(){
 		ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityResult, pGlobalResult, pContext ) {
 			var that = this;
 			return new Promise( function( resolve, reject ) {
-				resolve( { 'enver': { error: null, result: pContext['env'][ that.mEnvKey ] } } );
+				try {
+					assert.exists( pContext['env'][ that.mEnvKey ] );
+					assert.equal( pContext['env'][ that.mEnvKey ], 'world' );
+					resolve({});
+				} catch(e) {
+					reject(new Error("context should hold key " + that.mEnvKey + "."));
+				}
+				//resolve( { 'enver': { error: null, result: pContext['env'][ that.mEnvKey ] } } );
+				//resolve(  );
 			});
 		}
 		var oExecutor = new function() {};
@@ -45,12 +146,7 @@ describe('etl',function(){
     	};
     	process.env['hello'] = 'world';
 		oTested.process( oETL ).then(function( pData ) {
-			try {
-				assert.equal( pData['abc']['enver']['result'], 'world' );
-				done();
-			} catch (e) {
-				done(e);
-			}
+			done();
 		}, function( pError ) {
 			done( pError );
 		});
@@ -232,6 +328,11 @@ describe('etl',function(){
 		});
 	});
 	*/
+	
+	/*
+	 * TODO: Tabling this for later, when results structure is more stable.
+	 */
+	/*
 	it('results', function(done) {
 		var oExecutor = new function() {};
     	var oSettings = {};
@@ -256,22 +357,27 @@ describe('etl',function(){
     	};
 		oTested.process( oETL ).then(function( pData ) {
 			//console.dir( pData );
-			assert.exists( pData );
-			assert.exists( pData['etl'] );
-			assert.exists( pData['step1'] );
-			assert.exists( pData['step1']['collects'] );
-			assert.exists( pData['step1']['collects']['doSomething'] );
-			assert.equal( pData['step1']['collects']['doSomething']['result'], 'a' );
-			assert.exists( pData['step1']['collects']['doSomethingElse'] );
-			assert.equal( pData['step1']['collects']['doSomethingElse']['result'], 'b' );
-			assert.exists( pData['step1']['collects']['andSomethingElse'] );
-			assert.equal( pData['step1']['collects']['andSomethingElse']['result'], 'c' );
-			done();
+			try {
+				//console.log('data=');
+				//console.log(JSON.stringify( pData ));
+				
+				assert.exists( pData );
+				
+				assert.isNotNull( pData );
+				assert.isNotNull( pData['results'] );
+				assert.equal( pData['results'].length, 1);
+				assert.deepEqual( pData['results'][0], {"activity":"step1","result":{"collects":{"doSomething":{"result":"a"},"doSomethingElse":{"result":"b"},"andSomethingElse":{"result":"c"}}}});
+				
+				done();
+			} catch ( pError ) {
+				done( pError );
+			}
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );
 		});
 	});
+	*/
 	/*
 	it('collect_results_within_step', function(done) {
 		var oExecutor = new function() {};

@@ -72,7 +72,25 @@ $ npm install @lpezet/etl-js
 # Concept
 
 ETL-JS has been born from the need to script different activities as part of simple yet important extract, load, and transform processes.
-The idea is to be able to share and easily repeat activities over and over as needed.
+The idea is to be able to share and easily repeat activities over and over as needed, and leverage existing tools as much as possible.
+
+An ETL template is basically composed of an *etl* and its activities as such:
+
+```yml
+etl:
+ - activity1
+ - activity2
+activity1:
+ step1:
+  something: "something"
+ step2:
+  somethingelse: "somethingelse"
+activity2:
+ step1:
+  some: "some"
+```
+
+Each *activity* contains *step* handled by [Mods](#mods). Each *mod* can contain additional step within them.
 
 # Security
 

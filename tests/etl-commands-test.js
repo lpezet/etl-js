@@ -1,11 +1,19 @@
 const ETLClass = require('../lib/etl');
 const CommandsClass = require('../lib/commands');
 const assert = require('chai').assert;
+const SimpleLogger = require('../lib/logger');
+
 
 describe('etl-commands',function(){
 	
-	var ExecutorClass = function() {};
+	var ExecutorClass = function() {
+		this.mCmdsExecuted = [];
+	};
+	ExecutorClass.prototype.getCmdsExecuted = function() {
+		return this.mCmdsExecuted;
+	}
 	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+		this.mCmdsExecuted.push( pCmd );
 		//console.log('pCmd=' + pCmd);
 		if ( pCmd.startsWith("(error)") ) {
 			// Passing a value for error (first arg)
@@ -24,8 +32,8 @@ describe('etl-commands',function(){
 	
 	beforeEach(function(done) {
 		mETLTemplate = {
-			etl: [ 'step1', 'step2' ],
-			step1: {
+			etl: [ 'activity1', 'activity2' ],
+			activity1: {
 				commands: {
 					"t001test": {
 						command: "test me",
@@ -39,7 +47,7 @@ describe('etl-commands',function(){
 					}
 				}
 			},
-			step2: {
+			activity2: {
 				commands: {
 					"abouttofail1": {
 						command: "dont test me"
@@ -54,7 +62,7 @@ describe('etl-commands',function(){
 					}
 				}
 			},
-			step3: {
+			activity3: {
 				commands: {
 					"someothercommand": {
 						command: "hello"
@@ -69,23 +77,30 @@ describe('etl-commands',function(){
 		done();
 	});
 	
-	it('errorWithExitMultipleActivitiesAndCommands', function(done) {
+	it('basic', function(done) {
     	var oSettings = {};
-    	var oETL = new ETLClass( new ExecutorClass(), oSettings );
+    	var oExecutor = new ExecutorClass();
+    	var oETL = new ETLClass( oExecutor, oSettings );
     	new CommandsClass( oETL );
 		
 		oETL.process( mETLTemplate ).then(function( pData ) {
-			done( 'Should have failed with error.');
+			try {
+				assert.deepEqual( oExecutor.getCmdsExecuted(), [ 'test me', 'test me2', 'dont test me', '(error) && echo "continue" || echo "stop"' ]);
+				done();
+			} catch (e) {
+				done(e);
+			}
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
 	
-	it('errorWithExitSingleActivityAndCommand', function(done) {
-		var oETLConfigLite = {
-			etl: [ 'step1' ],
-			step1: {
+	//it('errorWithExitSingleActivityAndCommand', function(done) {
+	it('testFailingInError', function(done) {
+			var oETLConfigLite = {
+			etl: [ 'activity1' ],
+			activity1: {
 				commands: {
 					"t001test": {
 						command: "test me",
@@ -97,46 +112,59 @@ describe('etl-commands',function(){
     	};
 		
 		var oSettings = {};
-    	var oETL = new ETLClass( new ExecutorClass(), oSettings );
+		var oExecutor = new ExecutorClass();
+    	var oETL = new ETLClass( oExecutor, oSettings );
     	new CommandsClass( oETL );
 		
     	oETL.process( oETLConfigLite ).then(function( pData ) {
-			done( 'Should have failed with error.');
+    		try {
+    			assert.deepEqual( oExecutor.getCmdsExecuted(), [ '(error) && echo "continue" || echo "stop"' ]);
+    			done();	
+    		} catch(e) {
+    			done(e);
+    		}
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
 	it('errorNoExitMultipleActivitiesAndCommands', function(done) {
 		var oSettings = {};
-    	var oETL = new ETLClass( new ExecutorClass(), oSettings );
+		var oExecutor = new ExecutorClass();
+    	var oETL = new ETLClass( oExecutor, oSettings );
     	new CommandsClass( oETL );
 		
-    	mETLTemplate.step2.commands.gonnafail1.exit_on_test_failed = false;
+    	mETLTemplate.activity2.commands.gonnafail1.exit_on_test_failed = false;
 		oETL.process( mETLTemplate ).then(function( pData ) {
-			done();
+			try {
+    			assert.deepEqual( oExecutor.getCmdsExecuted(), [ 'test me', 'test me2', 'dont test me', '(error) && echo "continue" || echo "stop"', 'nope' ]);
+    			done();	
+    		} catch(e) {
+    			done(e);
+    		}
 		}, function( pError ) {
 			done( pError );
 		});
 	});
 	
 	it('stopWithExitMultipleActivitiesAndCommands', function(done) {
+		var oLogger = new SimpleLogger({ level: 'debug' });
 		var oSettings = {};
-    	var oETL = new ETLClass( new ExecutorClass(), oSettings );
+		var oExecutor = new ExecutorClass();
+    	var oETL = new ETLClass( oExecutor, oSettings, oLogger );
     	new CommandsClass( oETL );
 		
-    	mETLTemplate.step2.commands.gonnafail1.test = "stop";
+    	mETLTemplate.activity2.commands.gonnafail1.test = "stop";
     	mETLTemplate.etl.push('step3');
     	//console.log(util.inspect(mETLTemplate, false, null, true /* enable colors */))
 		
     	oETL.process( mETLTemplate ).then(function( pData ) {
-    		console.dir( pData );
-    		//console.log('End result: (pData)');
-    		//console.log(util.inspect(pData, false, null, true /* enable colors */))
-			//done( 'Should have exited with error (?)');
-    		assert.notExists( pData.step2.commands['shouldnotgethere'] );
-    		assert.notExists( pData['step3'] );
-    		done();
+    		try {
+    			assert.deepEqual( oExecutor.getCmdsExecuted(), [ 'test me', 'test me2', 'dont test me', '(stop) && echo "continue" || echo "stop"' ]);
+    			done();	
+    		} catch(e) {
+    			done(e);
+    		}
 		}, function( pError ) {
 			done( pError );
 		});
@@ -144,13 +172,23 @@ describe('etl-commands',function(){
 	
 	it('stopNoExitMultipleActivitiesAndCommands', function(done) {
 		var oSettings = {};
-    	var oETL = new ETLClass( new ExecutorClass(), oSettings );
+		var oExecutor = new ExecutorClass();
+    	var oETL = new ETLClass( oExecutor, oSettings );
     	new CommandsClass( oETL );
 		
-    	mETLTemplate.step2.commands.gonnafail1.test = "stop";
-    	mETLTemplate.step2.commands.gonnafail1.exit_on_test_failed = false;
+    	mETLTemplate.activity2.commands.gonnafail1.test = "stop";
+    	mETLTemplate.activity2.commands.gonnafail1.exit_on_test_failed = false;
+    	//console.log('############ Template ###############');
+		//console.log( JSON.stringify( mETLTemplate ) );
+		//console.log('#####################################');
+		
 		oETL.process( mETLTemplate ).then(function( pData ) {
-			done();
+			try {
+    			assert.deepEqual( oExecutor.getCmdsExecuted(), [ 'test me', 'test me2', 'dont test me', '(stop) && echo "continue" || echo "stop"', 'nope' ]);
+    			done();	
+    		} catch(e) {
+    			done(e);
+    		}
 		}, function( pError ) {
 			done( pError );
 		});

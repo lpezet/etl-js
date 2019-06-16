@@ -84,30 +84,74 @@ my_extract:
 
 ## Commands Mod
 
-This mod executes commands.
+You can use the Commands Mod to execute commands. Commands are executed in the order provided.
 
 ### Specs
 
-```yaml
-root:
-  commands:
-    _key_:
-      command: _command_
-      cwd: _cwd_
-      test: _test_
-```
+| Property   | Required? | Default value | Description |
+| ---------- | --------- | ------------- | ----------- |
+| **command** | required | | String specifying the command to run. Tags can be used |
+| **cwd** | optional  | | Working directory |
+| **env** | optional | | Sets environment variables for the command. This property overwrites, rather than appends, the existing environment. |
+| **test** | optional | | A test command that determines whether to run the **command** specified. If the test fails (or in error, based on exit code), the **command** is skipped. For Linux, the test command must return an exit code of 0 for the test to pass. For Windows, the test command must return an %ERRORLEVEL% of 0. |
+| **ignore_errors** | optional | false | If true, errors when executing **command** (not the test) are ignored and process continues as if **command** executed fine. |
+| **exit_on_error** | optional | false | Whether or not to exit the entire process upon error. |
+| **var** | optional | | Save result of command into context under **var** key. |
+| **result_as_json** | optional | false | Whether or not to parse **command** result (stdout) as JSON. This can be used with **var** to save JSON into context and make it available to other mods. |
+
+
+Note that, if the command used in **test** is in error, the command will be skipped. This means both **ignore_errors** and **exit_on_error** are ignored in this situation.
 
 ### Examples
 
 The template below runs `echo "hello"`.
 
 ```yaml
-root:
-  commands:
-    000_say_hello:
-      command: echo "hello"
+commands:
+  000_say_hello:
+    command: echo "hello"
 ```
 
+The following template will first run a test to decide whether or not to run the command:
+
+```yaml
+commands:
+  000_say_hello:
+    command: echo "Now do something"
+    test: [ $((`date +%d`%2)) -eq 0 ]
+```
+
+The following template make use of the **var** property to use the value in a subsequent command:
+
+```yaml
+commands:
+  000_figure_out_day:
+    command: date +%A
+    var: today
+  001_printit:
+    command: echo "Today is {{today}}"
+```
+
+The following template make use of both **var** and **result_as_json**:
+
+```yaml
+commands:
+  000_var:
+    command: echo '{ "toto":"titi" }'
+    var: myvar
+    result_as_json: true
+  001_use:
+    command: echo "According to myvar, toto={{myvar.toto}}"
+```
+
+To prevent the executing of the process, whatever the reason, a simple script exiting with an exit code different from 0 will do:
+
+```yaml
+commands:
+  000_pre_flight_check:
+    command: /opt/something/check_for_new_data.sh
+    exit_on_error: true
+```
 
 # HPCC Systems mods
 

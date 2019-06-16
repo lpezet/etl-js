@@ -43,7 +43,7 @@ describe('files',function(){
 			tag2: "world",
 			tags: [ "a", "b" ]
 		};
-		oTested.handle( 'root' , oTemplate['root'], oExecutor, {}, oContext).then(function( pData ) {
+		oTested.handle( 'root' , oTemplate['root'], oExecutor, oContext).then(function( pData ) {
 			done("Expecting error.");
 		}, function( pError ) {
 			console.log( pError );
@@ -310,7 +310,7 @@ describe('files',function(){
 				}
 		};
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root' , oConfig['root'], oExecutor, oContext ).then(function( pData ) {
 			assert.isNotNull( pData );
 			assert.isNotNull( pData['files'] );
 			assert.isNotNull( pData['files']['/tmp/file.txt'] );
@@ -364,7 +364,7 @@ describe('files',function(){
 				}
 		};
 		
-		oTested.handle( 'root' , oConfig['root'], oExecutor, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root' , oConfig['root'], oExecutor, oContext ).then(function( pData ) {
 			assert.isNotNull( pData );
 			assert.isNotNull( pData['files'] );
 			assert.isNotNull( pData['files']['/tmp/toto.txt'] );

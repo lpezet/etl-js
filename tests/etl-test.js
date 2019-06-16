@@ -119,7 +119,7 @@ describe('etl',function(){
 		ModClass.prototype.envValue = function() {
 			return this.mEnvValue;
 		}
-		ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityResult, pGlobalResult, pContext ) {
+		ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pContext ) {
 			var that = this;
 			return new Promise( function( resolve, reject ) {
 				try {

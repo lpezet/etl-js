@@ -178,7 +178,7 @@ describe('hpcc-ecls',function(){
     	var oContext = {
     			year: "2018"
     	};
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
 				assert.property( pData['hpcc-ecls'], 'summary_2018' );
 				done();

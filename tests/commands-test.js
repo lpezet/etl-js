@@ -48,7 +48,7 @@ describe('commands',function(){
 		var oContext = {
 				tag1: "hello"
 		}
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
 				console.log('Data=');
 				console.log(JSON.stringify( pData ));
@@ -89,7 +89,7 @@ describe('commands',function(){
 				}
 		}
 		var oContext = { env: {}, vars: {} };
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
 				//assert.exists( pData['commands'] );
 				//assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -124,7 +124,7 @@ describe('commands',function(){
 		}
 		
 		var oContext = { env: {}, vars: {} };
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
 				//assert.exists( pData['commands'] );
 				//assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -160,7 +160,7 @@ describe('commands',function(){
 		}
 		
 		var oContext = { env: {}, vars: {} };
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, oContext ).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
 				//assert.exists( pData['commands'] );
 				//assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -315,7 +315,7 @@ describe('commands',function(){
 				}
 		};
 		
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, {}, { env: {}, vars: { myvar: "2019" } } ).then(function() {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, { env: {}, vars: { myvar: "2019" } } ).then(function() {
 			done();
 		}, function( pError ) {
 			done( pError );

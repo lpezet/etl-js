@@ -46,7 +46,7 @@ describe('image-charts',function(){
 		var oContext = {
 				year: "2018"
 		}
-		oTested.handle( 'root', oConfig['root'], oExecutor , {}, oContext).then(function( pData ) {
+		oTested.handle( 'root', oConfig['root'], oExecutor , oContext).then(function( pData ) {
 			try {
 				assert.property( pData['image_charts'], 'chart_2018' );
 				done();

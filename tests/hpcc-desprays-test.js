@@ -39,7 +39,7 @@ describe('hpcc-desprays',function(){
     	};
     	var oExecutor = new ExecutorClass();
 		var oTested = new TestedClass( null, {} );
-		oTested.handle( 'root', oTemplate['root'], oExecutor, {}, oContext).then(function( pData ) {
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext).then(function( pData ) {
 			//console.dir( pData );
 			try {
 				assert.property( pData['hpcc-desprays'],  "noaa::ghcn::daily::2018::raw" );

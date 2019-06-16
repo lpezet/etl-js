@@ -141,6 +141,24 @@ describe('promises',function(){
 			done( error );
 		});
 		
+	});
+	
+	it('chainWithErrorInCustomCondition', function(done) {
+		var oCustomSkipCondition = function( pValue ) {
+			throw new Error("dummy error");
+		}
+		var oFuncs = [];
+		var oFunc1 = function( pValue ) { 
+			return Promise.resolve({}); // making sure default skip condition not used
+		};
+		oFuncs.push( oFunc1 );
+		
+		Promises.chain( oFuncs, 'Hello world!', oCustomSkipCondition).then( function( data ) {
+			done("Expected rejection");
+		}, function( error ) {
+			done();
+		});
+		
 	})
 	
 });

@@ -155,6 +155,22 @@ Mods are features of the ETL template. They execute code, download files, import
 The idea is to leverage as much as possible of the existing and be as efficient as possible.
 For more details, see the [Mods](Mods.md) page.
 
+## Control Flow
+
+Mods can decide whether to **skip** the remaining steps for a given activity, or even terminate (**exit**) the process.
+Use cases can be:
+
+* Mod detects that no new data has been found, decides to exit the ETL process.
+* Mod detects that data didn't change and decides not to continue the current activity of doing work already done before
+
+It's up to Mods to expose that functionality. For example, the **Commands Mod** expose the following properties:
+
+```yml
+	skip_on_test_failed: true|false
+	exit_on_test_failed: true|false
+```
+
+
 ## Tags
 
 Tags can be used to make the process more dynamic. You might want your ETL process to start with a step figuring out which files to ingest (e.g. only new ones). And you would want the next step to download those files and only those files.
@@ -170,14 +186,23 @@ step1:
   commands:
     orion_pic:
       command: printf "orion-nebula-xlarge_web.jpg"
+      var: file_to_download
 step2:
   files:
     /tmp/orion-nebula.jpg:
-      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
+      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.vars.file_to_download }}
 ```
 
-The tag here is `{{ $.step1.commands.orion_pic.result }}`. It basically refers to the `result` of the step1 command *orion_pic*.
-You can see the full JSON of the result of each activity and mod in the [Results](#results) section to help figure out attributes available to use in tags.
+The tag here is `{{ $.vars.file_to_download }}`. It basically refers to the `var` of the step1 command *orion_pic*.
+
+The context used in tags is as follows:
+
+```yml
+vars:
+	...vars go here...
+env:
+	...environment variables here from process.env.....
+```
 
 Here's another example using tags and making use of the `result_as_json` attribute of the `commands` mod. The `result` of the command will be parsed and stored as JSON instead of a string. This allows us to, for example, use the result as an array to download multiple files. The `files` mod will interpret that array and download multiple files.
 
@@ -189,20 +214,21 @@ var template = {
       "file_to_download": {
         command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
         result_as_json: true
+        var: files_to_download
       }
     }
   },
   step2: {
     files: {
       "/tmp/{{ $.step1.commands.file_to_download.result }}": {
-        source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
+        source: "https://images-assets.nasa.gov/image/{{ $.vars.files_to_download }}"
       }
     }
   }
 };
 ```
 
-In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each `file_to_download` result, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
+In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each file stores in `files_to_download` variable, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
 
 ## Events
 
@@ -212,6 +238,8 @@ ETL will emit some events during the ETL process.
 
 
 ## Results
+
+##### *OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags.*
 
 The ETL `process()` method returns a Promise. Upon success, the data **resolved** will contain the results of the process and each activity.
 
@@ -225,6 +253,7 @@ var template = {
       "file_to_download": {
         command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
         result_as_json: true
+        var: files_to_
       }
     }
   },

@@ -1,6 +1,7 @@
 const assert = require('chai').assert
 const load_file = require('./load_file');
 const TestedClass = require('../lib/commands');
+const SimpleLogger = require('../lib/logger');
 
 describe('commands',function(){
 	
@@ -177,7 +178,7 @@ describe('commands',function(){
 		})
 	});
 	
-	it('invalidTestOutput',function(done){
+	it('invalid_test_output',function(done){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -203,7 +204,7 @@ describe('commands',function(){
 	});
 	
 	//TODO: Somehow, right now, when a command fails, it will keep going...
-	it('nullExecutor',function(done){
+	it('null_executor',function(done){
 		var oSettings = {};
 		var oTested = new TestedClass( null, oSettings );
 		var oTemplate = {
@@ -220,7 +221,7 @@ describe('commands',function(){
 		});
 	});
 	
-	it('exitOnError',function(done){
+	it('exit_on_error',function(done){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -250,7 +251,7 @@ describe('commands',function(){
 	});
 	
 	//TODO: Somehow, right now, when a command fails, it will keep going...
-	it('errorExecutingCmd',function(done){
+	it('error_executing_cmd',function(done){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -273,7 +274,7 @@ describe('commands',function(){
 			done();
 		})
 	});
-	it('errorExecutingCmdIgnoreErrors',function(done){
+	it('error_executing_cmd_ignore_errors',function(done){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -298,7 +299,7 @@ describe('commands',function(){
 		})
 	});
 	
-	it('tagsReal', function(done) {
+	it('tags_real', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		assert.equal( pCmd, "gunzip 2019.zip" );
@@ -367,7 +368,7 @@ describe('commands',function(){
     	
 	});
 	
-	it('executorThrowingExceptionInCmd',function(done){
+	it('executor_throwing_exception_in_cmd',function(done){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		throw new Error("this is a dummy error");
@@ -389,7 +390,7 @@ describe('commands',function(){
 		})
 	});
 	
-	it('executorThrowingExceptionInTest',function(done){
+	it('executor_throwing_exception_in_test',function(done){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		throw new Error("this is a dummy error");
@@ -411,10 +412,9 @@ describe('commands',function(){
 		})
 	});
 	
-	it('errorInCmdAfterTestPassed',function(done){
+	it('error_in_cmd_after_test_passed',function(done){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		console.log('pCmd=' + pCmd);
     		if ( pCmd.match(/something/g) ) pCallback(null, 'continue');
     		throw new Error("this is a dummy error");
     	}
@@ -433,5 +433,245 @@ describe('commands',function(){
 		}, function( pError ) {
 			done();
 		})
+	});
+	
+	it('exit_on_test_failed',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback(null, 'stop');
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    exit_on_test_failed: true
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isTrue( data['exit'] );
+				assert.isFalse( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
+	it('exit_on_test_error',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback('dummey error', null);
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    exit_on_test_failed: true
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isTrue( data['exit'] );
+				assert.isFalse( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
+	it('no_exit_on_test_failed',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback(null, 'stop');
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    exit_on_test_failed: false
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isFalse( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
+	it('no_exit_on_test_error',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback('dummey error', null);
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oLogger = new SimpleLogger({ level: 'info' });
+		var oETL = new function() {
+    		return {
+    			mod: function( key, target, callback ) {
+    				callback( {}, oLogger );
+    			}
+    		}
+    	}
+    	var oTested = new TestedClass( oETL );
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    exit_on_test_failed: false
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isFalse( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
+	it('skip_on_test_failed',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback(null, 'stop');
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    skip_on_test_failed: true
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isTrue( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	it('skip_on_test_error',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback('dummey error', null);
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    skip_on_test_failed: true
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isTrue( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	it('no_skip_on_test_failed',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback(null, 'stop');
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    skip_on_test_failed: true
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isTrue( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	it('no_skip_on_test_error',function(done){
+    	var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		if ( pCmd.match(/something/g) ) pCallback('dummey error', null);
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "001_unzip": {
+					    command: "gunzip my.zip",
+					    test: "something",
+					    skip_on_test_failed: false
+					  }
+				}
+		};
+		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function(data) {
+			try {
+				assert.isFalse( data['exit'] );
+				assert.isFalse( data['skip'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
 	});
 });

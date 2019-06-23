@@ -38,7 +38,7 @@ describe('interactives',function(){
     	var oTested = new TestedClass();
     	oTested._exec = function() {
     		return function() {
-    			return Promise.reject( { error: new Error('error') } );
+    			return Promise.reject( { error: new Error('dummy error') } );
     		}
     	};
     	var oTemplate = {
@@ -60,7 +60,7 @@ describe('interactives',function(){
     	var oExecutor = new ExecutorClass();
     	var oTested = new TestedClass();
     	oTested._exec = function() {
-    		throw new Error('error');
+    		throw new Error('dummy error');
     	};
     	var oTemplate = {
 				root: {
@@ -86,15 +86,16 @@ describe('interactives',function(){
 		var oTemplate = {
 				root: {
 					"ask_name": {
-						prompt: "Enter your name"
+						prompt: "Enter your name",
+						var: "name"
 					}
 				}
 		}
-		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
+		var oContext = { env: {}, vars: {} };
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
-				assert.exists( pData['interactives'] );
-				assert.exists( pData[ 'interactives' ][ 'ask_name' ] );
-				assert.equal( pData[ 'interactives' ][ 'ask_name' ][ 'result' ], 'Schwarzenegger' );
+				assert.exists( oContext.vars['name'] );
+				assert.equal( oContext.vars['name'], 'Schwarzenegger' );
 				done();
 			} catch(e) {
 				done(e);

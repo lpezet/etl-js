@@ -39,6 +39,10 @@ Each Mod provide some functionality useful to an ETL process. For examples, the 
 
 This mod will prompt user to enter something.
 
+### Installation/Dependencies
+
+None. Simply leverages `readline` to prompt message and read answer.
+
 ### Specs
 
 ```yaml
@@ -46,6 +50,7 @@ root:
   interactives:
     sayhello:
       prompt: _prompt_ 
+      var: _key_
 ```
 
 ### Examples
@@ -55,11 +60,17 @@ root:
   interactives:
     sayhello:
       prompt: "Name please:" 
+      var: "name"
 ```
 
 ## Files Mod
 
 This mod simply downloads files.
+
+### Installation/Dependencies
+
+This mods uses `wget` to make download files.
+Other aspects (like permissions) are done through bash commands (`chmod`, `chown`, `chgrp`).
 
 ### Specs
 
@@ -85,6 +96,10 @@ my_extract:
 ## Commands Mod
 
 You can use the Commands Mod to execute commands. Commands are executed in the order provided.
+
+### Installation/Dependencies
+
+None. This mod simply provides access to bash environment.
 
 ### Specs
 
@@ -159,6 +174,11 @@ commands:
 
 This mod execute ECL code against an HPCC System cluster.
 
+### Installation/Dependencies
+
+This mods requires [HPCC ECL Client Tools](https://hpccsystems.com/download#HPCC-Platform).
+The program `eclplus`, specifically, is used here.
+
 ### Specs
 
 ```yaml
@@ -218,6 +238,11 @@ root:
 
 Use the HPCC Systems Distributed File Utility (DFU) (`dfuplus`) to load file into HPCC Systems Cluster.
 
+### Installation/Dependencies
+
+This mods requires [HPCC ECL Client Tools](https://hpccsystems.com/download#HPCC-Platform).
+The program `dfuplus`, specifically, is used here.
+
 ### Specs
 
 ```yaml
@@ -270,6 +295,11 @@ load:
 ## MySQLs Mod
 
 This mod can be used to query a MySQL database.
+
+### Installation/Dependencies
+
+This mods requires [MySQL client](https://dev.mysql.com/doc/refman/8.0/en/programs-client.html).
+The program `mysql`, specifically, is used here.
 
 ### Specs
 
@@ -353,6 +383,11 @@ root:
 ## MySQLImports Mod
 
 Imports file into MySQL database through `mysqlimport`.
+
+### Installation/Dependencies
+
+This mods requires [MySQL client](https://dev.mysql.com/doc/refman/8.0/en/programs-client.html).
+The program `mysqlimport`, specifically, is used here.
 
 ### Specs
 

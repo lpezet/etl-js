@@ -166,8 +166,8 @@ Use cases can be:
 It's up to Mods to expose that functionality. For example, the **Commands Mod** expose the following properties:
 
 ```yml
-	skip_on_test_failed: true|false
-	exit_on_test_failed: true|false
+skip_on_test_failed: true|false
+exit_on_test_failed: true|false
 ```
 
 

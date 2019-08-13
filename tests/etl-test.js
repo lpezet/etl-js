@@ -17,6 +17,76 @@ describe('etl',function(){
 		return new Factory();
 	}
 	
+	it('etlSets', function(done) {
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+    	var oTester = new (require('./etl/test'))( oTested );
+		
+    	var oETL = {
+    			etlSets: {
+    				mySet: [ "abc" ]
+    			},
+    			abc: {
+    				tester: {
+    					dontmatter: true
+    				}
+    			}
+    	};
+    	oTested.process( oETL, { "etlSet": "mySet" } ).then(function() {
+    		try {
+				assert.equal(1, oTester.calls());
+				done();
+    		} catch ( pError ) {
+    			done( pError );
+    		}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
+	it('resolve_etlsets', function() {
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+		
+    	var oSimpleNoRefETLSets = {
+    			prepare: [ "activity1", "activity2" ],
+    			process: [ "activity3" ],
+    			default: [ "activity4" ]
+    	}
+    	
+    	var oSimpleRefETLSets = {
+    			prepare: [ "activity1", "activity2" ],
+    			process: [ "activity3" ],
+    			default: [ { etlSet: "prepare" }, { etlSet: "process" }, "activity4" ]
+    	}
+    	
+    	var oDeepRefETLSets = {
+    			prepare: [ "activity1", "activity2" ],
+    			process: [ "activity3" ],
+    			report: [ { etlSet: "prepare" }, "activity5" ],
+    			default: [ { etlSet: "prepare" }, { etlSet: "process" }, "activity4", { etlSet: "report" } ]
+    	}
+    	
+    	var oInfiniteLoopRefETLSets = {
+    			sanity: [ "activity1" ],
+    			loop: [ { etlSet: "default" } ],
+    			default: [ { etlSet: "loop" } ]
+    	}
+    	
+    	var oActual = null;
+    	
+    	oActual = oTested._resolve_etlsets( oSimpleNoRefETLSets );
+    	assert.deepEqual( oActual, {"prepare":["activity1","activity2"],"process":["activity3"],"default":["activity4"]} );
+    	
+    	oActual = oTested._resolve_etlsets( oSimpleRefETLSets );
+    	assert.deepEqual( oActual, {"prepare":["activity1","activity2"],"process":["activity3"],"default":["activity1","activity2","activity3","activity4"]} );
+    	
+    	oActual = oTested._resolve_etlsets( oDeepRefETLSets );
+    	assert.deepEqual( oActual, {"prepare":["activity1","activity2"],"process":["activity3"],"report":["activity1","activity2","activity5"],"default":["activity1","activity2","activity3","activity4","activity1","activity2","activity5"]} );
+    	
+    	assert.throws( function() { oTested._resolve_etlsets( oInfiniteLoopRefETLSets ) });
+    });
+	
 	it('skip', function(done) {
 		var SkipModClass = function( pETL ) {
 			pETL.mod( 'skipMod', this );

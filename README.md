@@ -134,10 +134,11 @@ step1:
   commands:
     orion_pic:
       command: printf "orion-nebula-xlarge_web.jpg"
+      var: "picture"
 step2:
   files:
     /tmp/orion-nebula.jpg:
-      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.step1.commands.orion_pic.result }}
+      source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ vars.picture }}
 ```
 
 This ETL template makes use of tags, which will be explained a little later.
@@ -220,8 +221,8 @@ var template = {
   },
   step2: {
     files: {
-      "/tmp/{{ $.step1.commands.file_to_download.result }}": {
-        source: "https://images-assets.nasa.gov/image/{{ $.vars.files_to_download }}"
+      "/tmp/{{ $.vars.file_to_download }}": {
+        source: "https://images-assets.nasa.gov/image/{{ vars.files_to_download }}"
       }
     }
   }
@@ -253,14 +254,14 @@ var template = {
       "file_to_download": {
         command: "printf '[\"PIA08653/PIA08653~small.jpg\",\"PIA21073/PIA21073~small.jpg\"]'",
         result_as_json: true
-        var: files_to_
+        var: files_to_download
       }
     }
   },
   step2: {
     files: {
-      "/tmp/{{ $.step1.commands.file_to_download.result }}": {
-        source: "https://images-assets.nasa.gov/image/{{ $.step1.commands.file_to_download.result }}"
+      "/tmp/{{ vars.file_to_download }}": {
+        source: "https://images-assets.nasa.gov/image/{{ vars.file_to_download }}"
       }
     }
   }

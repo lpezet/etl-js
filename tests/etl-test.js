@@ -44,6 +44,33 @@ describe('etl',function(){
 		});
 	});
 	
+	it('invalidETLSet', function(done) {
+		var oExecutor = new function() {};
+    	var oTested = new TestedClass( oExecutor );
+    	var oTester = new (require('./etl/test'))( oTested );
+		
+    	var oETL = {
+    			etlSets: {
+    				mySet: [ "abc" ]
+    			},
+    			abc: {
+    				tester: {
+    					dontmatter: true
+    				}
+    			}
+    	};
+    	oTested.process( oETL, { "etlSet": "unknown" } ).then(function() {
+    		try {
+				assert.equal(0, oTester.calls());
+				done();
+    		} catch ( pError ) {
+    			done( pError );
+    		}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
 	it('resolve_etlsets', function() {
 		var oExecutor = new function() {};
     	var oTested = new TestedClass( oExecutor );

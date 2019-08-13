@@ -10,41 +10,38 @@ ModClass = function( pETL ) {
 }
 
 
-ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor) {
+ModClass.prototype._do = function( pParent, pKey, pConfig, pExecutor, pContext) {
 	return function( pData ) {
 		return new Promise( function( resolve, reject ) {
 			//var oResult = [];
 			logger.debug('[%s:%s] previous data=[%s]', pParent, pKey, pData);
 			if ( pData != null ) {
-				pData.collects[ pKey ] = pConfig;
-				/*
-				if ( Array.isArray( pData ) ) {
-					oResult = pData.slice();
-				} else {
-					oResult.push( pData );
+				var d = { key: pKey, result: pConfig['result'] };
+				//pData.collects[ pKey ] = pConfig;
+				pData.results.push( d );
+				if ( pConfig['var'] ) {
+					d['var'] = pConfig['var'];
+					pContext.vars[ pConfig['var'] ] = pConfig['result'];
 				}
-				*/
 			}
-			//oResult.push( pConfig['result'] );
-			//resolve( oResult );
 			resolve( pData );
 		});
 	}
 }
 
-ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pActivityContext, pContext ) {
+ModClass.prototype.handle = function( pParent, pConfig, pExecutor, pContext ) {
 	var that = this;
 	return new Promise( function( resolve, reject ) {
-		logger.debug('[%s] In report mod. Activity context=[%s], Global context=[%s]', pParent, pActivityContext, pContext);
+		logger.debug('[%s] In Collect mod. Context=[%j]', pParent, pContext);
 		try {
-			var oData = { 'collects' : {} };
+			var oResult = { exit: false, skip: false, results: [] };
 			var oPromises = [];
 			for (var i in pConfig) {
-				oPromises.push( that._do( pParent, i, pConfig[i], pExecutor ));
+				oPromises.push( that._do( pParent, i, pConfig[i], pExecutor, pContext ));
 			}
-			Promises.seq( oPromises, oData ).then(function( pData ) {
-				logger.debug('[%s] Done processing commands. Data=[%s]', pParent, oData);
-				resolve( oData );
+			Promises.seq( oPromises, oResult ).then(function( pData ) {
+				logger.debug('[%s] Done processing commands. Data=[%j]', pParent, oResult);
+				resolve( oResult );
 			}, function( pError ) {
 				logger.error('[%s] Unexpected error running commands.', pParent, pError);
 				reject( pError );

@@ -13,9 +13,11 @@ describe('etl-files',function(){
 			step1: {
 				collects: {
 					"t001test": {
+						var: "t001test",
 						result: "toto"
 					},
 					"t002test": {
+						var: "t002test",
 						result: [ "toto", "titi" ]
 					}
 				}
@@ -23,9 +25,11 @@ describe('etl-files',function(){
 			step2: {
 				collects: {
 					"singleResult1": {
+						var: "singleResult1",
 						result: "toto"
 					},
 					"singleResult2": {
+						var: "singleResult2",
 						result: "titi"
 					}
 				}
@@ -61,7 +65,7 @@ describe('etl-files',function(){
 			//console.dir(pData);
 			done();
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
@@ -74,7 +78,7 @@ describe('etl-files',function(){
 		mETLTemplate['step3'] = {
 				files: {
 					"/tmp/toto.txt": {
-						source: "http://a.b.c/{{ $.step1.collects.t001test.result }}.txt"
+						source: "http://a.b.c/{{ vars.t001test }}.txt"
 					}
 				}
 		};
@@ -87,7 +91,7 @@ describe('etl-files',function(){
     		//console.dir( pData );
 			done();
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
@@ -99,7 +103,7 @@ describe('etl-files',function(){
 		}
 		mETLTemplate['step3'] = {
 				files: {
-					"/tmp/{{ $.step1.collects.t001test.result }}.txt": {
+					"/tmp/{{ vars.t001test }}.txt": {
 						source: "http://a.b.c/titi.txt"
 					}
 				}
@@ -110,10 +114,10 @@ describe('etl-files',function(){
 		new CollectClass( oETL );
 		
     	oETL.process( mETLTemplate ).then(function( pData ) {
-    		//console.dir( pData );
+    		//console.dir( 'Data=' + pData );
 			done();
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
@@ -126,8 +130,8 @@ describe('etl-files',function(){
 		}
 		mETLTemplate['step3'] = {
 				files: {
-					"/tmp/{{ $.step1.collects.t001test.result }}.txt": {
-						source: "http://a.b.c/{{ $.step1.collects.t001test.result }}.txt"
+					"/tmp/{{ vars.t001test }}.txt": {
+						source: "http://a.b.c/{{ vars.t001test }}.txt"
 					}
 				}
 		};
@@ -140,7 +144,7 @@ describe('etl-files',function(){
     		//console.dir( pData );
 			done();
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	
@@ -158,8 +162,8 @@ describe('etl-files',function(){
 		}
 		mETLTemplate['step3'] = {
 				files: {
-					"/tmp/{{ $.step1.collects.t002test.result }}.txt": {
-						source: "http://a.b.c/{{ $.step1.collects.t002test.result }}.txt"
+					"/tmp/{{ vars.t002test }}.txt": {
+						source: "http://a.b.c/{{ vars.t002test }}.txt"
 					}
 				}
 		};
@@ -172,7 +176,7 @@ describe('etl-files',function(){
     		//console.dir( pData );
 			done();
 		}, function( pError ) {
-			done();
+			done( pError );
 		});
 	});
 	/*

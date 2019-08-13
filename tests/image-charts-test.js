@@ -139,8 +139,8 @@ describe('image-charts',function(){
 				}
 		}
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
-			console.log("##### Result: ");
-			console.dir( pData );
+			//console.log("##### Result: ");
+			//console.dir( pData );
 			if ( pData ) {
 				//assert.isArray( pData );
 				//assert.equal( 1, pData.length );

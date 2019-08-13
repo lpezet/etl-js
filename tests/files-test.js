@@ -311,11 +311,15 @@ describe('files',function(){
 		};
 		
 		oTested.handle( 'root' , oConfig['root'], oExecutor, oContext ).then(function( pData ) {
-			assert.isNotNull( pData );
-			assert.isNotNull( pData['files'] );
-			assert.isNotNull( pData['files']['/tmp/file.txt'] );
-			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
-			done();
+			try {
+				assert.isNotNull( pData );
+				assert.isNotNull( pData['files'] );
+				assert.isNotNull( pData['files']['/tmp/file.txt'] );
+				assert.isNull( pData['files']['/tmp/file.txt']['error'] );
+				done();
+			} catch( e ) {
+				done( e );
+			}
 		}, function( pError ) {
 			console.log( pError );
 			done( pError );

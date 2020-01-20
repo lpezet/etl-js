@@ -154,6 +154,67 @@ describe('hpcc-ecls',function(){
 		})
 	});
 	
+	it('test123', function(done) {
+		var oP1 = new Promise( function( resolve, reject ) {
+			resolve( 'Promise 1!!!' );
+		});
+		var oP2 = new Promise( function( resolve, reject ) {
+			resolve( 'Promise 2 !?!');
+		});
+		
+		var oTest = function() {
+			return oP1.then( function( pData ) {
+				return oP2;
+			});
+		};
+		
+		oTest().then( function( pData ) {
+			console.log('Test result: ' + pData );
+		}).finally( done );
+	});
+	
+	it('tagsMultipleValue', function(done) {
+		var oCmdsExecuted = [];
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.notInclude( pCmd, "{{ year }}");
+    		oCmdsExecuted.push( pCmd );
+    		pCallback( null, "", "");
+    	};
+    	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
+    		assert.notInclude( pContent, "{{ year }}");
+    		pCallback( null, "", "");
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+				root: {
+					  "summary_{{ years }}": {
+					    cluster: "thor",
+					    content: "OUTPUT({{ years }});",
+					    output: "/tmp/{{ years }}/test.csv"
+					  }
+				}
+		};
+    	var oContext = {
+    			years: [2018,2019,2020]
+    	};
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
+			try {
+				assert.equal( Object.keys(pData['hpcc-ecls']).length, oContext.years.length );
+				assert.equal( oCmdsExecuted.length, 3 );
+				assert.exists( pData['hpcc-ecls']['summary_2018'] );
+				assert.exists( pData['hpcc-ecls']['summary_2019'] );
+				assert.exists( pData['hpcc-ecls']['summary_2020'] );
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		})
+	});
+	
 	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -229,6 +290,9 @@ describe('hpcc-ecls',function(){
 	    		assert.include( pCmd, "cluster=thor");
 	    		assert.notInclude( pCmd, "format=null");
 	    		assert.notInclude( pCmd, "output=null");
+    		} else {
+    			// the TEMP_ECL_FILE
+    			fs.writeFileSync('/tmp/etl-js.ecl', 'something', 'utf8');
     		}
     		pCallback( null, "", "");
     	}
@@ -245,7 +309,9 @@ describe('hpcc-ecls',function(){
 			done();
 		}, function( pError ) {
 			done( pError );
-		});
+		}).finally( function() {
+			fs.unlinkSync( '/tmp/etl-js.ecl' );
+		})
 	});
 	
 	it('fileWithErrorDownloadingFile',function(done){
@@ -253,7 +319,7 @@ describe('hpcc-ecls',function(){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		if ( pCmd.indexOf('wget') >= 0 ) {
-    			pCallback( new Error("error"), "", "");
+    			pCallback( new Error("Test error"), "", "");
     		}
     		pCallback( null, "", "");
     	}
@@ -278,7 +344,10 @@ describe('hpcc-ecls',function(){
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
     		if ( pCmd.indexOf('wget') < 0 ) {
-    			pCallback( new Error("error"), "", "");
+    			pCallback( new Error("Test error"), "", "");
+    		} else {
+    			// the TEMP_ECL_FILE
+    			fs.writeFileSync('/tmp/etl-js.ecl', 'something', 'utf8');
     		}
     		pCallback( null, "", "");
     	}
@@ -295,6 +364,8 @@ describe('hpcc-ecls',function(){
 			done("Should have raised and caught error.");
 		}, function( pError ) {
 			done();
+		}).finally( function() {
+			fs.unlinkSync( '/tmp/etl-js.ecl' );
 		});
 	});
 	
@@ -328,14 +399,12 @@ describe('hpcc-ecls',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( pData ) {
 			//console.log('#### ecls content: ');
 			//console.dir( pData );
-			fs.unlinkSync('test.ecl');
 			done();
 		}, function( pError ) {
-			fs.unlinkSync('test.ecl');
 			done( pError );
+		}).finally( function() {
+			fs.unlinkSync('test.ecl');
 		})
-		
-    	
 	});
 	
 	it('content',function(done){
@@ -358,14 +427,10 @@ describe('hpcc-ecls',function(){
 		var oConfig = load_file( './hpcc-ecls/content.yml');
 		
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function( pData ) {
-			//console.log('#### ecls content: ');
-			//console.dir( pData );
 			done();
 		}, function( pError ) {
 			done( pError );
 		})
-		
-    	
 	});
 	
 	it('contentWithErrorCreatingFile',function(done){
@@ -375,7 +440,7 @@ describe('hpcc-ecls',function(){
     		pCallback( null, "", "");
     	}
     	ExecutorClass.prototype.writeFile = function( pFilename, pContent, pCallback ) {
-    		pCallback( new Error("error"), "", "some stderr stuff");
+    		pCallback( new Error("Test error"), "", "some stderr stuff");
     	}
     	
     	var oExecutor = new ExecutorClass();

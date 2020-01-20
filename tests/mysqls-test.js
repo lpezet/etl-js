@@ -21,6 +21,50 @@ describe('mysqls',function(){
 		done();
 	});
 	
+	it('tagsMultipleValues',function(done){
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		assert.notInclude( pCmd, '{{ years }}');
+    		pCallback( null, "", "");
+    	}
+    	
+    	var oExecutor = new ExecutorClass();
+    	var oSettings = {
+				'root': {
+					bind_address: '127.0.0.1',
+					silent: true
+				}
+		};
+		var oTested = new TestedClass( null, oSettings );
+		
+		var oTemplate = {
+    			root: {
+    				"do_something_{{ years }}": {
+						db_name: "testdb",
+					    execute: "SELECT * FROM test WHERE year = {{ years }}"
+				    }
+    			}
+    	};
+		
+		var oContext = {
+				years: [ 2018, 2019, 2020 ]
+		}
+    	
+    	oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
+    		try {
+    			assert.property( pData['mysqls'], 'do_something_2018' );
+    			assert.property( pData['mysqls'], 'do_something_2019' );
+        		assert.property( pData['mysqls'], 'do_something_2020' );
+    			done();
+    		} catch(e) {
+    			done(e);
+    		}    		
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		});
+	});
+	
 	it('apply_settings_parent',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

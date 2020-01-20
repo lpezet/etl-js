@@ -21,6 +21,43 @@ describe('mysqlimports',function(){
 		done();
 	});
 	
+	it('tagsMultipleValues', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		//assert.include( pCmd, "--fields-enclosed-by='\"'");
+    		assert.notInclude( pCmd, "{{ years }}");
+    		pCallback( null, "", "");
+    	}
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass();
+    	var oTemplate = {
+    			root: {
+    				"/downloads/{{ years }}.csv": {
+						db_name: "testdb",
+						fields_enclosed_by: '"'
+    				}
+    			}
+    	};
+    	var oContext = {
+    			years: [ 2018, 2019, 2020 ]
+    	}
+    	oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
+    		console.log('#### Data');
+    		console.dir( pData );
+    		try {
+	    		assert.property( pData['mysqlimports'],  "/downloads/2018.csv" );
+	    		assert.property( pData['mysqlimports'],  "/downloads/2019.csv" );
+	    		assert.property( pData['mysqlimports'],  "/downloads/2020.csv" );
+				done();
+    		} catch( e ) {
+    			done( e );
+    		}
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	});
+	
 	it('enclose',function(done){
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

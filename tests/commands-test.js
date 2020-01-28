@@ -73,7 +73,7 @@ describe('commands',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	})
@@ -107,8 +107,8 @@ describe('commands',function(){
 		}
 		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
 			try {
-				console.log('Data=');
-				console.log(JSON.stringify( pData ));
+				//console.log('Data=');
+				//console.log(JSON.stringify( pData ));
 				assert.exists( pData );
 				assert.isFalse( pData['exit'] );
 				assert.isFalse( pData['skip'] );
@@ -123,7 +123,7 @@ describe('commands',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	})
@@ -157,7 +157,7 @@ describe('commands',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -192,7 +192,7 @@ describe('commands',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -229,7 +229,7 @@ describe('commands',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -296,12 +296,12 @@ describe('commands',function(){
 		};
 		
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function( data ) {
-			console.log('data=');
-			console.dir(data);
+			//console.log('data=');
+			//console.dir(data);
 			done('Expecting error');
 		}, function( pError ) {
-			console.log('Error:');
-			console.dir( pError );
+			//console.log('Error:');
+			//console.dir( pError );
 			done();
 		});
 	});
@@ -417,7 +417,7 @@ describe('commands',function(){
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 		
@@ -441,7 +441,7 @@ describe('commands',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done("Expected rejection.");
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done();
 		})
 	});

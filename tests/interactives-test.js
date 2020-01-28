@@ -101,7 +101,7 @@ describe('interactives',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 		setTimeout(function() {

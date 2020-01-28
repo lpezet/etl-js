@@ -59,7 +59,7 @@ describe('hpcc-ecls',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -100,7 +100,7 @@ describe('hpcc-ecls',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -354,7 +354,7 @@ describe('hpcc-ecls',function(){
     	
     	var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
-    		console.log( 'Command=' + pCmd );
+    		//console.log( 'Command=' + pCmd );
     		assert.include( pCmd, "cluster=thor");
     		
     		pCallback( null, "", "");

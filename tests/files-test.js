@@ -46,7 +46,7 @@ describe('files',function(){
 		oTested.handle( 'root' , oTemplate['root'], oExecutor, oContext).then(function( pData ) {
 			done("Expecting error.");
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done();
 		})
 	});
@@ -119,7 +119,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -154,7 +154,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -200,7 +200,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -234,7 +234,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -273,7 +273,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/file.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -321,7 +321,7 @@ describe('files',function(){
 				done( e );
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -379,7 +379,7 @@ describe('files',function(){
 			assert.isNull( pData['files']['/tmp/static.txt']['error'] );
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});

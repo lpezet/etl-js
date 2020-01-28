@@ -60,7 +60,7 @@ describe('mysqls',function(){
     			done(e);
     		}    		
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -94,7 +94,7 @@ describe('mysqls',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -128,7 +128,7 @@ describe('mysqls',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -162,7 +162,7 @@ describe('mysqls',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -310,7 +310,7 @@ describe('mysqls',function(){
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 		
@@ -359,7 +359,7 @@ describe('mysqls',function(){
 		oTested.handle( 'root', oConfig['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});

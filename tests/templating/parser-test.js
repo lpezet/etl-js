@@ -82,7 +82,7 @@ describe('parser',function(){
 	it('simpleToken',function(done){
     	var oTested = new TestedClass();
     	var oActual = oTested.parseToTokens( "hello {{ firstName }}!" );
-    	console.dir( oActual );
+    	//console.dir( oActual );
     	assert.isNotNull( oActual );
     	assert.isArray( oActual );
     	assert.equal( 3, oActual.length );
@@ -99,7 +99,7 @@ describe('parser',function(){
     		oTested.parseToTokens( "hello {{ firstName !" );
     		done("Expecting error because of missing end tag }}.")
     	} catch (e) {
-    		console.log(e);
+    		//console.log(e);
     		done();
     	}
 	});

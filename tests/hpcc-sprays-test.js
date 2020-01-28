@@ -41,7 +41,7 @@ describe('hpcc-sprays',function(){
     	var oExecutor = new ExecutorClass();
 		var oTested = new TestedClass( null, {} );
 		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext).then(function( pData ) {
-			console.dir( pData );
+			//console.dir( pData );
 			try {
 				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2018::raw" );
 				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2019::raw" );
@@ -79,7 +79,7 @@ describe('hpcc-sprays',function(){
     	var oExecutor = new ExecutorClass();
 		var oTested = new TestedClass( null, {} );
 		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext).then(function( pData ) {
-			console.dir( pData );
+			//console.dir( pData );
 			try {
 				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2018::raw" );
 				assert.include( pData['hpcc-sprays']['noaa::ghcn::daily::2018::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv");
@@ -153,7 +153,7 @@ describe('hpcc-sprays',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -189,7 +189,7 @@ describe('hpcc-sprays',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -318,7 +318,7 @@ describe('hpcc-sprays',function(){
 		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 		

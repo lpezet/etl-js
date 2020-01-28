@@ -157,7 +157,7 @@ describe('etl',function(){
     			done( pError );
     		}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -313,7 +313,7 @@ describe('etl',function(){
 				done(e);
 			}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -364,7 +364,7 @@ describe('etl',function(){
 		oTested.process( oETL ).then(function( pData ) {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});
@@ -539,7 +539,7 @@ describe('etl',function(){
 			assert.equal(1, oModer.calls());
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 	});

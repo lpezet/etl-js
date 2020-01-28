@@ -10,7 +10,7 @@ describe('engine',function(){
 		done();
 	});
 	
-	it('evaluateTreeNoVars', function() {
+	it('evaluateObjectNoVars', function() {
 		var oObj = {
 				"abc": {
 					"toto_titi": {
@@ -28,7 +28,7 @@ describe('engine',function(){
 		assert.deepEqual( oActual, { "abc": { "toto_titi": { "a": "1", "b": 2 } } } );
 	});
 	
-	it('evaluateTreeBasic', function() {
+	it('evaluateObjectBasic', function() {
 		var oObj = {
 				"abc": {
 					"toto_{{ year }}": {
@@ -46,7 +46,7 @@ describe('engine',function(){
 		assert.deepEqual( oActual, { "abc": { "toto_2018": { "a": "1", "b": 2 } } } );
 	});
 	
-	it('evaluateTreeSubTree', function() {
+	it('evaluateObjectAdvanced', function() {
 		var oObj = {
 				"abc": {
 					"toto_{{ years }}": {
@@ -126,7 +126,7 @@ describe('engine',function(){
 	});
 	
 	// Here the problem is tata_{{ single }} breaks the loop for tutu_{{ years }}, so "a": "{{ years }}" is only reduced to "a": "2018".
-	it('evaluateTreeSubTreeBreakLoop', function() {
+	it('evaluateObjectAdvancedBreakLoop', function() {
 		var oObj = {
 				"abc": {
 					"tutu_{{ years }}": {
@@ -201,6 +201,44 @@ describe('engine',function(){
     	assert.isNotNull( oActual );
     	assert.isArray( oActual );
     	assert.deepEqual( [ 'something::20200101::file1', 'something::20200101::file2' ], oActual );
+	});
+	
+	// Here the problem is tata_{{ single }} breaks the loop for tutu_{{ years }}, so "a": "{{ years }}" is only reduced to "a": "2018".
+	it('evaluateObjectAdvanced2', function() {
+		var oObj = {
+				"tutu_{{ years }}": {
+					"a": "static",
+					"b": "{{ years }}",
+					"c": "{{single}}"
+				}
+		};
+		
+		var oExpected = {
+		  	    "tutu_2018": {
+		  	    	"a": "static",
+					"b": "2018",
+					"c": "hello"
+			    },
+			    "tutu_2019": {
+			    	"a": "static",
+					"b": "2019",
+					"c": "hello"
+			    },
+			    "tutu_2020": {
+			    	"a": "static",
+			    	"b": "2020",
+					"c": "hello"
+			    }
+		};
+		
+		var oTested = new TestedClass();
+		var oContext = {
+				years: [ 2018, 2019, 2020 ],
+				single: "hello"
+		}
+		var oActual = {};
+		oTested.evaluateObject( oObj, oContext, oActual );
+		assert.deepEqual( oActual, oExpected );
 	});
 	
 });

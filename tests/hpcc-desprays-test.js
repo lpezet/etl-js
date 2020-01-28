@@ -114,7 +114,7 @@ describe('hpcc-desprays',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -149,7 +149,7 @@ describe('hpcc-desprays',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -209,7 +209,7 @@ describe('hpcc-desprays',function(){
 		oTested.handle( 'root' , oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 		

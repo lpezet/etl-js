@@ -42,8 +42,8 @@ describe('mysqlimports',function(){
     			years: [ 2018, 2019, 2020 ]
     	}
     	oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
-    		console.log('#### Data');
-    		console.dir( pData );
+    		//console.log('#### Data');
+    		//console.dir( pData );
     		try {
 	    		assert.property( pData['mysqlimports'],  "/downloads/2018.csv" );
 	    		assert.property( pData['mysqlimports'],  "/downloads/2019.csv" );
@@ -53,7 +53,7 @@ describe('mysqlimports',function(){
     			done( e );
     		}
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -78,7 +78,7 @@ describe('mysqlimports',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -111,7 +111,7 @@ describe('mysqlimports',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -144,7 +144,7 @@ describe('mysqlimports',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -177,7 +177,7 @@ describe('mysqlimports',function(){
     	oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		})
 	});
@@ -237,7 +237,7 @@ describe('mysqlimports',function(){
 		oTested.handle( 'root', oTemplate['root'], oExecutor ).then(function() {
 			done();
 		}, function( pError ) {
-			console.log( pError );
+			//console.log( pError );
 			done( pError );
 		});
 		

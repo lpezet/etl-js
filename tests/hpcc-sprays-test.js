@@ -21,6 +21,44 @@ describe('hpcc-sprays',function(){
 		done();
 	});
 	
+	it('tagsMixSingleAndMultipleValues', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		pCallback( null, pCmd, "" );
+    	};
+    	var oTemplate = {
+    		root: {
+    		    "noaa::ghcn::daily::{{ years }}::raw": {
+    		        format: "csv",
+    		        sourceIP: "192.168.0.10",
+    		        sourcePath: "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ single }}/{{ years }}.csv"
+    		    }
+    		}
+    	};
+    	var oContext = {
+    			years: [2018,2019,2020],
+    			single: "hello"
+    	};
+    	var oExecutor = new ExecutorClass();
+		var oTested = new TestedClass( null, {} );
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext).then(function( pData ) {
+			//console.dir( pData );
+			try {
+				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2018::raw" );
+				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2019::raw" );
+				assert.property( pData['hpcc-sprays'],  "noaa::ghcn::daily::2020::raw" );
+				assert.include( pData['hpcc-sprays']['noaa::ghcn::daily::2018::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/hello/2018.csv");
+				assert.include( pData['hpcc-sprays']['noaa::ghcn::daily::2019::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/hello/2019.csv");
+				assert.include( pData['hpcc-sprays']['noaa::ghcn::daily::2020::raw']['result'], "srcfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/hello/2020.csv");
+				done();
+			} catch(e) {
+				done(e);
+			}
+		}, function( pError ) {
+			done( pError );
+		});
+	});
+	
 	it('tagsMultipleValues', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
@@ -55,7 +93,7 @@ describe('hpcc-sprays',function(){
 			}
 		}, function( pError ) {
 			done( pError );
-		})
+		});
 	})
 	
 	

@@ -154,25 +154,6 @@ describe('hpcc-ecls',function(){
 		})
 	});
 	
-	it('test123', function(done) {
-		var oP1 = new Promise( function( resolve, reject ) {
-			resolve( 'Promise 1!!!' );
-		});
-		var oP2 = new Promise( function( resolve, reject ) {
-			resolve( 'Promise 2 !?!');
-		});
-		
-		var oTest = function() {
-			return oP1.then( function( pData ) {
-				return oP2;
-			});
-		};
-		
-		oTest().then( function( pData ) {
-			console.log('Test result: ' + pData );
-		}).finally( done );
-	});
-	
 	it('tagsMultipleValue', function(done) {
 		var oCmdsExecuted = [];
 		var ExecutorClass = function() {};

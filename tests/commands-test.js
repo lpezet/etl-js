@@ -22,6 +22,62 @@ describe('commands',function(){
 		done();
 	});
 	
+	it('tagsAdvanced', function(done) {
+		var ExecutorClass = function() {};
+    	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {
+    		try {
+	    		assert.equal(typeof( pCmd ), 'string');
+	    		if ( pCmd.indexOf("echo \"continue\"") >= 0 ) {
+	    			assert.notInclude( pCmd, "{{ tag1 }}");
+	    		}
+	    		
+	    		if ( pCmd.indexOf("2019 -eq 2019") >= 0) {
+	    			pCallback( null, "stop", ""); // making test fail
+	    		} else {
+	    			pCallback( null, pCmd, "");
+	    		}
+    		} catch (e) {
+    			pCallback( e, pCmd, "");
+    		}
+    	};
+    	var oExecutor = new ExecutorClass();
+    	var oTested = new TestedClass(null, null, new SimpleLogger({ level: 'debug' }));
+    	
+		var oTemplate = {
+				root: {
+					"hello_{{years}}": {
+						command: "echo {{ years }}",
+						test: "{{years}} -eq 2019",
+						skip_on_test_failed: true
+					}
+				}
+		}
+		var oContext = {
+				years: [ "2018", "2019", "2020" ]
+		}
+		oTested.handle( 'root', oTemplate['root'], oExecutor, oContext ).then(function( pData ) {
+			try {
+				//console.log('Data=');
+				//console.log(JSON.stringify( pData ));
+				assert.exists( pData.results );
+				assert.isTrue( pData.skip );
+				assert.isFalse( pData.exit );
+				pData.results.forEach( function(e,i) {
+					var oCmd = e['command'];
+					if ( oCmd !== "hello_2018" && oCmd !== "hello_2019" ) {
+						fail("Unexpected command: " + oCmd + ". Should have stopped at 2019.");
+					}
+				});
+				done();
+			} catch (e) {
+				done(e);
+			}
+		}, function( pError ) {
+			console.log( pError );
+			done( pError );
+		})
+	})
+	
 	it('tags', function(done) {
 		var ExecutorClass = function() {};
     	ExecutorClass.prototype.exec = function( pCmd, pCmdOpts, pCallback ) {

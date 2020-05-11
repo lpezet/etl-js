@@ -13,31 +13,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  */
 
 /**
-   * A simple string scanner that is used by the template parser to find
-   * tokens in template strings.
-   */
-  function Scanner (string) {
-    this.string = string;
-    this.tail = string;
+ * A simple string scanner that is used by the template parser to find
+ * tokens in template strings.
+ */
+
+export default class Scanner {
+  string: string;
+  tail: string;
+  pos: number;
+  constructor(str: string) {
+    this.string = str;
+    this.tail = str;
     this.pos = 0;
   }
-
   /**
    * Returns `true` if the tail is empty (end of string).
    */
-  Scanner.prototype.eos = function eos () {
-    return this.tail === '';
-  };
-
+  eos() {
+    return this.tail === "";
+  }
   /**
    * Tries to match the given regular expression at the current position.
    * Returns the matched text if it can match, the empty string otherwise.
    */
-  Scanner.prototype.scan = function scan (re) {
+  scan(re: any) {
     var match = this.tail.match(re);
 
-    if (!match || match.index !== 0)
-      return '';
+    if (!match || match.index !== 0) return "";
 
     var string = match[0];
 
@@ -45,22 +47,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     this.pos += string.length;
 
     return string;
-  };
-
+  }
   /**
    * Skips all text until the given regular expression can be matched. Returns
    * the skipped string, which is the entire tail if no match can be made.
    */
-  Scanner.prototype.scanUntil = function scanUntil (re) {
-    var index = this.tail.search(re), match;
+  scanUntil(re: any) {
+    var index = this.tail.search(re),
+      match;
 
     switch (index) {
       case -1:
         match = this.tail;
-        this.tail = '';
+        this.tail = "";
         break;
       case 0:
-        match = '';
+        match = "";
         break;
       default:
         match = this.tail.substring(0, index);
@@ -70,7 +72,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     this.pos += match.length;
 
     return match;
-  };
-
-
-exports = module.exports = Scanner;
+  }
+}

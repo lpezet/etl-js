@@ -4,11 +4,17 @@
   "description": "ETL made simple and reproducible.",
   "main": "index.js",
   "scripts": {
+    "dist": "npm run clean && npm run tsc -- --build tsconfig.publish.json && chmod +x lib/src/bin/cue-me-in.js",
+    "tsc": "tsc",
+    "clean": "rimraf lib",
+    "lint": "eslint --ext .ts .",
+    "mocha_cuemein": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --opts mocha.opts",
+    "mocha-single": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
     "release": "release-it",
-    "lint": "eslint lib/ tests/",
-    "fix": "eslint lib/ tests/ --fix",
+    "lint_old": "eslint lib/ tests/",
+    "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
-    "test": "nyc mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
+    "test": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
     "posttest": "nyc check-coverage",
     "integration-test": "mocha ./integration-tests/*-test.js",
     "docs-gen": "doctoc README.md Mods.md --github --no-title",
@@ -45,23 +51,51 @@
     "reporter": [
       "lcov",
       "text-summary"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "extension": [
+      ".js",
+      ".ts"
+    ],
+    "exclude": [
+      "tests/**/*"
     ]
   },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
+    "@types/jest": "^25.2.1",
     "JSONPath": "^0.11.2",
+    "log4js": "^6.1.2",
     "ssh2": "^0.8.4"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.6",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/node": "^10.17.17",
+    "@types/sinon": "^5.0.5",
+    "@types/sinon-chai": "^3.2.2",
+    "@types/ssh2": "^0.5.43",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "chai-spies": "^1.0.0",
     "crypto": "^1.0.1",
     "doctoc": "^1.4.0",
-    "eslint": "^6.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-jsdoc": "^22.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
     "mocha": "^5.0.0",
     "nyc": "^14.1.1",
     "release-it": "^12.3.0",
-    "sinon": "^4.1.6",
+    "rimraf": "^3.0.2",
+    "sinon": "^6.3.4",
+    "sinon-chai": "^3.2.0",
+    "source-map-support": "^0.5.9",
+    "supertest": "^3.3.0",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.7.5",
     "yaml-cfn": "^0.2.1"
   }
 }

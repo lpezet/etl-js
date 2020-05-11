@@ -11,78 +11,77 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import { assert } from "chai";
+import Scanner from "../../lib/templating/scanner";
 
-const assert = require('chai').assert
-var Scanner = require('../../lib/templating/scanner');
-
-describe('scanner', function () {
-  describe('for an empty string', function () {
-    it('is at the end', function () {
-      var scanner = new Scanner('');
+describe("scanner", function () {
+  describe("for an empty string", function () {
+    it("is at the end", function () {
+      const scanner = new Scanner("");
       assert(scanner.eos());
     });
   });
 
-  describe('for a non-empty string', function () {
-    var scanner;
+  describe("for a non-empty string", function () {
+    let scanner: Scanner;
     beforeEach(function () {
-      scanner = new Scanner('a b c');
+      scanner = new Scanner("a b c");
     });
 
-    describe('scan', function () {
-      describe('when the RegExp matches the entire string', function () {
-        it('returns the entire string', function () {
-          var match = scanner.scan(/a b c/);
+    describe("scan", function () {
+      describe("when the RegExp matches the entire string", function () {
+        it("returns the entire string", function () {
+          const match = scanner.scan(/a b c/);
           assert.equal(match, scanner.string);
           assert(scanner.eos());
         });
       });
 
-      describe('when the RegExp matches at index 0', function () {
-        it('returns the portion of the string that matched', function () {
-          var match = scanner.scan(/a/);
-          assert.equal(match, 'a');
+      describe("when the RegExp matches at index 0", function () {
+        it("returns the portion of the string that matched", function () {
+          const match = scanner.scan(/a/);
+          assert.equal(match, "a");
           assert.equal(scanner.pos, 1);
         });
       });
 
-      describe('when the RegExp matches at some index other than 0', function () {
-        it('returns the empty string', function () {
-          var match = scanner.scan(/b/);
-          assert.equal(match, '');
+      describe("when the RegExp matches at some index other than 0", function () {
+        it("returns the empty string", function () {
+          const match = scanner.scan(/b/);
+          assert.equal(match, "");
           assert.equal(scanner.pos, 0);
         });
       });
 
-      describe('when the RegExp does not match', function () {
-        it('returns the empty string', function () {
-          var match = scanner.scan(/z/);
-          assert.equal(match, '');
+      describe("when the RegExp does not match", function () {
+        it("returns the empty string", function () {
+          const match = scanner.scan(/z/);
+          assert.equal(match, "");
           assert.equal(scanner.pos, 0);
         });
       });
     }); // scan
 
-    describe('scanUntil', function () {
-      describe('when the RegExp matches at index 0', function () {
-        it('returns the empty string', function () {
-          var match = scanner.scanUntil(/a/);
-          assert.equal(match, '');
+    describe("scanUntil", function () {
+      describe("when the RegExp matches at index 0", function () {
+        it("returns the empty string", function () {
+          const match = scanner.scanUntil(/a/);
+          assert.equal(match, "");
           assert.equal(scanner.pos, 0);
         });
       });
 
-      describe('when the RegExp matches at some index other than 0', function () {
-        it('returns the string up to that index', function () {
-          var match = scanner.scanUntil(/b/);
-          assert.equal(match, 'a ');
+      describe("when the RegExp matches at some index other than 0", function () {
+        it("returns the string up to that index", function () {
+          const match = scanner.scanUntil(/b/);
+          assert.equal(match, "a ");
           assert.equal(scanner.pos, 2);
         });
       });
 
-      describe('when the RegExp does not match', function () {
-        it('returns the entire string', function () {
-          var match = scanner.scanUntil(/z/);
+      describe("when the RegExp does not match", function () {
+        it("returns the entire string", function () {
+          const match = scanner.scanUntil(/z/);
           assert.equal(match, scanner.string);
           assert(scanner.eos());
         });

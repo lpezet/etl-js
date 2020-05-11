@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "module": "commonjs",
+    "esModuleInterop": true, // Because of JSONPath
+    "strict": true,
+    "outDir": "dev",
+    "removeComments": false,
+    "target": "es2015",
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types", "types"]
+  },
+  "include": ["scripts/**/*"]
+}

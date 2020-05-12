@@ -7,9 +7,9 @@ const LOGGER = createLogger("etljs::main");
 const SSH_CLIENT = new SSHClient();
 
 export type Callback = (
-  error: Error | null, // child_process.ExecException | null,
-  stdout: string,
-  stderr?: string
+  error?: Error | null, // child_process.ExecException | null,
+  stdout?: string | null,
+  stderr?: string | null
 ) => void;
 
 export interface Executor {

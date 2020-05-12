@@ -35,8 +35,8 @@ export type Data = {
   message?: string;
   exit: boolean;
   pass: boolean;
-  _stdout?: string;
-  _stderr?: string;
+  _stdout?: string | null;
+  _stderr?: string | null;
 };
 
 export default class FilesMod implements Mod {
@@ -47,7 +47,10 @@ export default class FilesMod implements Mod {
     var that = this;
     if (pETL)
       pETL.mod("files", this, function (pSettings: any) {
-        that.mSettings = pSettings;
+        that.mSettings = {
+          ...that.mSettings,
+          ...pSettings,
+        };
       });
     this.mTemplateEngine = new TemplateEngine();
   }
@@ -120,7 +123,11 @@ export default class FilesMod implements Mod {
               pSource +
               '" 2>&1',
             {},
-            function (error: Error | null, stdout: string, stderr?: string) {
+            function (
+              error?: Error | null,
+              stdout?: string | null,
+              stderr?: string | null
+            ) {
               if (error) data.error = error;
               data.pass = true; //???
               data["_stdout"] = stdout;

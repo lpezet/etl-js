@@ -26,17 +26,19 @@ export default class Engine {
       return oResults;
     }
   }
-  evaluateObject(pObj: any, pContext: any, pCallbackOrResult: Callback | any) {
+  evaluateObject(pObj: any, pContext: any, pCallbackOrResult?: Callback | any) {
     return this.evaluateObjectExperimental(pObj, pContext, pCallbackOrResult);
   }
   evaluateObjectExperimental(
     pTemplate: string,
     pContext: string,
-    pCallbackOrResult: Callback | any
+    pCallbackOrResult?: Callback | any
   ) {
     var that = this;
     var oResult =
-      typeof pCallbackOrResult === "object" ? pCallbackOrResult : {};
+      pCallbackOrResult && typeof pCallbackOrResult === "object"
+        ? pCallbackOrResult
+        : {};
 
     const traverse = function (
       pVal: any,

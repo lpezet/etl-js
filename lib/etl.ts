@@ -1,9 +1,9 @@
-import { createLogger } from "./logger";
 import Mod from "./mod";
 import { EventEmitter } from "events";
 import * as Promises from "./promises";
 import Context from "./context";
 import { Executor } from "./executors";
+import { createLogger } from "./logger";
 
 const LOGGER = createLogger("etljs::main");
 

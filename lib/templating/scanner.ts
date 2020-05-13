@@ -28,20 +28,23 @@ export default class Scanner {
   }
   /**
    * Returns `true` if the tail is empty (end of string).
+   * @return whether tail is empty or not
    */
-  eos() {
+  eos(): boolean {
     return this.tail === "";
   }
   /**
    * Tries to match the given regular expression at the current position.
    * Returns the matched text if it can match, the empty string otherwise.
+   * @param re regexp
+   * @return string
    */
-  scan(re: any) {
-    var match = this.tail.match(re);
+  scan(re: any): string {
+    const match: RegExpMatchArray | null = new RegExp(re).exec(this.tail); // this.tail.match(re); // /_re/.exec(this.tail);
 
     if (!match || match.index !== 0) return "";
 
-    var string = match[0];
+    const string = match[0];
 
     this.tail = this.tail.substring(string.length);
     this.pos += string.length;
@@ -51,10 +54,12 @@ export default class Scanner {
   /**
    * Skips all text until the given regular expression can be matched. Returns
    * the skipped string, which is the entire tail if no match can be made.
+   * @param re regexp
+   * @return matching string
    */
-  scanUntil(re: any) {
-    var index = this.tail.search(re),
-      match;
+  scanUntil(re: any): string {
+    const index = this.tail.search(re);
+    let match;
 
     switch (index) {
       case -1:

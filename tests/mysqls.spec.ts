@@ -3,65 +3,68 @@ import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
 import MySQLsMod from "../lib/mysqls";
 import { Callback, NoOpExecutor } from "../lib/executors";
-import { load_file } from "./utils";
+import { loadFile } from "./utils";
 import Context from "../lib/context";
 
-describe("mysqls", function () {
-  beforeEach(function (done: Function) {
+describe("mysqls", function() {
+  beforeEach(function(done: Function) {
     done();
   });
 
-  afterEach(function (done: Function) {
+  afterEach(function(done: Function) {
     done();
   });
-  function emptyContext() {
+  /**
+   * @return Context
+   */
+  const emptyContext = (): Context => {
     return { env: {}, vars: {} };
-  }
+  };
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });
     }
   }
 
-  it("mod", function (done) {
-    var oTested = new MySQLsMod(new ETLMock());
+  it("mod", function(done) {
+    const oTested = new MySQLsMod(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
 
-  it("tagsMultipleValues", function (done) {
+  it("tagsMultipleValues", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.notInclude(pCmd, "{{ years }}");
         pCallback(null, "", "");
       }
     }
-    var oExecutor = new ExecutorClass();
-    var oSettings = {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
       root: {
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "do_something_{{ years }}": {
           db_name: "testdb",
-          execute: "SELECT * FROM test WHERE year = {{ years }}",
-        },
-      },
+          execute: "SELECT * FROM test WHERE year = {{ years }}"
+        }
+      }
     };
 
-    var oContext: Context = {
+    const oContext: Context = {
       env: {},
       vars: {},
-      years: [2018, 2019, 2020],
+      years: [2018, 2019, 2020]
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function (pData: any) {
+      function(pData: any) {
         try {
           assert.property(pData["mysqls"], "do_something_2018");
           assert.property(pData["mysqls"], "do_something_2019");
@@ -71,122 +74,122 @@ describe("mysqls", function () {
           done(e);
         }
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_parent", function (done) {
+  it("apply_settings_parent", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oSettings = {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
       root: {
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_key", function (done) {
+  it("apply_settings_key", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oSettings = {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
       "/downloads/test.csv": {
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_all", function (done) {
+  it("apply_settings_all", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oSettings = {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
       "*": {
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
@@ -216,98 +219,98 @@ describe("mysqls", function () {
       );
   });
   */
-  it("internalRunError", function (done) {
+  it("internalRunError", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "some stderr stuff");
       }
     }
-    var oExecutor = new ExecutorClass();
-    var oSettings = {};
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
-    oTested._run = function () {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {};
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    oTested._run = function() {
       throw new Error("error");
     };
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("internalWrapRunError", function (done) {
+  it("internalWrapRunError", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "some stderr stuff");
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oSettings = {};
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
-    oTested._wrap_run = function () {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {};
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    oTested._wrap_run = function() {
       throw new Error("error");
     };
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("errorExecutingCmd", function (done) {
+  it("errorExecutingCmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "some stderr stuff");
       }
     }
-    var oExecutor = new ExecutorClass();
-    var oSettings = {};
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oExecutor = new ExecutorClass();
+    const oSettings = {};
+    const oTested = new MySQLsMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "/downloads/test.csv": {
           db_name: "testdb",
-          execute: "SELECT * FROM test",
-        },
-      },
+          execute: "SELECT * FROM test"
+        }
+      }
     };
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("basic", function (done) {
+  it("basic", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, pCmdOpts: any, pCallback: Callback): void {
         switch (pCmdOpts.context) {
           case "/a/b/c.txt":
             assert.include(pCmd, "--execute='SELECT * FROM test'");
@@ -343,25 +346,25 @@ describe("mysqls", function () {
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oTested = new MySQLsMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod(new ETLMock());
 
-    var oConfig = load_file("./mysqls/basic.yml");
+    const oConfig = loadFile("./mysqls/basic.yml");
 
     oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("basicFalse", function (done) {
+  it("basicFalse", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, pCmdOpts: any, pCallback: Callback): void {
         switch (pCmdOpts.context) {
           case "/a/b/c.txt":
             assert.include(pCmd, "--execute='SELECT * FROM test'");
@@ -396,15 +399,15 @@ describe("mysqls", function () {
         pCallback(null, "", "");
       }
     }
-    var oExecutor = new ExecutorClass();
-    var oTested = new MySQLsMod(new ETLMock());
-    var oConfig = load_file("./mysqls/basic_false.yml");
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod(new ETLMock());
+    const oConfig = loadFile("./mysqls/basic_false.yml");
     oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );

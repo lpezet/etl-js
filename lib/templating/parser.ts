@@ -18,24 +18,38 @@ const isArray =
   function isArrayPolyfill(object) {
     return Object.toString.call(object) === "[object Array]";
   };
-function escapeRegExp(string: string) {
+/**
+ * @param string string
+ * @return escaped string for regex use
+ */
+function escapeRegExp(string: string): string {
+  // eslint-disable-next-line no-useless-escape
   return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
 }
-const regExpTest = RegExp.prototype.test;
+const { test } = RegExp.prototype;
 
-function testRegExp(re: RegExp, string: string) {
-  return regExpTest.call(re, string);
+/**
+ * @param re regexp
+ * @param string string to test regexp against
+ * @return true if string passes test.
+ */
+function testRegExp(re: RegExp, string: string): boolean {
+  return test.call(re, string);
 }
 
 const nonSpaceRe = /\S/;
-function isWhitespace(string: string) {
+/**
+ * @param string string
+ * @return boolean
+ */
+function isWhitespace(string: string): boolean {
   return !testRegExp(nonSpaceRe, string);
 }
 
 const whiteRe = /\s*/;
 const spaceRe = /\s+/;
-//var equalsRe = /\s*=/;
-//var curlyRe = /\s*\}/;
+// var equalsRe = /\s*=/;
+// var curlyRe = /\s*\}/;
 const tagRe = /#|\^|\/|>|\{|&|=|!/;
 
 /**
@@ -43,14 +57,16 @@ const tagRe = /#|\^|\/|>|\{|&|=|!/;
  * tokens that represent a section have two additional items: 1) an array of
  * all tokens that appear in that section and 2) the index in the original
  * template that represents the end of that section.
+ * @param tokens tokens
+ * @return array of tokens
  */
 function nestTokens(tokens: any[]): any[][] {
-  var nestedTokens: any[][] = [];
-  var collector = nestedTokens;
-  //var sections = [];
+  const nestedTokens: any[][] = [];
+  const collector = nestedTokens;
+  // var sections = [];
 
-  var token; //, section;
-  for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+  let token; // , section;
+  for (let i = 0, numTokens = tokens.length; i < numTokens; ++i) {
     token = tokens[i];
 
     switch (token[0]) {
@@ -77,12 +93,15 @@ function nestTokens(tokens: any[]): any[][] {
 /**
  * Combines the values of consecutive text tokens in the given `tokens` array
  * to a single token.
+ * @param tokens tokens
+ * @return squashed tokens
  */
-function squashTokens(tokens: any[][]) {
-  var squashedTokens: any[][] = [];
+function squashTokens(tokens: any[][]): any[][] {
+  const squashedTokens: any[][] = [];
 
-  var token, lastToken;
-  for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+  let token;
+  let lastToken;
+  for (let i = 0, numTokens = tokens.length; i < numTokens; ++i) {
     token = tokens[i];
 
     if (token) {
@@ -100,7 +119,11 @@ function squashTokens(tokens: any[][]) {
 }
 const DEFAULT_TAGS = ["{{", "}}"];
 
-function resolveTags(pTags?: string[] | string) {
+/**
+ * @param pTags tags
+ * @return tags
+ */
+function resolveTags(pTags?: string[] | string): string[] {
   return pTags === undefined
     ? DEFAULT_TAGS
     : typeof pTags === "string"
@@ -114,21 +137,25 @@ export default class Parser {
   mClosingCurlyRe: RegExp;
   constructor(pTags?: string[] | string) {
     const tags = resolveTags(pTags);
-    if (!isArray(tags) || tags.length !== 2)
+    if (!isArray(tags) || tags.length !== 2) {
       throw new Error("Invalid tags: " + tags);
+    }
     this.mOpeningTagRe = new RegExp(escapeRegExp(tags[0]) + "\\s*");
     this.mClosingTagRe = new RegExp("\\s*" + escapeRegExp(tags[1]));
     this.mClosingCurlyRe = new RegExp("\\s*" + escapeRegExp("}" + tags[1]));
   }
   // _compileTags(tagsToCompile: string[] | string) {}
   parseToTokens(pTemplate: string): any[][] {
-    //var sections = [];     // Stack to hold section tokens
-    var tokens: any[][] = []; // Buffer to hold the tokens
-    var spaces: number[] = []; // Indices of whitespace tokens on the current line
-    var hasTag = false; // Is there a {{tag}} on the current line?
-    var nonSpace = false; // Is there a non-space char on the current line?
+    // var sections = [];     // Stack to hold section tokens
+    const tokens: any[][] = []; // Buffer to hold the tokens
+    let spaces: number[] = []; // Indices of whitespace tokens on the current line
+    let hasTag = false; // Is there a {{tag}} on the current line?
+    let nonSpace = false; // Is there a non-space char on the current line?
 
-    function stripSpace() {
+    /**
+     *
+     */
+    function stripSpace(): void {
       if (hasTag && !nonSpace) {
         while (spaces.length) delete tokens[spaces.pop() || -1];
       } else {
@@ -138,9 +165,13 @@ export default class Parser {
       nonSpace = false;
     }
 
-    var scanner = new Scanner(pTemplate);
+    const scanner = new Scanner(pTemplate);
 
-    var start, type, value, chr, token; //, openSection;
+    let start;
+    let type;
+    let value;
+    let chr;
+    let token; // , openSection;
 
     while (!scanner.eos()) {
       start = scanner.pos;
@@ -149,7 +180,7 @@ export default class Parser {
       value = scanner.scanUntil(this.mOpeningTagRe);
 
       if (value) {
-        for (var i = 0, valueLength = value.length; i < valueLength; ++i) {
+        for (let i = 0, valueLength = value.length; i < valueLength; ++i) {
           chr = value.charAt(i);
 
           if (isWhitespace(chr)) {
@@ -170,7 +201,7 @@ export default class Parser {
 
       // Match the opening tag.
       if (!scanner.scan(this.mOpeningTagRe)) {
-        //console.log('!scanner.scan(openingTagRe)');
+        // console.log('!scanner.scan(openingTagRe)');
         break;
       }
 
@@ -180,7 +211,7 @@ export default class Parser {
       type = scanner.scan(tagRe) || "name";
       scanner.scan(whiteRe);
 
-      //console.log('type = ' + type);
+      // console.log('type = ' + type);
 
       // Get the tag value.
       /*
@@ -196,18 +227,19 @@ export default class Parser {
           } else {
           */
       value = scanner.scanUntil(this.mClosingTagRe);
-      //}
+      // }
 
-      //console.log('value = ' + value);
+      // console.log('value = ' + value);
 
       // Match the closing tag.
-      if (!scanner.scan(this.mClosingTagRe))
+      if (!scanner.scan(this.mClosingTagRe)) {
         throw new Error("Unclosed tag at " + scanner.pos);
+      }
 
       token = [type, value, start, scanner.pos];
 
-      //console.log('tokens.push():');
-      //console.dir(token);
+      // console.log('tokens.push():');
+      // console.dir(token);
       tokens.push(token);
 
       /*
@@ -227,7 +259,7 @@ export default class Parser {
       if (type === "name" || type === "{" || type === "&") {
         nonSpace = true;
       }
-      /*else if (type === '=') {
+      /* else if (type === '=') {
               // Set the tags for the next time around.
               compileTags(value);
             }
@@ -235,8 +267,8 @@ export default class Parser {
     }
 
     // Make sure there are no open sections when we're done.
-    //openSection = sections.pop();
-    //if (openSection)
+    // openSection = sections.pop();
+    // if (openSection)
     //  throw new Error('Unclosed section "' + openSection[1] + '" at ' + scanner.pos);
 
     return nestTokens(squashTokens(tokens));

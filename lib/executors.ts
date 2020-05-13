@@ -1,6 +1,6 @@
 import { SSHClient } from "./ssh-client";
 import * as Fs from "fs";
-import * as child_process from "child_process";
+import * as childProcess from "child_process";
 import { createLogger } from "./logger";
 
 const LOGGER = createLogger("etljs::main");
@@ -18,8 +18,12 @@ export interface Executor {
 }
 
 export class NoOpExecutor implements Executor {
-  exec(_pCmd: string, _pCmdOptions: any, _pCallback: Callback): void {}
-  writeFile(_pFilename: string, _pContent: any, _pCallback: Callback): void {}
+  exec(_pCmd: string, _pCmdOptions: any, _pCallback: Callback): void {
+    // nop
+  }
+  writeFile(_pFilename: string, _pContent: any, _pCallback: Callback): void {
+    // nop
+  }
 }
 
 export class Local implements Executor {
@@ -30,8 +34,8 @@ export class Local implements Executor {
   }
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void {
     LOGGER.debug("Executing command [%s] locally...", pCmd);
-    child_process.exec(pCmd, pCmdOptions, function (
-      error: child_process.ExecException | null,
+    childProcess.exec(pCmd, pCmdOptions, function(
+      error: childProcess.ExecException | null,
       stdout: string,
       stderr: string
     ) {
@@ -41,8 +45,8 @@ export class Local implements Executor {
       pCallback(error, stdout, stderr);
     });
   }
-  writeFile(pFilename: string, pContent: any, pCallback: Callback) {
-    Fs.writeFile(pFilename, pContent, function (
+  writeFile(pFilename: string, pContent: any, pCallback: Callback): void {
+    Fs.writeFile(pFilename, pContent, function(
       err: NodeJS.ErrnoException | null
     ) {
       if (err) {
@@ -69,11 +73,11 @@ export class Remote {
   constructor(pSettings: any) {
     this.mSettings = pSettings;
   }
-  _get_ssh_opts() {
-    var opts: any = {
+  _getSshOpts(): any {
+    const opts: any = {
       host: this.mSettings.host, // e.g. '192.168.99.100',
       port: this.mSettings.port || 22,
-      username: this.mSettings.username,
+      username: this.mSettings.username
     };
     if (this.mSettings["privateKey"]) {
       opts["privateKey"] = this.mSettings["privateKey"];
@@ -90,10 +94,10 @@ export class Remote {
       this.mSettings.host
     );
 
-    const opts = this._get_ssh_opts();
+    const opts = this._getSshOpts();
 
     if (pCmdOptions["env"]) opts["env"] = pCmdOptions["env"];
-    var oCmd = pCmd;
+    let oCmd = pCmd;
     if (pCmdOptions["cwd"]) {
       oCmd = "cd " + pCmdOptions["cwd"] + "; " + oCmd;
       LOGGER.debug(
@@ -103,7 +107,7 @@ export class Remote {
     }
     LOGGER.info("Cmd=%s", oCmd);
     LOGGER.debug("Opts=%j", opts);
-    SSH_CLIENT.exec(opts, oCmd, function (err, stdout, stderr, _server, conn) {
+    SSH_CLIENT.exec(opts, oCmd, function(err, stdout, stderr, _server, conn) {
       try {
         stdout = Buffer.isBuffer(stdout) ? stdout.toString("utf8") : stdout;
         stderr = Buffer.isBuffer(stderr) ? stderr.toString("utf8") : stderr;
@@ -116,10 +120,10 @@ export class Remote {
       }
     });
   }
-  writeFile(pFilename: string, pContent: any, pCallback: Callback) {
+  writeFile(pFilename: string, pContent: any, pCallback: Callback): void {
     LOGGER.debug("Writing content to remote file [%s]...", pFilename);
-    const opts = this._get_ssh_opts();
-    SSH_CLIENT.writeFile(opts, pFilename, pContent, function (
+    const opts = this._getSshOpts();
+    SSH_CLIENT.writeFile(opts, pFilename, pContent, function(
       err,
       stdout,
       stderr,

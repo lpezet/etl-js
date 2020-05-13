@@ -18,18 +18,18 @@ export type Data = {
   _stderr?: string | null;
 };
 
-var asPromised = function (
+const asPromised = function(
   pPreviousData: any,
   pKey: string,
   func: Function,
   data: any
-) {
+): void {
   if (!pPreviousData.mysqlimports[pKey]) pPreviousData.mysqlimports[pKey] = {};
   pPreviousData.mysqlimports[pKey] = data;
-  //if ( data['exit'] ) {
+  // if ( data['exit'] ) {
   //	pPreviousData['_exit'] = data['exit'];
   //	pPreviousData['_exit_from'] = pKey;
-  //}
+  // }
   func(pPreviousData);
 };
 
@@ -38,104 +38,141 @@ export default class MySQLImportsMod implements Mod {
   mTemplateEngine: TemplateEngine;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("mysqlimports", this, function (pSettings: any) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+    if (pETL) {
+      pETL.mod("mysqlimports", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
+    }
     this.mTemplateEngine = new TemplateEngine();
   }
-  _evaluate(pTemplate: string, pContext: Context) {
+  _evaluate(pTemplate: string, pContext: Context): string[] | null {
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
-  _apply_settings(pParent: string, pKey: string, pConfig: any) {
-    var apply_settings = function (pConfig: any, pSettings: any) {
-      for (var i in pSettings) {
+  _applySettings(pParent: string, pKey: string, pConfig: any): void {
+    const applySettings = function(pConfig: any, pSettings: any): void {
+      for (const i in pSettings) {
         if (pConfig[i] == null) pConfig[i] = pSettings[i];
       }
     };
-    if (this.mSettings[pKey]) apply_settings(pConfig, this.mSettings[pKey]);
-    else if (this.mSettings[pParent])
-      apply_settings(pConfig, this.mSettings[pParent]);
-    else if (this.mSettings["*"]) apply_settings(pConfig, this.mSettings["*"]);
+    if (this.mSettings[pKey]) applySettings(pConfig, this.mSettings[pKey]);
+    else if (this.mSettings[pParent]) {
+      applySettings(pConfig, this.mSettings[pParent]);
+    } else if (this.mSettings["*"]) {
+      applySettings(pConfig, this.mSettings["*"]);
+    }
   }
-  _read_options(
+  _readOptions(
     pParent: string,
     pKey: string,
     pConfig: any,
     _pExecutor: Executor,
     _pContext: Context,
     _pTemplateIndex: number
-  ) {
-    var oOptions: any = {
+  ): any {
+    const oOptions: any = {
+      // eslint-disable-next-line @typescript-eslint/camelcase
       bind_address: null,
       columns: null,
       compress: null,
       debug: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       debug_check: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       debug_info: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       default_auth: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       default_character_set: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_extra_file: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_file: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_group_suffix: null,
       delete: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       enable_cleartext_plugin: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_enclosed_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_escaped_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_optionally_enclosed_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_terminated_by: null,
       force: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       get_server_public_key: null,
       host: null,
       ignore: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ignore_lines: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       lines_terminated_by: null,
       local: true,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       lock_tables: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       login_path: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       low_priority: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       no_defaults: null,
       password: null,
       pipe: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       plugin_dir: null,
       port: null,
       protocol: null,
       replace: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       secure_auth: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       server_public_key_path: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       shared_memory_base_name: null,
       silent: null,
       socket: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_ca: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_capath: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_cert: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_cipher: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_crl: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_crlpath: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_fips_mode: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_key: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_mode: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       tls_cipheruites: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       tls_version: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       use_threads: null,
-      user: null,
+      user: null
     };
 
     // WARNING: defaults will be affected here, don't make it a global thing, or change logic here, by first copying defaults into empty object.
-    var oConfig: any = oOptions;
-    for (var i in pConfig) {
+    const oConfig: any = oOptions;
+    Object.keys(pConfig).forEach(i => {
       oConfig[i.toLowerCase()] = pConfig[i];
-    }
-
-    this._apply_settings(pParent, pKey, oConfig);
+    });
+    this._applySettings(pParent, pKey, oConfig);
 
     return oConfig;
   }
-  _wrap_run(
+  _wrapRun(
     pParent: string,
     pKey: string,
     pConfig: any,
@@ -143,11 +180,10 @@ export default class MySQLImportsMod implements Mod {
     pContext: Context,
     pTemplateIndex: number
   ): (res: any) => Promise<any> {
-    var that = this;
-    return function (pPreviousData: any) {
+    return (pPreviousData: any) => {
       LOGGER.debug("[%s] Executing mysqlimport...", pParent);
       try {
-        return that._run(
+        return this._run(
           pPreviousData,
           pParent,
           pKey,
@@ -172,20 +208,19 @@ export default class MySQLImportsMod implements Mod {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ) {
-    const that = this;
-    return new Promise(function (resolve, reject) {
-      var enclose = function (pValue: string): string {
-        if (pValue.indexOf('"') >= 0) {
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const enclose = function(pValue: string): string {
+        if (pValue.includes('"')) {
           return "'" + pValue + "'";
-        } else if (pValue.indexOf("'") >= 0) {
+        } else if (pValue.includes("'")) {
           return '"' + pValue + '"';
         }
         return '"' + pValue + '"';
       };
       try {
-        var oCmdArgs = [];
-        for (var i in pConfig) {
+        const oCmdArgs = [];
+        for (const i in pConfig) {
           if (pConfig[i] == null) continue;
           switch (i) {
             case "bind_address":
@@ -347,14 +382,14 @@ export default class MySQLImportsMod implements Mod {
               oCmdArgs.push("--user=" + pConfig[i]);
               break;
             default:
-              //TODO
+              // TODO
               break;
           }
-          //console.log('i=' + i + ', config=' + pConfig[i]);
+          // console.log('i=' + i + ', config=' + pConfig[i]);
         }
-        var oDBName: string = pConfig["db_name"];
-        if (oDBName.indexOf("{{") >= 0) {
-          var oDBNames = that._evaluate(oDBName, pContext) || [];
+        let oDBName: string = pConfig["db_name"];
+        if (oDBName.includes("{{")) {
+          const oDBNames = this._evaluate(oDBName, pContext) || [];
           if (oDBNames.length < pTemplateIndex + 1) {
             return reject(
               new Error(
@@ -370,33 +405,33 @@ export default class MySQLImportsMod implements Mod {
         oCmdArgs.push(oDBName);
         oCmdArgs.push(pKey);
 
-        //TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
-        //See: https://stackoverflow.com/questions/2508559/using-mysqlimport-where-the-filename-is-different-from-the-table-name
+        // TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
+        // See: https://stackoverflow.com/questions/2508559/using-mysqlimport-where-the-filename-is-different-from-the-table-name
 
-        var oCmd = "/usr/bin/mysqlimport " + oCmdArgs.join(" ");
-        pExecutor.exec(oCmd, { context: pKey }, function (
+        const oCmd = "/usr/bin/mysqlimport " + oCmdArgs.join(" ");
+        pExecutor.exec(oCmd, { context: pKey }, function(
           error,
           stdout,
           stderr
         ) {
-          var data: Data = {
+          const data: Data = {
             error: error,
             exit: false,
             pass: true,
             _stdout: stdout,
-            _stderr: stderr,
+            _stderr: stderr
           };
-          var func = null;
+          let func = null;
 
           LOGGER.debug("[%s] Done executing mysqlimport.", pParent);
           if (error) {
             LOGGER.error("[%s] Error executing mysqlimport.", pParent, error);
-            //reject( error );
-            //if ( pConfig['exit_on_failure'] ) data.exit = true;
+            // reject( error );
+            // if ( pConfig['exit_on_failure'] ) data.exit = true;
             func = reject;
             data.result = data._stderr;
           } else {
-            //resolve( stdout );
+            // resolve( stdout );
             func = resolve;
             data.result = data._stdout;
           }
@@ -404,11 +439,11 @@ export default class MySQLImportsMod implements Mod {
           asPromised(pPreviousData, pKey, func, data);
         });
       } catch (e) {
-        //reject( e );
-        var data: Data = {
+        // reject( e );
+        const data: Data = {
           error: e,
           exit: false,
-          pass: true,
+          pass: true
         };
         LOGGER.error("[%s] Unexpected error running mysqlimport.", pParent, e);
         asPromised(pPreviousData, pKey, reject, data);
@@ -420,20 +455,19 @@ export default class MySQLImportsMod implements Mod {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
       LOGGER.info("[%s] Processing mysqlimport...", pParent);
       try {
-        var oData = { mysqlimports: {} };
-        var oPromises: ((res: any) => Promise<any>)[] = [];
-
-        for (var i in pConfig) {
-          var oConfig = pConfig[i];
-          var oKeys: string[] =
-            i.indexOf("{{") < 0 ? [i] : that._evaluate(i, pContext) || [];
-          oKeys.forEach(function (e, j) {
-            var oOptions = that._read_options(
+        const oData = { mysqlimports: {} };
+        const oPromises: ((res: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          const oConfig = pConfig[i];
+          const oKeys: string[] = !i.includes("{{")
+            ? [i]
+            : this._evaluate(i, pContext) || [];
+          oKeys.forEach((e, j) => {
+            const oOptions = this._readOptions(
               pParent,
               e,
               oConfig,
@@ -442,16 +476,16 @@ export default class MySQLImportsMod implements Mod {
               j
             );
             oPromises.push(
-              that._wrap_run(pParent, e, oOptions, pExecutor, pContext, j)
+              this._wrapRun(pParent, e, oOptions, pExecutor, pContext, j)
             );
           });
-        }
+        });
         Promises.seq(oPromises, oData).then(
-          function (_pData) {
+          function(_pData) {
             LOGGER.info("[%s] Done running mysqlimports.", pParent);
             resolve(oData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.info("[%s] Error running mysqlimport.", pParent, pError);
             reject(pError);
           }

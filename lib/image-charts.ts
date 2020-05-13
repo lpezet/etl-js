@@ -19,43 +19,43 @@ export type Data = {
   _stderr?: string | null;
 };
 
-var asPromised = function (
+const asPromised = function(
   pPreviousData: any,
   pKey: string,
   func: (result: any) => void,
   data: any
-) {
+): void {
   if (!pPreviousData.image_charts[pKey]) pPreviousData.image_charts[pKey] = {};
   pPreviousData.image_charts[pKey] = data;
   func(pPreviousData);
 };
 
-var create_image_charts_url = function (pArgs: string[]) {
-  var oArgs = pArgs.join("&");
+const createImageChartsUrl = function(pArgs: string[]): string {
+  const oArgs = pArgs.join("&");
   return "https://image-charts.com/chart?" + oArgs;
 };
 
-var get_data_file_content = function (
+const getDataFileContent = function(
   pParent: string,
   pKey: string,
   pDataFile: string,
   pCmdOptions: any,
   pExecutor: Executor
 ): Promise<Data> {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     LOGGER.debug("[%s] Getting data file content...", pParent);
-    pExecutor.exec("cat " + pDataFile, pCmdOptions, function (
+    pExecutor.exec("cat " + pDataFile, pCmdOptions, function(
       error,
       stdout,
       stderr
     ) {
-      var data: Data = {
+      const data: Data = {
         error: error,
         exit: false,
         pass: error == null,
         skip: false,
         _stdout: stdout,
-        _stderr: stderr,
+        _stderr: stderr
       };
       if (error) {
         reject(data);
@@ -76,19 +76,19 @@ export default class ImageChartsMod implements Mod {
   mTemplateEngine: TemplateEngine;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("image_charts", this, function (pSettings: any) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+    if (pETL) {
+      pETL.mod("image_charts", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
+    }
     this.mTemplateEngine = new TemplateEngine();
   }
-  _evaluate(pTemplate: string, pContext: Context) {
-    //TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    //For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
+  _evaluate(pTemplate: string, pContext: Context): string[] | null {
+    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
+    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
     // Having said that, a mod then cannot access the results of another mod within the same activity...
 
     /*
@@ -108,14 +108,13 @@ export default class ImageChartsMod implements Mod {
     pSpecs: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    var that = this;
-    return function (pPreviousData: any) {
-      return new Promise(function (resolve, reject) {
+  ): (data: any) => Promise<any> {
+    return (pPreviousData: any) => {
+      return new Promise((resolve, reject) => {
         try {
           LOGGER.debug("[%s] Creating image-charts [%s]...", pParent, pKey);
           const oChartArgs: string[] = [];
-          for (var i in pSpecs) {
+          Object.keys(pSpecs).forEach(i => {
             switch (i) {
               case "chs":
                 oChartArgs.push("chs=" + pSpecs[i]);
@@ -123,16 +122,17 @@ export default class ImageChartsMod implements Mod {
               case "cht":
                 oChartArgs.push("cht=" + pSpecs[i]);
                 break;
-              case "chtt":
-                var oTitle = pSpecs[i];
+              case "chtt": {
+                let oTitle = pSpecs[i];
                 if (oTitle) {
                   if (oTitle.indexOf("{{") >= 0) {
-                    const v = that._evaluate(oTitle, pContext);
+                    const v = this._evaluate(oTitle, pContext);
                     if (v) oTitle = v[0];
                   }
                   oChartArgs.push("chtt=" + oTitle);
                 }
                 break;
+              }
               case "chxt":
                 oChartArgs.push("chxt=" + pSpecs[i]);
                 break;
@@ -140,46 +140,46 @@ export default class ImageChartsMod implements Mod {
                 oChartArgs.push("chxs=" + pSpecs[i]);
                 break;
               default:
-                //TODO
+                // TODO
                 break;
             }
+          });
+          let oChartDataFile = pSpecs["data"];
+          if (oChartDataFile.indexOf("{{") < 0) {
+            const v = this._evaluate(oChartDataFile, pContext);
+            if (v && v.length >= 1) oChartDataFile = v[0];
+            // TODO: else, log???
           }
-          var oChartDataFile = pSpecs["data"];
-          oChartDataFile =
-            oChartDataFile.indexOf("{{") < 0
-              ? oChartDataFile
-              : that._evaluate(oChartDataFile, pContext);
-
-          var oCmdOptions: any = {};
+          const oCmdOptions: any = {};
           oCmdOptions["context"] = pKey;
 
-          get_data_file_content(
+          getDataFileContent(
             pParent,
             pKey,
             oChartDataFile,
             oCmdOptions,
             pExecutor
           ).then(
-            function (pData: Data) {
-              var data: Data = {
+            function(pData: Data) {
+              const data: Data = {
                 ...pData,
                 exit: false,
-                pass: true,
+                pass: true
               };
-              var func = resolve;
+              let func = resolve;
               if (data.error) {
                 func = reject;
               } else {
-                var oArgs = data._stdout?.split(/\r?\n/);
+                const oArgs = data._stdout?.split(/\r?\n/);
                 if (oArgs && oArgs.length >= 3) {
                   oChartArgs.push("chxl=0:|" + oArgs[0]);
                   oChartArgs.push("chdl=" + oArgs[1]);
                   oChartArgs.push("chd=a:" + oArgs[2]);
-                  var url = create_image_charts_url(oChartArgs);
+                  const url = createImageChartsUrl(oChartArgs);
                   LOGGER.info("[%s] Url for [%s]:\n%s", pParent, pKey, url);
 
                   data.result = url;
-                  //oResult.push( url );
+                  // oResult.push( url );
                 } else {
                   func = reject;
                   data.error = new Error("Invalid data for image-charts.");
@@ -191,14 +191,14 @@ export default class ImageChartsMod implements Mod {
                 }
               }
               asPromised(pPreviousData, pKey, func, data);
-              //resolve( oResult );
+              // resolve( oResult );
             },
-            function (error) {
-              //console.log( error );
-              //reject( error );
+            function(error) {
+              // console.log( error );
+              // reject( error );
               asPromised(pPreviousData, pKey, reject, {
                 error: error,
-                result: null,
+                result: null
               });
             }
           );
@@ -218,31 +218,30 @@ export default class ImageChartsMod implements Mod {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    //pCurrentActivityResult, pGlobalResult, pContext ) {
-    //var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    // pCurrentActivityResult, pGlobalResult, pContext ) {
+    // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
+    return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] Processing image-charts...", pParent);
       try {
-        var oData = { image_charts: {} };
-        var oPromises = [];
-        for (var i in pConfig) {
-          var oKey = i;
-          if (oKey.indexOf("{{") >= 0) {
-            const v = that._evaluate(oKey, pContext);
+        const oData = { image_charts: {} };
+        const oPromises: ((data: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          let oKey = i;
+          if (oKey.includes("{{")) {
+            const v = this._evaluate(oKey, pContext);
             if (v) oKey = v[0];
           }
           oPromises.push(
-            that._exec(pParent, oKey, pConfig[i], pExecutor, pContext)
+            this._exec(pParent, oKey, pConfig[i], pExecutor, pContext)
           );
-        }
+        });
         Promises.seq(oPromises, oData).then(
-          function () {
+          function() {
             LOGGER.debug("[%s] Done processing image-charts.", pParent);
             resolve(oData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error(
               "[%s] Unexpected error running image-charts.",
               pParent,

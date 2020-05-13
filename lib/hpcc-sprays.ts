@@ -8,8 +8,8 @@ import Context from "./context";
 
 const LOGGER = createLogger("etljs::hpcc-desprays");
 
-var re_escape = function (pValue: string) {
-  if (pValue.indexOf("\\") < 0) return pValue;
+const reEscape = function(pValue: string): string {
+  if (!pValue.includes("\\")) return pValue;
   return pValue.replace("/\\/g", "\\\\");
 };
 
@@ -23,14 +23,15 @@ export type Data = {
   _stderr?: string | null;
 };
 
-var asPromised = function (
+const asPromised = function(
   pPreviousData: any,
   pKey: string,
   func: Function,
   data: any
-) {
-  if (!pPreviousData["hpcc-sprays"][pKey])
+): void {
+  if (!pPreviousData["hpcc-sprays"][pKey]) {
     pPreviousData["hpcc-sprays"][pKey] = {};
+  }
   pPreviousData["hpcc-sprays"][pKey] = data;
   if (data["exit"]) {
     pPreviousData["_exit"] = data["exit"];
@@ -44,19 +45,19 @@ export default class HPCCSpraysMod implements Mod {
   mTemplateEngine: TemplateEngine;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("hpcc-sprays", this, function (pSettings: any) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+    if (pETL) {
+      pETL.mod("hpcc-sprays", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
+    }
     this.mTemplateEngine = new TemplateEngine();
   }
-  _evaluate = function (pTemplate: string, pContext: Context) {
-    //TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    //For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
+  _evaluate(pTemplate: string, pContext: Context): string[] | null {
+    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
+    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
     // Having said that, a mod then cannot access the results of another mod within the same activity...
 
     /*
@@ -69,10 +70,10 @@ export default class HPCCSpraysMod implements Mod {
       console.dir( oResult );
       */
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
-  };
-  _spray_error(pParent: string, pKey: string) {
-    return function (_pPreviousData: any) {
-      var data = {
+  }
+  _sprayError(pParent: string, pKey: string): (data: any) => Promise<any> {
+    return function(_pPreviousData: any) {
+      const data = {
         error:
           "Must specify spray format (fixed|csv|delimited|xml|recfmv|recfmb) for file [" +
           pKey +
@@ -82,7 +83,7 @@ export default class HPCCSpraysMod implements Mod {
         exit: false,
         pass: true,
         _stdout: null,
-        _stderr: null,
+        _stderr: null
       };
       LOGGER.error(
         "[%s] Must specify spray format (fixed|csv|delimited|xml|recfmv|recfmb) for file [%s].",
@@ -92,72 +93,71 @@ export default class HPCCSpraysMod implements Mod {
       return Promise.reject(data);
     };
   }
-  _spray_fixed = function (
+  _sprayFixed = function(
     pParent: string,
     _pKey: string,
     _pSprayConfig: any,
     _pExecutor: Executor,
     _pContext: Context,
     _pTemplateIndex: number
-  ) {
-    return function () {
-      return new Promise(function (_resolve, reject) {
-        var data = {
+  ): () => Promise<any> {
+    return function() {
+      return new Promise(function(_resolve, reject) {
+        const data = {
           error: "Spray fixed is not yet supported.",
           result: null,
           message: null,
           exit: false,
           pass: true,
           _stdout: null,
-          _stderr: null,
+          _stderr: null
         };
         LOGGER.error("[%s] Spray fixed is not yet supported.", pParent);
         reject(data);
       });
     };
   };
-  _spray_xml = function (
+  _sprayXml(
     pParent: string,
     _pKey: string,
     _pSprayConfig: any,
     _pExecutor: Executor,
     _pContext: Context,
     _pTemplateIndex: number
-  ) {
-    return function (_pPreviousData: any) {
-      return new Promise(function (_resolve, reject) {
-        var data = {
+  ): (data: any) => Promise<any> {
+    return function(_pPreviousData: any) {
+      return new Promise(function(_resolve, reject) {
+        const data = {
           error: "Spray fixed is not yet supported.",
           result: null,
           message: null,
           exit: false,
           pass: true,
           _stdout: null,
-          _stderr: null,
+          _stderr: null
         };
         LOGGER.error("[%s] Spray xml is not yet supported.", pParent);
         reject(data);
       });
     };
-  };
-  _spray_delimited(
+  }
+  _sprayDelimited(
     pParent: string,
     pKey: string,
     pSprayConfig: any,
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ) {
+  ): (data: any) => Promise<any> {
     LOGGER.debug(
       "[%s] Spraying delimited to [%s]...",
       pParent,
       pSprayConfig ? pSprayConfig.destinationlogicalname : "NA"
     );
-    var that = this;
-    return function (pPreviousData: any) {
-      return new Promise(function (resolve, reject) {
+    return (pPreviousData: any) => {
+      return new Promise((resolve, reject) => {
         try {
-          var safe_parse_int = function (
+          const safeParseInt = function(
             pValue: string,
             pDefault: number
           ): number {
@@ -168,15 +168,15 @@ export default class HPCCSpraysMod implements Mod {
             }
           };
 
-          var zero_one = function (pValue: any): string {
+          const zeroOne = function(pValue: any): string {
             if (pValue === true || pValue === "1") return "1";
             return "0";
           };
-          var oCmdArgs = [];
+          const oCmdArgs = [];
           oCmdArgs.push("action=spray");
 
           const DEFAULT_ATTRS: any = {
-            //, , , "espserveripport": true,
+            // , , , "espserveripport": true,
             sourceip: true,
             destinationgroup: true,
             destinationlogicalname: true,
@@ -191,7 +191,7 @@ export default class HPCCSpraysMod implements Mod {
             replicate: true,
             compress: true,
             failifnosourcefile: true,
-            expiredays: true,
+            expiredays: true
           };
 
           const CSV_ATTRS: any = {
@@ -202,16 +202,16 @@ export default class HPCCSpraysMod implements Mod {
             srccsvterminator: true,
             srccsvquote: true,
             sourcecsvescape: true,
-            maxrecordsize: true,
+            maxrecordsize: true
           };
-          for (var k in pSprayConfig) {
-            k = new String(k).toLowerCase();
+          Object.keys(pSprayConfig).forEach(k => {
+            k = String(k).toLowerCase();
 
-            if (!DEFAULT_ATTRS[k] && !CSV_ATTRS[k]) continue;
-            //if ( ! pSprayConfig[k] ) continue; //TODO: sure?
+            if (!DEFAULT_ATTRS[k] && !CSV_ATTRS[k]) return; // TODO: log???
+            // if ( ! pSprayConfig[k] ) continue; //TODO: sure?
 
             switch (k) {
-              //case "espserveripport": // this is from ECL SprayDelimited documentation, not from dfuplus...
+              // case "espserveripport": // this is from ECL SprayDelimited documentation, not from dfuplus...
               case "server":
                 oCmdArgs.push("server=" + pSprayConfig[k]);
                 break;
@@ -226,11 +226,13 @@ export default class HPCCSpraysMod implements Mod {
                 break;
               case "sourcepath":
                 if (pSprayConfig[k]) {
-                  var oSrcPath = pSprayConfig[k];
-                  //console.log('srcPath=' + oSrcPath);
+                  let oSrcPath = pSprayConfig[k];
+                  // console.log('srcPath=' + oSrcPath);
                   if (oSrcPath.indexOf("{{") >= 0) {
-                    var oSrcPaths = that._evaluate(oSrcPath, pContext);
-                    oSrcPath = oSrcPaths[pTemplateIndex];
+                    const oSrcPaths = this._evaluate(oSrcPath, pContext);
+                    if (oSrcPaths && oSrcPaths.length > pTemplateIndex) {
+                      oSrcPath = oSrcPaths[pTemplateIndex];
+                    } // TODO: else, log????
                   }
                   oCmdArgs.push("srcfile=" + oSrcPath);
                 }
@@ -241,11 +243,12 @@ export default class HPCCSpraysMod implements Mod {
               case "maxconnections":
                 oCmdArgs.push("connect=" + pSprayConfig[k]);
                 break;
-              case "timeout":
-                var oTimeoutValue = safe_parse_int(pSprayConfig[k], -999);
+              case "timeout": {
+                const oTimeoutValue = safeParseInt(pSprayConfig[k], -999);
                 if (oTimeoutValue === 0) oCmdArgs.push("nowait=1");
                 else oCmdArgs.push("nowait=0");
                 break;
+              }
               case "destinationlogicalname":
                 oCmdArgs.push("dstname=" + pSprayConfig[k]);
                 break;
@@ -253,41 +256,39 @@ export default class HPCCSpraysMod implements Mod {
                 oCmdArgs.push("dstcluster=" + pSprayConfig[k]);
                 break;
               case "allowoverwrite":
-                oCmdArgs.push("overwrite=" + zero_one(pSprayConfig[k]));
+                oCmdArgs.push("overwrite=" + zeroOne(pSprayConfig[k]));
                 break;
               case "replicate":
-                oCmdArgs.push("replicate=" + zero_one(pSprayConfig[k]));
+                oCmdArgs.push("replicate=" + zeroOne(pSprayConfig[k]));
                 break;
               case "compress":
-                oCmdArgs.push("compress=" + zero_one(pSprayConfig[k]));
+                oCmdArgs.push("compress=" + zeroOne(pSprayConfig[k]));
                 break;
               case "failifnosourcefile":
-                oCmdArgs.push(
-                  "failifnosourcefile=" + zero_one(pSprayConfig[k])
-                );
+                oCmdArgs.push("failifnosourcefile=" + zeroOne(pSprayConfig[k]));
                 break;
               case "expiredays":
                 oCmdArgs.push("expiredays=" + pSprayConfig[k]);
                 break;
               case "quotedterminator":
-                oCmdArgs.push("quotedTerminator=" + zero_one(pSprayConfig[k]));
+                oCmdArgs.push("quotedTerminator=" + zeroOne(pSprayConfig[k]));
                 break;
               case "recordstructurepresent":
                 oCmdArgs.push(
-                  "recordstructurepresent=" + zero_one(pSprayConfig[k])
+                  "recordstructurepresent=" + zeroOne(pSprayConfig[k])
                 );
                 break;
               case "encoding":
                 oCmdArgs.push("encoding=" + pSprayConfig[k]);
                 break;
               case "srccsvseparator":
-                oCmdArgs.push("srccsvseparator=" + re_escape(pSprayConfig[k]));
+                oCmdArgs.push("srccsvseparator=" + reEscape(pSprayConfig[k]));
                 break;
               case "srccsvterminator":
-                oCmdArgs.push("srccsvterminator=" + re_escape(pSprayConfig[k]));
+                oCmdArgs.push("srccsvterminator=" + reEscape(pSprayConfig[k]));
                 break;
               case "srccsvquote":
-                oCmdArgs.push("quote=\\" + pSprayConfig[k]); //TODO: is that right to escape here?
+                oCmdArgs.push("quote=\\" + pSprayConfig[k]); // TODO: is that right to escape here?
                 break;
               case "maxrecordsize":
                 oCmdArgs.push("maxrecordsize=" + pSprayConfig[k]);
@@ -303,19 +304,19 @@ export default class HPCCSpraysMod implements Mod {
                 );
                 break;
             }
-          }
-          var oCmdOptions = {};
+          });
+          const oCmdOptions = {};
 
-          var oCmd = "/usr/bin/dfuplus " + oCmdArgs.join(" ");
-          pExecutor.exec(oCmd, oCmdOptions, function (error, stdout, stderr) {
-            var data: Data = {
+          const oCmd = "/usr/bin/dfuplus " + oCmdArgs.join(" ");
+          pExecutor.exec(oCmd, oCmdOptions, function(error, stdout, stderr) {
+            const data: Data = {
               error: error,
               exit: false,
               pass: true,
               _stdout: stdout,
-              _stderr: stderr,
+              _stderr: stderr
             };
-            var func = null;
+            let func = null;
 
             if (error) {
               LOGGER.error(
@@ -323,11 +324,11 @@ export default class HPCCSpraysMod implements Mod {
                 pParent,
                 error
               );
-              //reject( error );
+              // reject( error );
               func = reject;
               data.result = data._stderr;
             } else {
-              //resolve();
+              // resolve();
               func = resolve;
               data.result = data._stdout;
             }
@@ -335,10 +336,10 @@ export default class HPCCSpraysMod implements Mod {
             asPromised(pPreviousData, pKey, func, data);
           });
         } catch (e) {
-          var data: Data = {
+          const data: Data = {
             error: e,
             exit: false,
-            pass: true,
+            pass: true
           };
           LOGGER.error("[%s] Unexpected error spraying delimited", e);
           asPromised(pPreviousData, pKey, reject, data);
@@ -346,10 +347,10 @@ export default class HPCCSpraysMod implements Mod {
       });
     };
   }
-  _read_config(pParent: string, pKey: string, pConfig: any) {
-    var oDefaults: any = {
+  _readConfig(pParent: string, pKey: string, pConfig: any): any {
+    const oDefaults: any = {
       format: null,
-      //sourceip: null,
+      // sourceip: null,
       sourcepath: null,
       maxrecordsize: 8192,
       srccsvseparator: "\\,",
@@ -358,7 +359,7 @@ export default class HPCCSpraysMod implements Mod {
       destinationgroup: null,
       destinationlogicalname: null,
       timeout: -1,
-      //espserveripport: null,
+      // espserveripport: null,
       maxconnections: 25,
       allowoverwrite: "0",
       replicate: "1",
@@ -367,17 +368,16 @@ export default class HPCCSpraysMod implements Mod {
       failifnosourcefile: "1",
       recordstructurepresent: "0",
       quotedterminator: "1",
-      //encoding: "utf8",//TODO: seems to overide "format"!
-      expiredays: "",
+      // encoding: "utf8",//TODO: seems to overide "format"!
+      expiredays: ""
     };
 
     // WARNING: defaults will be affected here, don't make it a global thing, or change logic here, by first copying defaults into empty object.
-    var oConfig: any = oDefaults;
-    for (var i in pConfig) {
+    const oConfig: any = oDefaults;
+    Object.keys(pConfig).forEach(i => {
       oConfig[i.toLowerCase()] = pConfig[i];
-    }
-
-    var apply_settings = function (pConfig: any, pSettings: any) {
+    });
+    const applySettings = function(pConfig: any, pSettings: any): void {
       if (!pConfig["server"] && pSettings["server"]) {
         pConfig["server"] = pSettings["server"];
       }
@@ -389,10 +389,12 @@ export default class HPCCSpraysMod implements Mod {
       }
     };
 
-    if (this.mSettings[pKey]) apply_settings(oConfig, this.mSettings[pKey]);
-    else if (this.mSettings[pParent])
-      apply_settings(oConfig, this.mSettings[pParent]);
-    else if (this.mSettings["*"]) apply_settings(oConfig, this.mSettings["*"]);
+    if (this.mSettings[pKey]) applySettings(oConfig, this.mSettings[pKey]);
+    else if (this.mSettings[pParent]) {
+      applySettings(oConfig, this.mSettings[pParent]);
+    } else if (this.mSettings["*"]) {
+      applySettings(oConfig, this.mSettings["*"]);
+    }
 
     return oConfig;
   }
@@ -401,35 +403,35 @@ export default class HPCCSpraysMod implements Mod {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    //pCurrentActivityResult, pGlobalResult, pContext ) {
-    //var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    // pCurrentActivityResult, pGlobalResult, pContext ) {
+    // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
+    return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] Processing spray...", pParent);
       try {
-        var oData = { "hpcc-sprays": {} };
-        var oPromises: ((res: any) => Promise<any>)[] = [];
-
-        for (var i in pConfig) {
-          var oLogicalFileName = i;
-          var oLogicalFileNames =
-            oLogicalFileName.indexOf("{{") < 0
-              ? [oLogicalFileName]
-              : that._evaluate(oLogicalFileName, pContext);
-          oLogicalFileNames.forEach(function (e: string, j: number) {
-            var oSprayConfig = that._read_config(pParent, i, pConfig[i]);
-            if (!oSprayConfig.destinationlogicalname)
+        const oData = { "hpcc-sprays": {} };
+        const oPromises: ((res: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          const oLogicalFileName = i;
+          let oLogicalFileNames = [oLogicalFileName];
+          if (oLogicalFileName.includes("{{")) {
+            const v = this._evaluate(oLogicalFileName, pContext);
+            if (v && v.length >= 1) oLogicalFileNames = v;
+          }
+          oLogicalFileNames.forEach((e: string, j: number) => {
+            const oSprayConfig = this._readConfig(pParent, i, pConfig[i]);
+            if (!oSprayConfig.destinationlogicalname) {
               oSprayConfig.destinationlogicalname = e;
+            }
 
             if (!oSprayConfig.format) {
-              oPromises.push(that._spray_error(pParent, e));
+              oPromises.push(this._sprayError(pParent, e));
             } else {
               switch (oSprayConfig.format) {
                 case "delimited":
                 case "csv":
                   oPromises.push(
-                    that._spray_delimited(
+                    this._sprayDelimited(
                       pParent,
                       e,
                       oSprayConfig,
@@ -441,7 +443,7 @@ export default class HPCCSpraysMod implements Mod {
                   break;
                 case "fixed":
                   oPromises.push(
-                    that._spray_fixed(
+                    this._sprayFixed(
                       pParent,
                       e,
                       oSprayConfig,
@@ -453,7 +455,7 @@ export default class HPCCSpraysMod implements Mod {
                   break;
                 case "xml":
                   oPromises.push(
-                    that._spray_xml(
+                    this._sprayXml(
                       pParent,
                       e,
                       oSprayConfig,
@@ -473,13 +475,13 @@ export default class HPCCSpraysMod implements Mod {
               }
             }
           });
-        }
+        });
         Promises.seq(oPromises, oData).then(
-          function (_pData) {
+          function(_pData) {
             LOGGER.debug("[%s] Done processing spray.", pParent);
             resolve(oData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error("[%s] Unexpected error spraying.", pParent, pError);
             reject(pError);
           }

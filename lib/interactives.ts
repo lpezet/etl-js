@@ -19,23 +19,23 @@ export type Data = {
   _stderr?: string | null;
 };
 
-var asPromised = function (
+const asPromised = function(
   pResults: any,
   pFunc: (results: any) => void,
   pParent: string,
   pKey: string,
   pData: any
-) {
+): void {
   LOGGER.debug("[%s] Interactive [%s] results:\n%j", pParent, pKey, pData);
-  //if ( ! pPreviousData.commands[pKey] ) pPreviousData.commands[pKey] = {};
-  //pPreviousData.commands[pKey] = data;
-  var data = {
+  // if ( ! pPreviousData.commands[pKey] ) pPreviousData.commands[pKey] = {};
+  // pPreviousData.commands[pKey] = data;
+  const data = {
     interactive: pKey,
     results: pData,
     exit: Boolean(pData["exit"]),
-    skip: Boolean(pData["skip"]),
+    skip: Boolean(pData["skip"])
   };
-  //data[ pKey ] = pData;
+  // data[ pKey ] = pData;
   pResults.exit = pResults.exit || Boolean(pData["exit"]);
   pResults.skip = pResults.skip || Boolean(pData["skip"]);
   pResults.results.push(data);
@@ -46,12 +46,11 @@ export default class InteractivesMod implements Mod {
   mSettings: any;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
     if (pETL) {
-      pETL.mod("interactives", this, function (pSettings) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+      pETL.mod("interactives", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
     }
@@ -62,35 +61,34 @@ export default class InteractivesMod implements Mod {
     pSpecs: any,
     _pExecutor: Executor,
     pContext: Context
-  ) {
-    var that = this;
-    return function (pResults: any) {
-      //if ( pResults['_exit'] ) {
+  ): (data: any) => Promise<any> {
+    return (pResults: any) => {
+      // if ( pResults['_exit'] ) {
       //	return Promise.resolve( pResults );
-      //}
-      return new Promise(function (resolve, reject) {
-        var data: Data = {
+      // }
+      return new Promise((resolve, reject) => {
+        const data: Data = {
           result: null,
           exit: false,
           pass: true,
           skip: false,
           _stdout: null,
-          _stderr: null,
+          _stderr: null
         };
         const rlOpts = {
-          input: that.mSettings["input"]
-            ? that.mSettings["input"]
+          input: this.mSettings["input"]
+            ? this.mSettings["input"]
             : process.stdin,
-          output: that.mSettings["output"]
-            ? that.mSettings["output"]
-            : process.stdout,
+          output: this.mSettings["output"]
+            ? this.mSettings["output"]
+            : process.stdout
         };
         const rl = readline.createInterface(rlOpts);
         try {
-          var prompt = pSpecs["prompt"];
-          rl.question(prompt, (answer) => {
+          const prompt = pSpecs["prompt"];
+          rl.question(prompt, answer => {
             rl.close();
-            var oVarName = pSpecs["var"];
+            const oVarName = pSpecs["var"];
             if (oVarName) {
               pContext.vars[oVarName] = answer;
             }
@@ -109,26 +107,25 @@ export default class InteractivesMod implements Mod {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] Processing Interactive...", pParent);
       try {
-        var oResult = { exit: false, skip: false, results: [] };
-        var oPromises = [];
-        for (var i in pConfig) {
-          var oTarget = i;
+        const oResult = { exit: false, skip: false, results: [] };
+        const oPromises: ((data: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          const oTarget = i;
           LOGGER.debug("[%s] Interactive...", pParent, oTarget);
           oPromises.push(
-            that._exec(pParent, i, pConfig[i], pExecutor, pContext)
+            this._exec(pParent, i, pConfig[i], pExecutor, pContext)
           );
-        }
+        });
         Promises.seq(oPromises, oResult).then(
-          function (pData) {
+          function(pData) {
             LOGGER.debug("[%s] Done processing interactives.", pParent);
             resolve(pData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error("[%s] Error during interactives.", pParent, pError);
             reject(pError);
           }

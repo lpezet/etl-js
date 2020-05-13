@@ -18,18 +18,18 @@ export type Data = {
   _stderr?: string | null;
 };
 
-var asPromised = function (
+const asPromised = function(
   pPreviousData: any,
   pKey: string,
   func: Function,
   data: any
-) {
+): void {
   if (!pPreviousData.mysqls[pKey]) pPreviousData.mysqls[pKey] = {};
   pPreviousData.mysqls[pKey] = data;
-  //if ( data['exit'] ) {
+  // if ( data['exit'] ) {
   //	pPreviousData['_exit'] = data['exit'];
   //	pPreviousData['_exit_from'] = pKey;
-  //}
+  // }
   /*
       if ( result ) {
           pPreviousData[pKey]['result'] = result;
@@ -38,8 +38,8 @@ var asPromised = function (
           pPreviousData[pKey]['error'] = error;
       }
       */
-  //console.log('asPromised:');
-  //console.dir( pPreviousData );
+  // console.log('asPromised:');
+  // console.dir( pPreviousData );
   func(pPreviousData);
 };
 
@@ -48,116 +48,153 @@ export default class MySQLsMod implements Mod {
   mTemplateEngine: TemplateEngine;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("mysqls", this, function (pSettings: any) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+    if (pETL) {
+      pETL.mod("mysqls", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
+    }
     this.mTemplateEngine = new TemplateEngine();
   }
-  _evaluate(pTemplate: string, pContext: Context) {
+  _evaluate(pTemplate: string, pContext: Context): string[] | null {
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
-  _apply_settings = function (pParent: string, pKey: string, pConfig: any) {
-    var apply_settings = function (pConfig: any, pSettings: any) {
-      for (var i in pSettings) {
+  _applySettings(pParent: string, pKey: string, pConfig: any): void {
+    const applySettings = function(pConfig: any, pSettings: any): void {
+      for (const i in pSettings) {
         if (pConfig[i] == null) pConfig[i] = pSettings[i];
       }
     };
-    if (this.mSettings[pKey]) apply_settings(pConfig, this.mSettings[pKey]);
-    else if (this.mSettings[pParent])
-      apply_settings(pConfig, this.mSettings[pParent]);
-    else if (this.mSettings["*"]) apply_settings(pConfig, this.mSettings["*"]);
-  };
-  _read_options(
+    if (this.mSettings[pKey]) applySettings(pConfig, this.mSettings[pKey]);
+    else if (this.mSettings[pParent]) {
+      applySettings(pConfig, this.mSettings[pParent]);
+    } else if (this.mSettings["*"]) {
+      applySettings(pConfig, this.mSettings["*"]);
+    }
+  }
+  _readOptions(
     pParent: string,
     pKey: string,
     pConfig: any,
     _pExecutor: Executor,
     _pContext: Context,
     _pTemplateIndex: number
-  ) {
-    var oOptions: any = {
+  ): any {
+    const oOptions: any = {
+      // eslint-disable-next-line @typescript-eslint/camelcase
       bind_address: null,
       columns: null,
       compress: null,
       debug: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       debug_check: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       debug_info: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       default_auth: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       default_character_set: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_extra_file: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_file: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       defaults_group_suffix: null,
       delete: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       enable_cleartext_plugin: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_enclosed_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_escaped_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_optionally_enclosed_by: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       fields_terminated_by: null,
       force: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       get_server_public_key: null,
       host: null,
       ignore: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ignore_lines: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       lines_terminated_by: null,
       local: true,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       lock_tables: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       login_path: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       low_priority: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       no_defaults: null,
       password: null,
       pipe: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       plugin_dir: null,
       port: null,
       protocol: null,
       replace: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       secure_auth: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       server_public_key_path: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       shared_memory_base_name: null,
       silent: null,
       socket: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_ca: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_capath: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_cert: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_cipher: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_crl: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_crlpath: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_fips_mode: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_key: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       ssl_mode: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       tls_cipheruites: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       tls_version: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
       use_threads: null,
-      user: null,
+      user: null
     };
 
     // WARNING: defaults will be affected here, don't make it a global thing, or change logic here, by first copying defaults into empty object.
-    var oConfig: any = oOptions;
-    for (var i in pConfig) {
+    const oConfig: any = oOptions;
+    Object.keys(pConfig).forEach(i => {
       oConfig[i.toLowerCase()] = pConfig[i];
-    }
+    });
 
-    this._apply_settings(pParent, pKey, oConfig);
+    this._applySettings(pParent, pKey, oConfig);
 
     return oConfig;
   }
-  _wrap_run = function (
+  _wrapRun(
     pParent: string,
     pKey: string,
     pConfig: any,
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ) {
-    var that = this;
-    return function (pPreviousData: any) {
+  ): (data: any) => Promise<any> {
+    return (pPreviousData: any) => {
       LOGGER.debug("[%s] Executing mysql...", pParent);
       try {
-        return that._run(
+        return this._run(
           pPreviousData,
           pParent,
           pKey,
@@ -168,13 +205,13 @@ export default class MySQLsMod implements Mod {
         );
       } catch (e) {
         LOGGER.error("[%s] Error executing mysql.", pParent);
-        return Promise.reject(e); //TODO
+        return Promise.reject(e); // TODO
       } finally {
         LOGGER.debug("[%s] Done executing mysql.", pParent);
       }
     };
-  };
-  _run = function (
+  }
+  _run(
     pPreviousData: any,
     pParent: string,
     pKey: string,
@@ -182,15 +219,14 @@ export default class MySQLsMod implements Mod {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ) {
-    var that = this;
-    return new Promise(function (resolve, reject) {
-      var escape_single_quotes = function (pValue: string): string {
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const escapeSingleQuotes = function(pValue: string): string {
         return pValue.replace(/'/g, "\\'");
       };
       try {
-        var oCmdArgs = [];
-        for (var i in pConfig) {
+        const oCmdArgs = [];
+        for (const i in pConfig) {
           if (pConfig[i] == null) continue;
           switch (i) {
             case "auto_rehash":
@@ -232,7 +268,7 @@ export default class MySQLsMod implements Mod {
             case "connect_timeout":
               oCmdArgs.push("--connect_timeout=" + pConfig[i]);
               break;
-            //case "database":
+            // case "database":
             case "debug":
               oCmdArgs.push("--debug=" + pConfig[i]);
               break;
@@ -263,18 +299,22 @@ export default class MySQLsMod implements Mod {
             case "enable_cleartext_plugin":
               if (pConfig[i]) oCmdArgs.push("--enable-cleartext-plugin");
               break;
-            case "execute":
+            case "execute": {
               // TODO: need to escape?
-              var oExecuteRaw = pConfig[i];
+              let oExecuteRaw = pConfig[i];
               if (oExecuteRaw.indexOf("{{") >= 0) {
-                var oExecuteRaws = that._evaluate(oExecuteRaw, pContext);
-                //TODO: check index vs length
-                oExecuteRaw = oExecuteRaws[pTemplateIndex];
+                const oExecuteRaws = this._evaluate(oExecuteRaw, pContext);
+                // TODO: check index vs length
+                if (oExecuteRaws && oExecuteRaws.length > pTemplateIndex) {
+                  oExecuteRaw = oExecuteRaws[pTemplateIndex];
+                }
+                // TODO: else, log???
               }
               oCmdArgs.push(
-                "--execute='" + escape_single_quotes(oExecuteRaw) + "'"
+                "--execute='" + escapeSingleQuotes(oExecuteRaw) + "'"
               );
               break;
+            }
             case "force":
               if (pConfig[i]) oCmdArgs.push("--force");
               break;
@@ -290,7 +330,7 @@ export default class MySQLsMod implements Mod {
             case "ignore_spaces":
               if (pConfig[i]) oCmdArgs.push("--ignore-spaces");
               break;
-            //case "init_command":
+            // case "init_command":
             case "line_numbers":
               if (pConfig[i]) oCmdArgs.push("--line-numbers");
               break;
@@ -339,8 +379,8 @@ export default class MySQLsMod implements Mod {
             case "port":
               oCmdArgs.push("--port=" + pConfig[i]);
               break;
-            //case "print-defaults":
-            //case "prompt": // ???
+            // case "print-defaults":
+            // case "prompt": // ???
             case "protocol":
               oCmdArgs.push("--protocol=" + pConfig[i]);
               break;
@@ -459,50 +499,53 @@ export default class MySQLsMod implements Mod {
               if (pConfig[i]) oCmdArgs.push("--xml");
               break;
             default:
-              //TODO
+              // TODO
               break;
           }
-          //console.log('i=' + i + ', config=' + pConfig[i]);
+          // console.log('i=' + i + ', config=' + pConfig[i]);
         }
-        var oDBName = pConfig["db_name"];
+        let oDBName = pConfig["db_name"];
         if (oDBName.indexOf("{{") >= 0) {
-          var oDBNames = that._evaluate(oDBName, pContext);
-          //TODO: check index vs length
-          oDBName = oDBNames[pTemplateIndex];
+          const oDBNames = this._evaluate(oDBName, pContext);
+          if (oDBNames && oDBNames.length > pTemplateIndex) {
+            oDBName = oDBNames[pTemplateIndex];
+          }
+          // TODO: else, log????
         }
         oCmdArgs.push(oDBName);
-        //oCmdArgs.push( pKey );
-        //TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
-        var oEnsureFolderExists =
+        // oCmdArgs.push( pKey );
+        // TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
+        const oEnsureFolderExists =
           '[ ! -d $(dirname "' +
           pKey +
           '") ] && mkdir -p $(dirname "' +
           pKey +
           '");';
-        var oCmd = oEnsureFolderExists + "/usr/bin/mysql " + oCmdArgs.join(" ");
-        pExecutor.exec(oCmd, { context: pKey }, function (
+        const oCmd =
+          oEnsureFolderExists + "/usr/bin/mysql " + oCmdArgs.join(" ");
+        pExecutor.exec(oCmd, { context: pKey }, function(
           error,
           stdout,
           stderr
         ) {
-          var data: Data = {
+          const data: Data = {
             error: error,
             exit: false,
             pass: true,
             _stdout: stdout,
-            _stderr: stderr,
+            _stderr: stderr
           };
-          var func = null;
+          let func = null;
 
           LOGGER.debug("[%s] Done executing mysql.", pParent);
           if (error) {
             LOGGER.error("[%s] Error executing mysql.", pParent, error);
-            //reject( error );
-            //if ( pConfig['exit_on_failure'] ) data.exit = true;
+            // reject( error );
+            // if ( pConfig['exit_on_failure'] ) data.exit = true;
             func = reject;
             data.result = data._stderr;
           } else {
-            //resolve( stdout );
+            // resolve( stdout );
             func = resolve;
             data.result = data._stdout;
           }
@@ -510,36 +553,37 @@ export default class MySQLsMod implements Mod {
           asPromised(pPreviousData, pKey, func, data);
         });
       } catch (e) {
-        //reject( e );
-        var data: Data = {
+        // reject( e );
+        const data: Data = {
           error: e,
           exit: false,
-          pass: true,
+          pass: true
         };
         LOGGER.error("[%s] Unexpected error running mysqlimport.", pParent, e);
         asPromised(pPreviousData, pKey, reject, data);
       }
     });
-  };
+  }
   handle(
     pParent: string,
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
       LOGGER.info("[%s] Processing mysqls...", pParent);
       try {
-        var oData = { mysqls: {} };
-        var oPromises: ((res: any) => Promise<any>)[] = [];
-
-        for (var i in pConfig) {
-          var oConfig = pConfig[i];
-          var oKeys =
-            i.indexOf("{{") < 0 ? [i] : that._evaluate(i, pContext) || [];
-          oKeys.forEach(function (e, j) {
-            var oOptions = that._read_options(
+        const oData = { mysqls: {} };
+        const oPromises: ((res: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          const oConfig = pConfig[i];
+          let oKeys: string[] = [i];
+          if (i.includes("{{")) {
+            const v = this._evaluate(i, pContext);
+            if (v) oKeys = v;
+          }
+          oKeys.forEach((e, j) => {
+            const oOptions = this._readOptions(
               pParent,
               e,
               oConfig,
@@ -548,19 +592,20 @@ export default class MySQLsMod implements Mod {
               j
             );
             oPromises.push(
-              that._wrap_run(pParent, e, oOptions, pExecutor, pContext, j)
+              this._wrapRun(pParent, e, oOptions, pExecutor, pContext, j)
             );
 
-            //var oOptions = that._read_options( pParent, i, pConfig[i] );
-            //oPromises.push( that._wrap_run( pParent, i, oOptions, pExecutor, pContext ) );
+            // var oOptions = that._read_options( pParent, i, pConfig[i] );
+            // oPromises.push( that._wrap_run( pParent, i, oOptions, pExecutor, pContext ) );
           });
-        }
+        });
+
         Promises.seq(oPromises, oData).then(
-          function (_pData) {
+          function(_pData) {
             LOGGER.info("[%s] Done running mysqls.", pParent);
             resolve(oData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error("[%s] Error running mysqls.", pParent, pError);
             reject(pError);
           }

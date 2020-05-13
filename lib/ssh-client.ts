@@ -10,16 +10,24 @@ type Callback = (
   conn: Client
 ) => void;
 
-function ssh2_exec(pClientOpts: any, pCmd: string, pCallback: Callback) {
+/**
+ * @param pClientOpts client options
+ * @param pCmd command
+ * @param pCallback callback
+ */
+function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
   let stdout: string;
   let stderr: string;
   let err: Error;
   let code: any;
-  //var signal = null;
+  // var signal = null;
   let callbackCalled = false;
   let timeoutCallback: any;
 
-  function doCallback(): void {
+  /**
+   * @param conn client
+   */
+  function doCallback(conn: Client): void {
     if (!err && (stderr || code)) {
       err = new Error(stderr || code);
     }
@@ -31,69 +39,75 @@ function ssh2_exec(pClientOpts: any, pCmd: string, pCallback: Callback) {
   }
 
   const conn = new Client();
-  //console.log('ssh2_exec: 1');
+  // console.log('ssh2_exec: 1');
   conn
-    .on("ready", function () {
-      conn.exec(pCmd, function (pErr, stream) {
+    .on("ready", function() {
+      conn.exec(pCmd, function(pErr, stream) {
         if (pErr) {
           err = pErr;
-          doCallback();
-          //pCallback( err, "", "", null, conn );
+          doCallback(conn);
+          // pCallback( err, "", "", null, conn );
           return;
         }
 
         stream
-          .on("close", function (pCode: any) {
+          .on("close", function(pCode: any) {
             code = pCode;
-            //signal = pSignal;
-            //console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);
-            doCallback();
+            // signal = pSignal;
+            // console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);
+            doCallback(conn);
           })
-          .on("data", function (pData: any) {
+          .on("data", function(pData: any) {
             stdout = pData;
           })
-          .on("error", function (_pData: any) {
-            //console.log('error');
-            //TODO
-            //stdout = data;
+          .on("error", function(_pData: any) {
+            // console.log('error');
+            // TODO
+            // stdout = data;
           })
-          .on("end", function (_pData: any) {
-            //TODO?
-            //stdout = data;
+          .on("end", function(_pData: any) {
+            // TODO?
+            // stdout = data;
           })
-          .on("exit", function (_pData: any) {
-            //TODO?
-            //stdout = data;
+          .on("exit", function(_pData: any) {
+            // TODO?
+            // stdout = data;
           })
-          .stderr.on("data", function (pData: any) {
+          .stderr.on("data", function(pData: any) {
             stderr = pData;
             if (timeoutCallback) clearInterval(timeoutCallback);
             timeoutCallback = setInterval(doCallback, 100);
-            //No documentation saying this would be the end of it. When calling dfuplus, nothing happens afterwards.
-            //pCallback( err, stdout, stderr, null, conn );
+            // No documentation saying this would be the end of it. When calling dfuplus, nothing happens afterwards.
+            // pCallback( err, stdout, stderr, null, conn );
           })
-          .on("close", function (_code: any, _signal: any) {
-            //TODO?
+          .on("close", function(_code: any, _signal: any) {
+            // TODO?
           });
       });
     })
-    .on("error", function (pErr) {
+    .on("error", function(pErr) {
       err = pErr;
-      doCallback();
-      //pCallback(err, "", "", null, conn);
+      doCallback(conn);
+      // pCallback(err, "", "", null, conn);
     })
     .connect(pClientOpts);
 }
 
-function ssh2_writeToFile(
+/**
+ * @param pClientOpts client options
+ * @param pRemoteFile remote file path
+ * @param pContent content
+ * @param pCallback callback
+ */
+function ssh2WriteToFile(
   pClientOpts: any,
   pRemoteFile: string,
   pContent: any,
   pCallback: Callback
-) {
+): void {
   pRemoteFile = pRemoteFile.replace(/[\\]/g, "/"); // windows needs this
-  var remotePath = path.dirname(pRemoteFile);
-  ssh2_exec(pClientOpts, "mkdir -p " + remotePath, function (
+  const remotePath = path.dirname(pRemoteFile);
+  ssh2Exec(pClientOpts, "mkdir -p " + remotePath, function(
     err,
     stdout,
     stderr,
@@ -112,17 +126,17 @@ function ssh2_writeToFile(
       }
 
       try {
-        //debug('stream start');
-        var wStream = sftp.createWriteStream(pRemoteFile, {
-          flags: "w+",
-          //autoClose: true,
+        // debug('stream start');
+        const wStream = sftp.createWriteStream(pRemoteFile, {
+          flags: "w+"
+          // autoClose: true,
         });
-        wStream.on("error", function (err) {
-          //debug('stream error %j', err);
+        wStream.on("error", function(err) {
+          // debug('stream error %j', err);
           wStream.removeAllListeners("finish");
           pCallback(err, "", "", server, conn);
         });
-        wStream.on("finish", function () {
+        wStream.on("finish", function() {
           // wStream.close();
           pCallback(null, "", "", server, conn);
         });
@@ -135,27 +149,27 @@ function ssh2_writeToFile(
 }
 
 export class SSHClient {
-  exec(pClientOpts: any, pCmd: string, pCallback: Callback) {
+  exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
     if (pClientOpts.privateKey && Fs.existsSync(pClientOpts.privateKey)) {
       pClientOpts.privateKey = Fs.readFileSync(pClientOpts.privateKey, {
-        encoding: "utf8",
+        encoding: "utf8"
       });
     }
-    //SSH2Utils.exec( pClientOpts, pCmd, pCallback); //function(err, stdout, stderr, server, conn){
-    ssh2_exec(pClientOpts, pCmd, pCallback);
+    // SSH2Utils.exec( pClientOpts, pCmd, pCallback); //function(err, stdout, stderr, server, conn){
+    ssh2Exec(pClientOpts, pCmd, pCallback);
   }
   writeFile(
     pClientOpts: any,
     pFilename: string,
     pContent: any,
     pCallback: Callback
-  ) {
+  ): void {
     if (pClientOpts.privateKey && Fs.existsSync(pClientOpts.privateKey)) {
       pClientOpts.privateKey = Fs.readFileSync(pClientOpts.privateKey, {
-        encoding: "utf8",
+        encoding: "utf8"
       });
     }
-    //SSH2Utils.writeFile( pClientOpts, pFilename, pContent, pCallback );
-    ssh2_writeToFile(pClientOpts, pFilename, pContent, pCallback);
+    // SSH2Utils.writeFile( pClientOpts, pFilename, pContent, pCallback );
+    ssh2WriteToFile(pClientOpts, pFilename, pContent, pCallback);
   }
 }

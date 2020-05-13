@@ -8,6 +8,12 @@ import Context from "./context";
 
 const LOGGER = createLogger("etljs::files");
 
+/**
+ * @param pPreviousData previous data
+ * @param pKey key
+ * @param func function
+ * @param data data
+ */
 function asPromised(
   pPreviousData: any,
   pKey: string,
@@ -44,39 +50,43 @@ export default class FilesMod implements Mod {
   mTemplateEngine: TemplateEngine;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("files", this, function (pSettings: any) {
-        that.mSettings = {
-          ...that.mSettings,
-          ...pSettings,
+    if (pETL) {
+      pETL.mod("files", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
         };
       });
+    }
     this.mTemplateEngine = new TemplateEngine();
   }
-  _handle_perms(
+  _handlePerms(
     pParent: string,
     pExecutor: Executor,
     pTarget: string,
     pPerms: Permissions
-  ) {
-    if (!pPerms["mode"] || !pPerms["group"] || !pPerms["owner"])
+  ): Promise<void> {
+    if (!pPerms["mode"] || !pPerms["group"] || !pPerms["owner"]) {
       return Promise.resolve();
+    }
 
-    var oCmd = '[ -f "' + pTarget + '" ]';
-    if (pPerms["mode"])
+    let oCmd = '[ -f "' + pTarget + '" ]';
+    if (pPerms["mode"]) {
       oCmd += " && chmod " + pPerms.mode + ' "' + pTarget + '"';
-    if (pPerms["group"])
+    }
+    if (pPerms["group"]) {
       oCmd += " && chgrp " + pPerms.group + ' "' + pTarget + '"';
-    if (pPerms["owner"])
+    }
+    if (pPerms["owner"]) {
       oCmd += " && chown " + pPerms.owner + ' "' + pTarget + '"';
-    return new Promise(function (resolve, reject) {
+    }
+    return new Promise(function(resolve, reject) {
       LOGGER.debug(
         "[%s] File: setting permissions: cmd=[%s]...",
         pParent,
         oCmd
       );
-      pExecutor.exec(oCmd, {}, function (error, _stdout, _stderr) {
+      pExecutor.exec(oCmd, {}, function(error, _stdout, _stderr) {
         if (error) {
           reject(error);
         } else {
@@ -85,7 +95,7 @@ export default class FilesMod implements Mod {
       });
     });
   }
-  _single_download(
+  _singleDownload(
     pParent: string,
     pExecutor: Executor,
     pTarget: string,
@@ -93,10 +103,9 @@ export default class FilesMod implements Mod {
     pPerms: Permissions,
     _pContext: Context
   ) {
-    var that = this;
-    return function (pPreviousData: any) {
-      return new Promise(function (resolve, reject) {
-        //TODO: Handle templates here for pSource and pTarget.
+    return (pPreviousData: any): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        // TODO: Handle templates here for pSource and pTarget.
         // Example:
         // pTarget: /tmp/{{ $.step1.commands.001_test.result }}
         // pSource: http://a.b.c/{{ $.step1.commands.001_test.result }}/download
@@ -109,7 +118,7 @@ export default class FilesMod implements Mod {
         );
         const data: Data = {
           exit: false,
-          pass: false,
+          pass: false
         };
         try {
           pExecutor.exec(
@@ -123,16 +132,16 @@ export default class FilesMod implements Mod {
               pSource +
               '" 2>&1',
             {},
-            function (
+            (
               error?: Error | null,
               stdout?: string | null,
               stderr?: string | null
-            ) {
+            ) => {
               if (error) data.error = error;
-              data.pass = true; //???
+              data.pass = true; // ???
               data["_stdout"] = stdout;
               data["_stderr"] = stderr;
-              //var func = null;
+              // var func = null;
 
               if (error) {
                 LOGGER.error(
@@ -141,28 +150,28 @@ export default class FilesMod implements Mod {
                   pSource,
                   error
                 );
-                //reject( error );
-                //func = reject;
+                // reject( error );
+                // func = reject;
                 data.result = stderr;
 
                 asPromised(pPreviousData, pTarget, reject, data);
               } else {
                 data.result = stdout;
 
-                that._handle_perms(pParent, pExecutor, pTarget, pPerms).then(
-                  function () {
+                this._handlePerms(pParent, pExecutor, pTarget, pPerms).then(
+                  function() {
                     asPromised(pPreviousData, pTarget, resolve, data);
                   },
-                  function (error) {
+                  function(error: Error) {
                     data.result = error;
                     asPromised(pPreviousData, pTarget, reject, data);
                   }
                 );
-                //resolve();
-                //func = resolve;
-                //data.result = stdout;
+                // resolve();
+                // func = resolve;
+                // data.result = stdout;
               }
-              //asPromised( pPreviousData, pTarget, func, data );
+              // asPromised( pPreviousData, pTarget, func, data );
             }
           );
         } catch (e) {
@@ -172,9 +181,9 @@ export default class FilesMod implements Mod {
       });
     };
   }
-  _evaluate = function (pTemplate: string, pContext: Context) {
-    //TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    //For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
+  _evaluate(pTemplate: string, pContext: Context): string[] | null {
+    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
+    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
     // Having said that, a mod then cannot access the results of another mod within the same activity...
 
     /*
@@ -187,7 +196,7 @@ export default class FilesMod implements Mod {
     console.dir( oResult );
     */
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
-  };
+  }
   _download(
     pParent: string,
     pExecutor: Executor,
@@ -195,15 +204,28 @@ export default class FilesMod implements Mod {
     pSource: string,
     pPerms: Permissions,
     pContext: Context
-  ) {
-    var that = this;
-    var oSources =
-      pSource.indexOf("{{") < 0 ? [pSource] : this._evaluate(pSource, pContext);
-    var oTargets =
-      pTarget.indexOf("{{") < 0 ? [pTarget] : this._evaluate(pTarget, pContext);
+  ): (data?: any) => Promise<any> {
+    let oSources = [pSource];
+    if (pSource.includes("{{")) {
+      oSources = this._evaluate(pSource, pContext) || [];
+    }
+    let oTargets = [pTarget];
+    if (pTarget.includes("{{")) {
+      oTargets = this._evaluate(pTarget, pContext) || [];
+    }
+    // TODO: check when oSources and oTargets.length == 0
     if (oSources.length !== oTargets.length) {
-      return function () {
-        return Promise.reject({
+      return function() {
+        return Promise.reject(
+          new Error(
+            "Template used in source/target do not match (sources=[" +
+              oSources +
+              "], targets=[" +
+              oTargets +
+              "])"
+          )
+        );
+        /* {
           error:
             "Template used in source/target do not match (sources=[" +
             oSources +
@@ -215,13 +237,14 @@ export default class FilesMod implements Mod {
           exit: false,
           pass: true,
           _stdout: null,
-          _stderr: null,
+          _stderr: null
         });
+        */
       };
     }
     LOGGER.debug("[%s] Downloading %s file(s)...", pParent, oSources.length);
     if (oSources.length === 1) {
-      return this._single_download(
+      return this._singleDownload(
         pParent,
         pExecutor,
         oTargets[0],
@@ -230,16 +253,16 @@ export default class FilesMod implements Mod {
         pContext
       );
     } else {
-      return function (_pPreviousData: any) {
-        return new Promise(function (resolve, reject) {
+      return (_pPreviousData: any) => {
+        return new Promise((resolve, reject) => {
           try {
-            var oData = { files: {} };
-            var oPromises = [];
-            for (var i in oSources) {
-              var oSource = oSources[i];
-              var oTarget = oTargets[i];
+            const oData = { files: {} };
+            const oPromises = [];
+            for (let i = 0; i < oSources.length; i++) {
+              const oSource = oSources[i];
+              const oTarget = oTargets[i];
               oPromises.push(
-                that._single_download(
+                this._singleDownload(
                   pParent,
                   pExecutor,
                   oTarget,
@@ -250,16 +273,16 @@ export default class FilesMod implements Mod {
               );
             }
             Promises.seq(oPromises, oData).then(
-              function (_pData) {
+              function(_pData) {
                 LOGGER.debug("[%s] Done processing multiple files.", pParent);
-                //console.log('files_download.then(): pData=');
-                //console.dir( pData );
-                //console.log('oData=');
-                //console.dir( oData );
-                //resolve( pData );
+                // console.log('files_download.then(): pData=');
+                // console.dir( pData );
+                // console.log('oData=');
+                // console.dir( oData );
+                // resolve( pData );
                 resolve(oData);
               },
-              function (pError) {
+              function(pError) {
                 LOGGER.error(
                   "[%s] Unexpected error getting multiple files.",
                   pParent,
@@ -287,22 +310,17 @@ export default class FilesMod implements Mod {
     pContent: string,
     pPerms: Permissions,
     _pContext: Context
-  ) {
-    var that = this;
-    return function (pPreviousData: any) {
-      return new Promise(function (resolve, reject) {
-        pExecutor.writeFile(pTarget, pContent, function (
-          error,
-          stdout,
-          stderr
-        ) {
-          var data: Data = {
+  ): (data: any) => Promise<any> {
+    return (pPreviousData: any) => {
+      return new Promise((resolve, reject) => {
+        pExecutor.writeFile(pTarget, pContent, (error, stdout, stderr) => {
+          const data: Data = {
             exit: false,
             pass: true,
             _stdout: stdout,
-            _stderr: stderr,
+            _stderr: stderr
           };
-          //var func = null;
+          // var func = null;
 
           if (error) {
             LOGGER.error(
@@ -310,24 +328,24 @@ export default class FilesMod implements Mod {
               pParent,
               error
             );
-            //reject( error );
-            //func = reject;
+            // reject( error );
+            // func = reject;
             data.result = stderr || "";
             asPromised(pPreviousData, pTarget, reject, data);
           } else {
             LOGGER.debug("[%s] Done creating file with content.", pParent);
             data.result = stdout;
-            that._handle_perms(pParent, pExecutor, pTarget, pPerms).then(
-              function () {
+            this._handlePerms(pParent, pExecutor, pTarget, pPerms).then(
+              function() {
                 asPromised(pPreviousData, pTarget, resolve, data);
               },
-              function (error) {
+              function(error: Error) {
                 data.result = error;
                 asPromised(pPreviousData, pTarget, reject, data);
               }
             );
-            //resolve( stdout );
-            //func = resolve;
+            // resolve( stdout );
+            // func = resolve;
           }
         });
       });
@@ -338,30 +356,29 @@ export default class FilesMod implements Mod {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ) {
-    //pCurrentActivityResult, pGlobalResult, pContext ) {
-    //var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
-    var that = this;
-    return new Promise(function (resolve, reject) {
+  ): Promise<any> {
+    // pCurrentActivityResult, pGlobalResult, pContext ) {
+    // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
+    return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] Processing files...", pParent);
-      //console.log('files: Activity Context=');
-      //console.dir( pActivityContext );
-      //console.log('files: Global Context=');
-      //console.dir( pGlobalContext );
+      // console.log('files: Activity Context=');
+      // console.dir( pActivityContext );
+      // console.log('files: Global Context=');
+      // console.dir( pGlobalContext );
       try {
-        //TODO:
-        //pActivityContext[ pParent ]['files'] = {};
-        //oData = pActivityContext[ pParent ] or ['files']....TBC
-        var oData = { files: {} };
-        var oPromises = [];
-        for (var i in pConfig) {
-          var oTarget = i;
+        // TODO:
+        // pActivityContext[ pParent ]['files'] = {};
+        // oData = pActivityContext[ pParent ] or ['files']....TBC
+        const oData = { files: {} };
+        const oPromises: ((data: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          const oTarget = i;
 
           if (pConfig[i].source) {
-            var oSource = pConfig[i].source;
-            //logger.debug('[%s] File(s): source=[%s], target=[%s]...', pParent, oSource, oTarget);
+            const oSource = pConfig[i].source;
+            // logger.debug('[%s] File(s): source=[%s], target=[%s]...', pParent, oSource, oTarget);
             oPromises.push(
-              that._download(
+              this._download(
                 pParent,
                 pExecutor,
                 oTarget,
@@ -371,14 +388,14 @@ export default class FilesMod implements Mod {
               )
             );
           } else if (pConfig[i].content) {
-            var oContent = pConfig[i].content;
+            const oContent = pConfig[i].content;
             LOGGER.debug(
               "[%s] Creating file [%s] with content...",
               pParent,
               oTarget
             );
             oPromises.push(
-              that._create(
+              this._create(
                 pParent,
                 pExecutor,
                 oTarget,
@@ -388,19 +405,20 @@ export default class FilesMod implements Mod {
               )
             );
           }
-        }
+        });
+
         Promises.seq(oPromises, oData).then(
-          function (pData) {
+          function(pData) {
             LOGGER.debug("[%s] Done processing files.", pParent);
-            //resolve( pData );
-            //console.log('files.handle(): pData=');
-            //console.dir( pData );
-            //console.log('oData=');
-            //console.dir(oData);
+            // resolve( pData );
+            // console.log('files.handle(): pData=');
+            // console.dir( pData );
+            // console.log('oData=');
+            // console.dir(oData);
 
             resolve(pData);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error(
               "[%s] Error creating/getting file(s).",
               pParent,

@@ -160,7 +160,7 @@ describe("promises", function() {
 
   it("chainWithErrorInCustomCondition", function(done) {
     const oCustomSkipCondition = function(_pValue: any): never {
-      throw new Error("dummy error");
+      throw new Error("Error generated for testing purposes.");
     };
     const oFuncs = [];
     const oFunc1 = function(_pValue: any): Promise<any> {

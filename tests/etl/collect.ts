@@ -9,7 +9,11 @@ const LOGGER = createLogger("etljs::etl::test");
 
 export default class CollectMod implements Mod {
   constructor(pETL: IETL) {
-    if (pETL) pETL.mod("collects", this, function (_pSettings: any) {});
+    if (pETL) {
+      pETL.mod("collects", this, function(_pSettings: any) {
+        // nop
+      });
+    }
   }
   _do(
     pParent: string,
@@ -18,13 +22,13 @@ export default class CollectMod implements Mod {
     _pExecutor: Executor,
     pContext: Context
   ) {
-    return function (pData: any) {
-      return new Promise(function (resolve, _reject) {
-        //var oResult = [];
+    return function(pData: any) {
+      return new Promise(function(resolve, _reject) {
+        // var oResult = [];
         LOGGER.debug("[%s:%s] previous data=[%s]", pParent, pKey, pData);
         if (pData != null) {
-          var d: any = { key: pKey, result: pConfig["result"] };
-          //pData.collects[ pKey ] = pConfig;
+          const d: any = { key: pKey, result: pConfig["result"] };
+          // pData.collects[ pKey ] = pConfig;
           pData.results.push(d);
           if (pConfig["var"]) {
             d["var"] = pConfig["var"];
@@ -41,17 +45,16 @@ export default class CollectMod implements Mod {
     pExecutor: Executor,
     pContext: Context
   ): Promise<any> {
-    var that = this;
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] In Collect mod. Context=[%j]", pParent, pContext);
       try {
-        var oResult = { exit: false, skip: false, results: [] };
-        var oPromises = [];
-        for (var i in pConfig) {
-          oPromises.push(that._do(pParent, i, pConfig[i], pExecutor, pContext));
-        }
+        const oResult = { exit: false, skip: false, results: [] };
+        const oPromises: ((data: any) => Promise<any>)[] = [];
+        Object.keys(pConfig).forEach(i => {
+          oPromises.push(this._do(pParent, i, pConfig[i], pExecutor, pContext));
+        });
         Promises.seq(oPromises, oResult).then(
-          function (_pData) {
+          function(_pData) {
             LOGGER.debug(
               "[%s] Done processing commands. Data=[%j]",
               pParent,
@@ -59,7 +62,7 @@ export default class CollectMod implements Mod {
             );
             resolve(oResult);
           },
-          function (pError) {
+          function(pError) {
             LOGGER.error(
               "[%s] Unexpected error running commands.",
               pParent,

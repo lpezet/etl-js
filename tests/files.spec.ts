@@ -66,7 +66,11 @@ describe("files", function() {
   it("downloadError", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
 
@@ -97,7 +101,11 @@ describe("files", function() {
         _pContent: string,
         pCallback: Callback
       ): void {
-        pCallback(new Error("error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
 

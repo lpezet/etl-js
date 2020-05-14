@@ -10,24 +10,26 @@ export default class TestMod implements Mod {
   mCalls: number;
   constructor(pETL: IETL, pSettings?: any) {
     this.mSettings = pSettings || {};
-    var that = this;
-    if (pETL)
-      pETL.mod("tester", that, function (pSettings: any) {
-        that.mSettings = pSettings;
+    if (pETL) {
+      pETL.mod("tester", this, (pSettings: any) => {
+        this.mSettings = {
+          ...this.mSettings,
+          ...pSettings
+        };
       });
+    }
     this.mCalls = 0;
   }
   calls(): number {
     return this.mCalls;
   }
   handle(pParent: string, _pConfig: any, _pExecutor: Executor): Promise<any> {
-    var that = this;
-    return new Promise(function (resolve, _reject) {
-      that.mCalls++;
+    return new Promise((resolve, _reject) => {
+      this.mCalls++;
       LOGGER.debug(
         "[%s] In test mod. Settings: hello=%s",
         pParent,
-        that.mSettings["hello"]
+        this.mSettings["hello"]
       );
       resolve();
     });

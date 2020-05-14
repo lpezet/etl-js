@@ -14,7 +14,7 @@
     "lint_old": "eslint lib/ tests/",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
-    "test": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
+    "test": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*.spec.ts\"",
     "posttest": "nyc check-coverage",
     "integration-test": "mocha ./integration-tests/*-test.js",
     "docs-gen": "doctoc README.md Mods.md --github --no-title",

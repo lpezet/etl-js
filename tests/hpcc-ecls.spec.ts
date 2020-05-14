@@ -142,7 +142,7 @@ describe("hpcc-ecls", function() {
         _pContent: string,
         _pCallback: Callback
       ): void {
-        throw new Error("error");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     const oExecutor = new ExecutorClass();
@@ -169,7 +169,7 @@ describe("hpcc-ecls", function() {
   it("errorThrownFromCmdExecutor", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
-        throw new Error("error");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     const oExecutor = new ExecutorClass();
@@ -376,7 +376,7 @@ describe("hpcc-ecls", function() {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.includes("wget")) {
-          pCallback(new Error("Test error"), "", "");
+          pCallback(new Error("Error generated for testing purposes."), "", "");
         }
         pCallback(null, "", "");
       }
@@ -407,7 +407,7 @@ describe("hpcc-ecls", function() {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (!pCmd.includes("wget")) {
-          pCallback(new Error("Test error"), "", "");
+          pCallback(new Error("Error generated for testing purposes."), "", "");
         } else {
           // the TEMP_ECL_FILE
           fs.writeFileSync("/tmp/etl-js.ecl", "something", "utf8");
@@ -531,7 +531,11 @@ describe("hpcc-ecls", function() {
         _pContent: string,
         pCallback: Callback
       ): void {
-        pCallback(new Error("Test error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
     const oExecutor = new ExecutorClass();
@@ -552,7 +556,11 @@ describe("hpcc-ecls", function() {
   it("contentWithErrorRunningECL", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "somestderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "somestderr stuff"
+        );
       }
       writeFile(
         _pFilename: string,

@@ -59,7 +59,9 @@ describe("interactives", function() {
     const oTested = new InteractivesMod(new ETLMock());
     oTested._exec = function() {
       return function() {
-        return Promise.reject(new Error("dummy error"));
+        return Promise.reject(
+          new Error("Error generated for testing purposes.")
+        );
       };
     };
     const oTemplate = {
@@ -83,7 +85,7 @@ describe("interactives", function() {
   it("execError", function(done) {
     const oTested = new InteractivesMod(new ETLMock());
     oTested._exec = function() {
-      throw new Error("dummy error");
+      throw new Error("Error generated for testing purposes.");
     };
     const oTemplate = {
       root: {

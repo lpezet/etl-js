@@ -145,7 +145,7 @@ export default class ImageChartsMod implements Mod {
             }
           });
           let oChartDataFile = pSpecs["data"];
-          if (oChartDataFile.indexOf("{{") < 0) {
+          if (oChartDataFile.indexOf("{{") >= 0) {
             const v = this._evaluate(oChartDataFile, pContext);
             if (v && v.length >= 1) oChartDataFile = v[0];
             // TODO: else, log???
@@ -224,6 +224,7 @@ export default class ImageChartsMod implements Mod {
     return new Promise((resolve, reject) => {
       LOGGER.debug("[%s] Processing image-charts...", pParent);
       try {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         const oData = { image_charts: {} };
         const oPromises: ((data: any) => Promise<any>)[] = [];
         Object.keys(pConfig).forEach(i => {

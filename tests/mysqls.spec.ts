@@ -230,14 +230,18 @@ describe("mysqls", function() {
   it("internalRunError", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
     const oExecutor = new ExecutorClass();
     const oSettings = {};
     const oTested = new MySQLsMod(new ETLMock(), oSettings);
     oTested._run = function() {
-      throw new Error("error");
+      throw new Error("Error generated for testing purposes.");
     };
     const oTemplate = {
       root: {
@@ -261,7 +265,11 @@ describe("mysqls", function() {
   it("internalWrapRunError", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
 
@@ -269,7 +277,7 @@ describe("mysqls", function() {
     const oSettings = {};
     const oTested = new MySQLsMod(new ETLMock(), oSettings);
     oTested._wrapRun = function() {
-      throw new Error("error");
+      throw new Error("Error generated for testing purposes.");
     };
     const oTemplate = {
       root: {
@@ -293,7 +301,11 @@ describe("mysqls", function() {
   it("errorExecutingCmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "some stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "some stderr stuff"
+        );
       }
     }
     const oExecutor = new ExecutorClass();

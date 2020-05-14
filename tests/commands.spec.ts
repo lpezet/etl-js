@@ -348,7 +348,7 @@ describe("commands", function() {
   it("exit_on_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("test error"));
+        pCallback(new Error("Error generated for testing purposes."));
       }
     }
     const oExecutor = new ExecutorClass();
@@ -382,7 +382,11 @@ describe("commands", function() {
   it("error_executing_cmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "stderr stuff"
+        );
       }
     }
     const oExecutor = new ExecutorClass();
@@ -408,7 +412,11 @@ describe("commands", function() {
   it("error_executing_cmd_ignore_errors", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), "", "stderr stuff");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          "",
+          "stderr stuff"
+        );
       }
     }
     const oExecutor = new ExecutorClass();
@@ -495,7 +503,7 @@ describe("commands", function() {
           case "005_test_error":
             // TODO
             // error = { code: 1 };
-            error = new Error("code = 1");
+            error = new Error("Error generated for testing purposes.");
             break;
         }
         pCallback(error, stdout, stderr);
@@ -521,7 +529,7 @@ describe("commands", function() {
   it("executor_throwing_exception_in_cmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
-        throw new Error("this is a dummy error");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     const oExecutor = new ExecutorClass();
@@ -547,7 +555,7 @@ describe("commands", function() {
   it("executor_throwing_exception_in_test", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
-        throw new Error("this is a dummy error");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     const oExecutor = new ExecutorClass();
@@ -574,7 +582,7 @@ describe("commands", function() {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "continue");
-        throw new Error("this is a dummy error");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     const oExecutor = new ExecutorClass();
@@ -634,7 +642,9 @@ describe("commands", function() {
   it("exit_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
+        if (pCmd.match(/something/g)) {
+          pCallback(new Error("Error generated for testing purposes."));
+        }
       }
     }
     const oExecutor = new ExecutorClass();
@@ -702,7 +712,9 @@ describe("commands", function() {
   it("no_exit_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
+        if (pCmd.match(/something/g)) {
+          pCallback(new Error("Error generated for testing purposes."));
+        }
       }
     }
     const oExecutor = new ExecutorClass();
@@ -770,7 +782,9 @@ describe("commands", function() {
   it("skip_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
+        if (pCmd.match(/something/g)) {
+          pCallback(new Error("Error generated for testing purposes."));
+        }
       }
     }
     const oExecutor = new ExecutorClass();
@@ -838,7 +852,9 @@ describe("commands", function() {
   it("no_skip_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
+        if (pCmd.match(/something/g)) {
+          pCallback(new Error("Error generated for testing purposes."));
+        }
       }
     }
     const oExecutor = new ExecutorClass();

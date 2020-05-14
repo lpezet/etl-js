@@ -229,7 +229,11 @@ describe("mysqlimports", function() {
   it("erorExecutingCmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
-        pCallback(new Error("error"), null, "some stderr");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          null,
+          "some stderr"
+        );
       }
     }
     const oExecutor = new ExecutorClass();

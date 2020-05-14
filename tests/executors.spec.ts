@@ -52,7 +52,7 @@ const setupSshServer = function(): ssh2.Server {
               ctx.key.data.length !== allowedPubSSHKey.length ||
               !crypto.timingSafeEqual(
                 ctx.key.data,
-                new Buffer(allowedPubSSHKey)
+                Buffer.from(allowedPubSSHKey)
               ) ||
               (ctx.signature && !allowedPubKey.verify(ctx.blob, ctx.signature))
             ) {

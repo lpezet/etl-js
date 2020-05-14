@@ -19,7 +19,11 @@ describe("etl-commands", function() {
       // console.log('pCmd=' + pCmd);
       if (pCmd.startsWith("(error)")) {
         // Passing a value for error (first arg)
-        pCallback(new Error("!!error!!"), null, "failed stderr");
+        pCallback(
+          new Error("Error generated for testing purposes."),
+          null,
+          "failed stderr"
+        );
       } else if (pCmd.startsWith("(stop)")) {
         pCallback(null, "stop", null);
       } else if (pCmd.startsWith("(continue)")) {

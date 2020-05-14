@@ -447,7 +447,7 @@ describe("etl", function() {
         _pExecutor: Executor,
         _pContext: Context
       ): Promise<any> {
-        throw new Error("Awesome mod error.");
+        throw new Error("Error generated for testing purposes.");
       }
     }
     new AwesomeMod(oTested);

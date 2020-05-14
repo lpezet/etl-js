@@ -2,26 +2,23 @@
   "name": "@lpezet/etl-js",
   "version": "2.0.0",
   "description": "ETL made simple and reproducible.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "dist": "npm run clean && npm run tsc -- --build tsconfig.publish.json && chmod +x lib/src/bin/cue-me-in.js",
+    "build": "tsc",
+    "prepare": "npm run build",
     "tsc": "tsc",
-    "clean": "rimraf lib",
+    "prepublish": "tsc",
+    "clean": "rimraf dist",
     "lint": "eslint --ext .ts .",
-    "mocha_cuemein": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --opts mocha.opts",
     "mocha-single": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
     "release": "release-it",
-    "lint_old": "eslint lib/ tests/",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
     "test": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*.spec.ts\"",
     "posttest": "nyc check-coverage",
-    "integration-test": "mocha ./integration-tests/*-test.js",
     "docs-gen": "doctoc README.md Mods.md --github --no-title",
-    "test-watch": "mocha --watch --reporter=spec",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "test-bak": "mocha --bail --check-leaks --reporter spec \"./tests/**/*-test.js\"",
-    "test-ci-bak": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks \"./tests/**/*-test.js\""
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -38,8 +35,7 @@
   "files": [
     "LICENSE",
     "README.md",
-    "index.js",
-    "lib/"
+    "dist"
   ],
   "nyc": {
     "include": "lib",

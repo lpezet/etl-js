@@ -101,11 +101,13 @@ describe("commands", function() {
 
   it("tags", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+      exec(pCmd: string, pCmdOpts: any, pCallback: Callback): void {
         try {
           assert.equal(typeof pCmd, "string");
           if (pCmd.includes('echo "continue"')) {
             assert.notInclude(pCmd, "{{ tag1 }}");
+          } else {
+            assert.equal(pCmdOpts["cwd"], "/something/hello");
           }
           pCallback(null, pCmd, "");
         } catch (e) {
@@ -120,7 +122,8 @@ describe("commands", function() {
       root: {
         hello: {
           command: "echo {{ tag1 }}",
-          test: '[ "{{ tag1 }}" == "hello"]'
+          test: '[ "{{ tag1 }}" == "hello"]',
+          cwd: "/something/{{tag1}}"
         }
       }
     };

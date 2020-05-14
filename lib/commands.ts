@@ -50,6 +50,21 @@ export default class CommandsMod implements Mod {
     }
     this.mTemplateEngine = new TemplateEngine();
   }
+  _evaluateToIndex(
+    pTemplate: string,
+    pContext: Context,
+    pIndex: number
+  ): string {
+    const v = this._evaluate(pTemplate, pContext);
+    if (v && v.length > pIndex) return v[pIndex];
+    throw new Error(
+      "Unbalanced template (resolved to " +
+        v?.length +
+        " elements but wanted #" +
+        pIndex +
+        ")."
+    );
+  }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
     // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
     // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
@@ -77,7 +92,7 @@ export default class CommandsMod implements Mod {
     pSpecs: any,
     pExecutor: Executor,
     pContext: Context,
-    _pTemplateIndex: number
+    pTemplateIndex: number
   ): (data: any) => Promise<any> {
     return (pPreviousData: any): Promise<any> => {
       return new Promise((resolve, reject) => {
@@ -125,17 +140,18 @@ export default class CommandsMod implements Mod {
           LOGGER.debug("[%s] Executing command [%s]...", pParent, pKey);
           let oCwd = oCmdSpecs["cwd"];
           if (oCwd && oCwd.indexOf("{{") >= 0) {
-            oCwd = this._evaluate(oCwd, pContext);
+            oCwd = this._evaluateToIndex(oCwd, pContext, pTemplateIndex);
           }
 
           let oTest = oCmdSpecs["test"];
-          if (oTest) {
-            oTest =
-              oTest.indexOf("{{") < 0 ? oTest : this._evaluate(oTest, pContext);
+          if (oTest && oTest.indexOf("{{") >= 0) {
+            oTest = this._evaluateToIndex(oTest, pContext, pTemplateIndex);
           }
           if (Array.isArray(oTest)) oTest = oTest[0];
           let oCmd = oCmdSpecs["command"];
-          oCmd = oCmd.indexOf("{{") < 0 ? oCmd : this._evaluate(oCmd, pContext);
+          if (oCmd && oCmd.indexOf("{{") >= 0) {
+            oCmd = this._evaluateToIndex(oCmd, pContext, pTemplateIndex);
+          }
           if (Array.isArray(oCmd)) oCmd = oCmd[0];
           const oEnv = oCmdSpecs["env"];
 

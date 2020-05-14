@@ -221,7 +221,8 @@ describe("executors", function() {
   });
 
   it("localWriteFile", function(done) {
-    const executor = new Local();
+    const settings: any = { test: true };
+    const executor = new Local(settings);
     const oFilePath = path.resolve(os.tmpdir(), "etl-js-test.txt");
 
     const oExpectedContent = "this is dummy content";

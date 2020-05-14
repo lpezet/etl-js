@@ -4,75 +4,75 @@ import FilesMod from "../lib/files";
 import CollectMod from "./etl/collect";
 import { assert } from "chai";
 
-describe("etl-files", function () {
+describe("etl-files", function() {
   let mETLTemplate: any = null;
 
-  beforeEach(function (done) {
+  beforeEach(function(done) {
     mETLTemplate = {
       etl: ["step1", "step2", "step3"],
       step1: {
         collects: {
           t001test: {
             var: "t001test",
-            result: "toto",
+            result: "toto"
           },
           t002test: {
             var: "t002test",
-            result: ["toto", "titi"],
-          },
-        },
+            result: ["toto", "titi"]
+          }
+        }
       },
       step2: {
         collects: {
           singleResult1: {
             var: "singleResult1",
-            result: "toto",
+            result: "toto"
           },
           singleResult2: {
             var: "singleResult2",
-            result: "titi",
-          },
-        },
+            result: "titi"
+          }
+        }
       },
       step3: {
         files: {
           "/tmp/toto.txt": {
-            source: "https://a.b.c/toto.txt",
-          },
-        },
-      },
+            source: "https://a.b.c/toto.txt"
+          }
+        }
+      }
     };
     done();
   });
 
-  afterEach(function (done) {
+  afterEach(function(done) {
     done();
   });
 
-  it("sanityTest", function (done) {
+  it("sanityTest", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
         pCallback(null, pCmd);
       }
     }
-    var oSettings = {};
-    var oETL = new ETL(new ExecutorClass(), oSettings);
+    const oSettings = {};
+    const oETL = new ETL(new ExecutorClass(), oSettings);
     new FilesMod(oETL);
     new CollectMod(oETL);
 
     oETL.process(mETLTemplate).then(
-      function (_pData) {
-        //console.log('pData=');
-        //console.dir(pData);
+      function(_pData) {
+        // console.log('pData=');
+        // console.dir(pData);
         done();
       },
-      function (pError) {
+      function(pError) {
         done(pError);
       }
     );
   });
 
-  it("filesSourceTemplate", function (done) {
+  it("filesSourceTemplate", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
         assert.include(pCmd, "http://a.b.c/toto.txt");
@@ -82,27 +82,27 @@ describe("etl-files", function () {
     mETLTemplate["step3"] = {
       files: {
         "/tmp/toto.txt": {
-          source: "http://a.b.c/{{ vars.t001test }}.txt",
-        },
-      },
+          source: "http://a.b.c/{{ vars.t001test }}.txt"
+        }
+      }
     };
-    var oSettings = {};
-    var oETL = new ETL(new ExecutorClass(), oSettings);
+    const oSettings = {};
+    const oETL = new ETL(new ExecutorClass(), oSettings);
     new FilesMod(oETL);
     new CollectMod(oETL);
 
     oETL.process(mETLTemplate).then(
-      function (_pData) {
-        //console.dir( pData );
+      function(_pData) {
+        // console.dir( pData );
         done();
       },
-      function (pError) {
+      function(pError) {
         done(pError);
       }
     );
   });
 
-  it("filesTargetTemplate", function (done) {
+  it("filesTargetTemplate", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
         assert.include(pCmd, "/tmp/toto.txt");
@@ -112,27 +112,27 @@ describe("etl-files", function () {
     mETLTemplate["step3"] = {
       files: {
         "/tmp/{{ vars.t001test }}.txt": {
-          source: "http://a.b.c/titi.txt",
-        },
-      },
+          source: "http://a.b.c/titi.txt"
+        }
+      }
     };
-    var oSettings = {};
-    var oETL = new ETL(new ExecutorClass(), oSettings);
+    const oSettings = {};
+    const oETL = new ETL(new ExecutorClass(), oSettings);
     new FilesMod(oETL);
     new CollectMod(oETL);
 
     oETL.process(mETLTemplate).then(
-      function (_pData) {
-        //console.dir( 'Data=' + pData );
+      function(_pData) {
+        // console.dir( 'Data=' + pData );
         done();
       },
-      function (pError) {
+      function(pError) {
         done(pError);
       }
     );
   });
 
-  it("filesTargetAndSourceTemplate", function (done) {
+  it("filesTargetAndSourceTemplate", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
         assert.include(pCmd, "/tmp/toto.txt");
@@ -143,32 +143,32 @@ describe("etl-files", function () {
     mETLTemplate["step3"] = {
       files: {
         "/tmp/{{ vars.t001test }}.txt": {
-          source: "http://a.b.c/{{ vars.t001test }}.txt",
-        },
-      },
+          source: "http://a.b.c/{{ vars.t001test }}.txt"
+        }
+      }
     };
-    var oSettings = {};
-    var oETL = new ETL(new ExecutorClass(), oSettings);
+    const oSettings = {};
+    const oETL = new ETL(new ExecutorClass(), oSettings);
     new FilesMod(oETL);
     new CollectMod(oETL);
 
     oETL.process(mETLTemplate).then(
-      function (_pData) {
-        //console.dir( pData );
+      function(_pData) {
+        // console.dir( pData );
         done();
       },
-      function (pError) {
+      function(pError) {
         done(pError);
       }
     );
   });
 
-  it("filesTargetAndSourceMultiValueTemplate", function (done) {
+  it("filesTargetAndSourceMultiValueTemplate", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
-        if (pCmd.indexOf("/tmp/toto.txt") >= 0) {
+        if (pCmd.includes("/tmp/toto.txt")) {
           assert.include(pCmd, "http://a.b.c/toto.txt");
-        } else if (pCmd.indexOf("/tmp/titi.txt") >= 0) {
+        } else if (pCmd.includes("/tmp/titi.txt")) {
           assert.include(pCmd, "http://a.b.c/titi.txt");
         } else {
           throw new Error("Unexpected command: " + pCmd);
@@ -179,21 +179,21 @@ describe("etl-files", function () {
     mETLTemplate["step3"] = {
       files: {
         "/tmp/{{ vars.t002test }}.txt": {
-          source: "http://a.b.c/{{ vars.t002test }}.txt",
-        },
-      },
+          source: "http://a.b.c/{{ vars.t002test }}.txt"
+        }
+      }
     };
-    var oSettings = {};
-    var oETL = new ETL(new ExecutorClass(), oSettings);
+    const oSettings = {};
+    const oETL = new ETL(new ExecutorClass(), oSettings);
     new FilesMod(oETL);
     new CollectMod(oETL);
 
     oETL.process(mETLTemplate).then(
-      function (_pData) {
-        //console.dir( pData );
+      function(_pData) {
+        // console.dir( pData );
         done();
       },
-      function (pError) {
+      function(pError) {
         done(pError);
       }
     );

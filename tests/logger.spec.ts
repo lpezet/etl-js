@@ -12,11 +12,11 @@ describe("logger", () => {
     expect(
       configureLogger({
         appenders: {
-          console: { type: "console", layout: { type: "colored" } },
+          console: { type: "console", layout: { type: "colored" } }
         },
         categories: {
-          default: { appenders: ["console"], level: "all" },
-        },
+          default: { appenders: ["console"], level: "all" }
+        }
       })
     ).to.not.throw;
   });

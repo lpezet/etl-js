@@ -42,6 +42,7 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
         silent: true
       }
@@ -51,6 +52,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "do_something_{{ years }}": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test WHERE year = {{ years }}"
         }
@@ -93,6 +95,7 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
         silent: true
       }
@@ -102,6 +105,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }
@@ -131,6 +135,7 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       "/downloads/test.csv": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
         silent: true
       }
@@ -140,6 +145,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }
@@ -169,6 +175,7 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       "*": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
         silent: true
       }
@@ -178,6 +185,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }
@@ -234,6 +242,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }
@@ -259,12 +268,13 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oSettings = {};
     const oTested = new MySQLsMod(new ETLMock(), oSettings);
-    oTested._wrap_run = function() {
+    oTested._wrapRun = function() {
       throw new Error("error");
     };
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }
@@ -293,6 +303,7 @@ describe("mysqls", function() {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
           execute: "SELECT * FROM test"
         }

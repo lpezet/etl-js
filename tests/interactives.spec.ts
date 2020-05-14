@@ -6,13 +6,16 @@ import Mod from "../lib/mod";
 import Context from "../lib/context";
 import { NoOpExecutor } from "../lib/executors";
 
-const chai = require("chai");
-const spies = require("chai-spies");
-chai.use(spies);
+// const chai = require("chai");
+// const spies = require("chai-spies");
+// chai.use(spies);
 
-describe("interactives", function () {
+describe("interactives", function() {
   const NOOP_EXEC = new NoOpExecutor();
-  function emptyContext() {
+  /**
+   * @return Context
+   */
+  function emptyContext(): Context {
     return { env: {}, vars: {} };
   }
   class ETLMock implements IETL {
@@ -21,88 +24,102 @@ describe("interactives", function () {
     }
   }
   class FakeStream extends EventEmitter {
-    resume() {}
-    pause() {}
-    write() {}
-    end() {}
+    read(): any {
+      return {};
+    }
+    pause(): this {
+      return this;
+    }
+    resume(): this {
+      return this;
+    }
+    write(): boolean {
+      return true;
+    }
+    end(): void {
+      // nop
+    }
   }
 
-  beforeEach(function (done: () => void) {
+  beforeEach(function(done: () => void) {
     done();
   });
 
-  afterEach(function (done: () => void) {
+  afterEach(function(done: () => void) {
     done();
   });
 
-  it("mod", function (done) {
-    var oTested = new InteractivesMod(new ETLMock());
+  it("mod", function(done) {
+    const oTested = new InteractivesMod(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
 
-  it("questionError", function (done) {
-    var oTested = new InteractivesMod(new ETLMock());
-    oTested._exec = function () {
-      return function () {
-        return Promise.reject({ error: new Error("dummy error") });
+  it("questionError", function(done) {
+    const oTested = new InteractivesMod(new ETLMock());
+    oTested._exec = function() {
+      return function() {
+        return Promise.reject(new Error("dummy error"));
       };
     };
-    var oTemplate = {
+    const oTemplate = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         ask_name: {
-          prompt: "Enter your name",
-        },
-      },
+          prompt: "Enter your name"
+        }
+      }
     };
     oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("execError", function (done) {
-    var oTested = new InteractivesMod(new ETLMock());
-    oTested._exec = function () {
+  it("execError", function(done) {
+    const oTested = new InteractivesMod(new ETLMock());
+    oTested._exec = function() {
       throw new Error("dummy error");
     };
-    var oTemplate = {
+    const oTemplate = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         ask_name: {
-          prompt: "Enter your name",
-        },
-      },
+          prompt: "Enter your name"
+        }
+      }
     };
     oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("basic", function (done) {
-    var fs = new FakeStream();
-    var oSettings = { input: fs, output: fs };
-    var oTested = new InteractivesMod(new ETLMock(), oSettings);
+  it("basic", function(done) {
+    const fs = new FakeStream();
+    const oSettings = { input: fs, output: fs };
+    const oTested = new InteractivesMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         ask_name: {
           prompt: "Enter your name",
-          var: "name",
-        },
-      },
+          var: "name"
+        }
+      }
     };
     const oContext: Context = emptyContext();
     oTested.handle("root", oTemplate["root"], NOOP_EXEC, oContext).then(
-      function () {
+      function() {
         try {
           assert.exists(oContext.vars["name"]);
           assert.equal(oContext.vars["name"], "Schwarzenegger");
@@ -111,12 +128,12 @@ describe("interactives", function () {
           done(e);
         }
       },
-      function (pError) {
-        //console.log( pError );
+      function(pError) {
+        // console.log( pError );
         done(pError);
       }
     );
-    setTimeout(function () {
+    setTimeout(function() {
       fs.emit("data", "Schwarzenegger\n");
     }, 10);
   });

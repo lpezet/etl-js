@@ -2,7 +2,7 @@ import { assert } from "chai";
 import Mod from "../lib/mod";
 import { IETL, ModCallback } from "../lib/etl";
 import CommandsMod from "../lib/commands";
-import { load_file } from "./utils";
+import { loadFile } from "./utils";
 import { Callback, NoOpExecutor } from "../lib/executors";
 import Context from "../lib/context";
 
@@ -16,7 +16,7 @@ describe("commands", function() {
   });
 
   /**
-   *
+   * @return Context
    */
   function emptyContext(): Context {
     return { env: {}, vars: {} };
@@ -36,7 +36,7 @@ describe("commands", function() {
 
   it("tagsAdvanced", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         try {
           assert.equal(typeof pCmd, "string");
           if (pCmd.includes('echo "continue"')) {
@@ -61,6 +61,7 @@ describe("commands", function() {
         "hello_{{years}}_suffix": {
           command: "echo {{ years }}",
           test: "{{years}} -eq 2019",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           skip_on_test_failed: true
         }
       }
@@ -100,7 +101,7 @@ describe("commands", function() {
 
   it("tags", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         try {
           assert.equal(typeof pCmd, "string");
           if (pCmd.includes('echo "continue"')) {
@@ -163,7 +164,7 @@ describe("commands", function() {
 
   it("result_as_normal", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(null, '[ "Toto", "Tutu" ]');
       }
     }
@@ -174,6 +175,7 @@ describe("commands", function() {
       root: {
         "001_json": {
           command: "dontmatter",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           result_as_json: false,
           var: "myvar"
         }
@@ -204,7 +206,7 @@ describe("commands", function() {
 
   it("result_as_json", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(null, '[ "Toto", "Tutu" ]');
       }
     }
@@ -215,6 +217,7 @@ describe("commands", function() {
       root: {
         "001_json": {
           command: "dontmatter",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           result_as_json: true,
           var: "myvar"
         }
@@ -246,7 +249,7 @@ describe("commands", function() {
 
   it("invalid_json_result_as_json", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         // Evil: single quotes are not valid in JSON...
         pCallback(null, "[ 'Toto', 'Tutu' ]");
       }
@@ -258,6 +261,7 @@ describe("commands", function() {
       root: {
         "001_json": {
           command: "dontmatter",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           result_as_json: true,
           var: "myvar"
         }
@@ -290,7 +294,7 @@ describe("commands", function() {
 
   it("invalid_test_output", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback();
       }
     }
@@ -343,7 +347,7 @@ describe("commands", function() {
   */
   it("exit_on_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("test error"));
       }
     }
@@ -354,6 +358,7 @@ describe("commands", function() {
       root: {
         "001_test": {
           command: "gunzip test.gz",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           exit_on_error: true
         }
       }
@@ -376,7 +381,7 @@ describe("commands", function() {
   // TODO: Somehow, right now, when a command fails, it will keep going...
   it("error_executing_cmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "stderr stuff");
       }
     }
@@ -402,7 +407,7 @@ describe("commands", function() {
   });
   it("error_executing_cmd_ignore_errors", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "stderr stuff");
       }
     }
@@ -413,6 +418,7 @@ describe("commands", function() {
       root: {
         "001_test": {
           command: "gunzip test.gz",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           ignore_errors: true
         }
       }
@@ -430,7 +436,7 @@ describe("commands", function() {
 
   it("tags_real", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.equal(pCmd, "gunzip 2019.zip");
         pCallback(null, undefined, "");
       }
@@ -463,7 +469,7 @@ describe("commands", function() {
 
   it("basic", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, pCmdOpts: any, pCallback: Callback): void {
         assert.isNotNull(pCallback);
         let error = null;
         let stdout = "";
@@ -499,7 +505,7 @@ describe("commands", function() {
     const oExecutor = new ExecutorClass();
     const oTested = new CommandsMod();
 
-    const oConfig = load_file("./commands/basic.yml");
+    const oConfig = loadFile("./commands/basic.yml");
 
     oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
       function() {
@@ -514,7 +520,7 @@ describe("commands", function() {
 
   it("executor_throwing_exception_in_cmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
         throw new Error("this is a dummy error");
       }
     }
@@ -540,7 +546,7 @@ describe("commands", function() {
 
   it("executor_throwing_exception_in_test", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
         throw new Error("this is a dummy error");
       }
     }
@@ -566,7 +572,7 @@ describe("commands", function() {
 
   it("error_in_cmd_after_test_passed", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "continue");
         throw new Error("this is a dummy error");
       }
@@ -593,7 +599,7 @@ describe("commands", function() {
 
   it("exit_on_test_failed", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "stop");
       }
     }
@@ -604,6 +610,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           exit_on_test_failed: true
         }
       }
@@ -626,7 +633,7 @@ describe("commands", function() {
 
   it("exit_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
       }
     }
@@ -637,6 +644,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           exit_on_test_failed: true
         }
       }
@@ -659,7 +667,7 @@ describe("commands", function() {
 
   it("no_exit_on_test_failed", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "stop");
       }
     }
@@ -670,6 +678,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           exit_on_test_failed: false
         }
       }
@@ -692,7 +701,7 @@ describe("commands", function() {
 
   it("no_exit_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
       }
     }
@@ -703,6 +712,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           exit_on_test_failed: false
         }
       }
@@ -725,7 +735,7 @@ describe("commands", function() {
 
   it("skip_on_test_failed", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "stop");
       }
     }
@@ -736,6 +746,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           skip_on_test_failed: true
         }
       }
@@ -758,7 +769,7 @@ describe("commands", function() {
 
   it("skip_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
       }
     }
@@ -769,6 +780,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           skip_on_test_failed: true
         }
       }
@@ -791,7 +803,7 @@ describe("commands", function() {
 
   it("no_skip_on_test_failed", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(null, "stop");
       }
     }
@@ -802,6 +814,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           skip_on_test_failed: true
         }
       }
@@ -824,7 +837,7 @@ describe("commands", function() {
 
   it("no_skip_on_test_error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.match(/something/g)) pCallback(new Error("dummey error"));
       }
     }
@@ -835,6 +848,7 @@ describe("commands", function() {
         "001_unzip": {
           command: "gunzip my.zip",
           test: "something",
+          // eslint-disable-next-line @typescript-eslint/camelcase
           skip_on_test_failed: false
         }
       }

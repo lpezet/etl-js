@@ -1,20 +1,23 @@
 import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
 import Context from "../lib/context";
-import { NoOpExecutor, Callback } from "../lib/executors";
+import { Callback, NoOpExecutor } from "../lib/executors";
 import { assert } from "chai";
-import { load_file } from "./utils";
+import { loadFile } from "./utils";
 import HPCCSpraysMod from "../lib/hpcc-sprays";
 
-describe("hpcc-sprays", function () {
-  beforeEach(function (done: Function) {
+describe("hpcc-sprays", function() {
+  beforeEach(function(done: Function) {
     done();
   });
 
-  afterEach(function (done: Function) {
+  afterEach(function(done: Function) {
     done();
   });
 
+  /**
+   * @return Context
+   */
   function emptyContext(): Context {
     return { env: {}, vars: {} };
   }
@@ -25,39 +28,39 @@ describe("hpcc-sprays", function () {
     }
   }
 
-  it("mod", function (done) {
-    var oTested = new HPCCSpraysMod(new ETLMock());
+  it("mod", function(done) {
+    const oTested = new HPCCSpraysMod(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
 
-  it("tagsMixSingleAndMultipleValues", function (done) {
+  it("tagsMixSingleAndMultipleValues", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(null, pCmd, "");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "noaa::ghcn::daily::{{ years }}::raw": {
           format: "csv",
           sourceIP: "192.168.0.10",
           sourcePath:
-            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ single }}/{{ years }}.csv",
-        },
-      },
+            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ single }}/{{ years }}.csv"
+        }
+      }
     };
-    var oContext: Context = {
+    const oContext: Context = {
       env: {},
       vars: {},
       years: [2018, 2019, 2020],
-      single: "hello",
+      single: "hello"
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function (pData: any) {
-        //console.dir( pData );
+      function(pData: any) {
+        // console.dir( pData );
         try {
           assert.property(pData["hpcc-sprays"], "noaa::ghcn::daily::2018::raw");
           assert.property(pData["hpcc-sprays"], "noaa::ghcn::daily::2019::raw");
@@ -79,38 +82,38 @@ describe("hpcc-sprays", function () {
           done(e);
         }
       },
-      function (pError: Error) {
+      function(pError: Error) {
         done(pError);
       }
     );
   });
 
-  it("tagsMultipleValues", function (done) {
+  it("tagsMultipleValues", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(null, pCmd, "");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "noaa::ghcn::daily::{{ years }}::raw": {
           format: "csv",
           sourceIP: "192.168.0.10",
           sourcePath:
-            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ years }}.csv",
-        },
-      },
+            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ years }}.csv"
+        }
+      }
     };
-    var oContext: Context = {
+    const oContext: Context = {
       env: {},
       vars: {},
-      years: [2018, 2019, 2020],
+      years: [2018, 2019, 2020]
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function (pData: any) {
-        //console.dir( pData );
+      function(pData: any) {
+        // console.dir( pData );
         try {
           assert.property(pData["hpcc-sprays"], "noaa::ghcn::daily::2018::raw");
           assert.property(pData["hpcc-sprays"], "noaa::ghcn::daily::2019::raw");
@@ -132,38 +135,38 @@ describe("hpcc-sprays", function () {
           done(e);
         }
       },
-      function (pError: Error) {
+      function(pError: Error) {
         done(pError);
       }
     );
   });
 
-  it("tagsInTargetAndSourcePath", function (done) {
+  it("tagsInTargetAndSourcePath", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(null, pCmd, "");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "noaa::ghcn::daily::{{ year }}::raw": {
           format: "csv",
           sourceIP: "192.168.0.10",
           sourcePath:
-            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ year }}.csv",
-        },
-      },
+            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/{{ year }}.csv"
+        }
+      }
     };
-    var oContext: Context = {
+    const oContext: Context = {
       env: {},
       vars: {},
-      year: "2018",
+      year: "2018"
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function (pData: any) {
-        //console.dir( pData );
+      function(pData: any) {
+        // console.dir( pData );
         try {
           assert.property(pData["hpcc-sprays"], "noaa::ghcn::daily::2018::raw");
           assert.include(
@@ -175,93 +178,93 @@ describe("hpcc-sprays", function () {
           done(e);
         }
       },
-      function (pError: Error) {
+      function(pError: Error) {
         done(pError);
       }
     );
   });
 
-  it("executorThrowingError", function (done) {
+  it("executorThrowingError", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
         throw new Error("error");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         something: {
-          format: "csv",
-        },
-      },
+          format: "csv"
+        }
+      }
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expecting error.");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("error", function (done) {
+  it("error", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), "", "some stderr stuff");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         something: {
-          format: "csv",
-        },
-      },
+          format: "csv"
+        }
+      }
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expecting error.");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("safe_parse_int", function (done) {
+  it("safe_parse_int", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "nowait=0");
         pCallback(null, "", "");
       }
     }
-    var oTemplate = {
+    const oTemplate = {
       root: {
         something: {
           format: "csv",
-          timeout: "abcd",
-        },
-      },
+          timeout: "abcd"
+        }
+      }
     };
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock());
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock());
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings", function (done) {
+  it("apply_settings", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "server=127.0.0.1");
         assert.include(pCmd, "username=foobar");
         assert.include(pCmd, "password=foobar");
@@ -269,120 +272,120 @@ describe("hpcc-sprays", function () {
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oSettings = {
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
       "*": {
         server: "127.0.0.1",
         username: "foobar",
-        password: "foobar",
-      },
+        password: "foobar"
+      }
     };
-    var oTested = new HPCCSpraysMod(new ETLMock(), oSettings);
+    const oTested = new HPCCSpraysMod(new ETLMock(), oSettings);
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         something: {
           format: "csv",
           sourcePath:
-            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv",
-        },
-      },
+            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("xml", function (done) {
-    var oExecutor = new NoOpExecutor();
-    var oTested = new HPCCSpraysMod(new ETLMock());
-    var oTemplate = load_file("./hpcc-sprays/xml.yml");
+  it("xml", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTemplate = loadFile("./hpcc-sprays/xml.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Update test (xml spray not supported before).");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("fixed", function (done) {
-    var oExecutor = new NoOpExecutor();
-    var oTested = new HPCCSpraysMod(new ETLMock());
-    var oTemplate = load_file("./hpcc-sprays/fixed.yml");
+  it("fixed", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTemplate = loadFile("./hpcc-sprays/fixed.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Update test (f spray not supported before).");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("missingFormat", function (done) {
-    var oExecutor = new NoOpExecutor();
-    var oTested = new HPCCSpraysMod(new ETLMock(), {
-      "*": { server: "1.2.3.4" },
+  it("missingFormat", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new HPCCSpraysMod(new ETLMock(), {
+      "*": { server: "1.2.3.4" }
     });
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "noaa::ghcn::daily::2018::raw": {
-          sourceIP: "192.168.0.10",
-        },
-      },
+          sourceIP: "192.168.0.10"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error due to missing format information in template.");
       },
-      function () {
+      function() {
         done();
       }
     );
   });
 
-  it("invalidFormat", function (done) {
-    var oExecutor = new NoOpExecutor();
-    var oTested = new HPCCSpraysMod(new ETLMock(), {
-      "*": { server: "1.2.3.4" },
+  it("invalidFormat", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new HPCCSpraysMod(new ETLMock(), {
+      "*": { server: "1.2.3.4" }
     });
 
-    var oTemplate = {
+    const oTemplate = {
       root: {
         "noaa::ghcn::daily::2018::raw": {
           sourceIP: "192.168.0.10",
-          format: "concrete",
-        },
-      },
+          format: "concrete"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
+      function(pError: Error) {
         done(pError);
       }
     );
   });
 
-  it("delimited", function (done) {
+  it("delimited", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
-        //console.log('cmd=' + pCmd );
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        // console.log('cmd=' + pCmd );
         assert.include(pCmd, "action=spray");
         assert.include(pCmd, "server=1.2.3.4");
         assert.include(
@@ -415,19 +418,19 @@ describe("hpcc-sprays", function () {
       }
     }
 
-    var oExecutor = new ExecutorClass();
-    var oTested = new HPCCSpraysMod(new ETLMock(), {
-      "*": { server: "1.2.3.4", username: "foo", password: "bar" },
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod(new ETLMock(), {
+      "*": { server: "1.2.3.4", username: "foo", password: "bar" }
     });
 
-    var oTemplate = load_file("./hpcc-sprays/delimited.yml");
+    const oTemplate = loadFile("./hpcc-sprays/delimited.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );

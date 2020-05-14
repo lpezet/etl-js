@@ -3,19 +3,22 @@ import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
 import MySQLImportsMod from "../lib/mysqlimports";
 import { Callback, NoOpExecutor } from "../lib/executors";
-import { load_file } from "./utils";
+import { loadFile } from "./utils";
 import Context from "../lib/context";
 
-describe("mysqlimports", function () {
-  beforeEach(function (done: Function) {
+describe("mysqlimports", function() {
+  beforeEach(function(done: Function) {
     done();
   });
 
-  afterEach(function (done: Function) {
+  afterEach(function(done: Function) {
     done();
   });
 
-  function emptyContext() {
+  /**
+   * @return Context
+   */
+  function emptyContext(): Context {
     return { env: {}, vars: {} };
   }
   class ETLMock implements IETL {
@@ -24,16 +27,16 @@ describe("mysqlimports", function () {
     }
   }
 
-  it("mod", function (done) {
+  it("mod", function(done) {
     const oTested = new MySQLImportsMod(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
 
-  it("tagsMultipleValues", function (done) {
+  it("tagsMultipleValues", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
-        //assert.include( pCmd, "--fields-enclosed-by='\"'");
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        // assert.include( pCmd, "--fields-enclosed-by='\"'");
         assert.notInclude(pCmd, "{{ years }}");
         pCallback(null, "", "");
       }
@@ -43,20 +46,22 @@ describe("mysqlimports", function () {
     const oTemplate = {
       root: {
         "/downloads/{{ years }}.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
-          fields_enclosed_by: '"',
-        },
-      },
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          fields_enclosed_by: '"'
+        }
+      }
     };
     const oContext: Context = {
       env: {},
       vars: {},
-      years: [2018, 2019, 2020],
+      years: [2018, 2019, 2020]
     };
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function (pData: any) {
-        //console.log('#### Data');
-        //console.dir( pData );
+      function(pData: any) {
+        // console.log('#### Data');
+        // console.dir( pData );
         try {
           assert.property(pData["mysqlimports"], "/downloads/2018.csv");
           assert.property(pData["mysqlimports"], "/downloads/2019.csv");
@@ -66,16 +71,16 @@ describe("mysqlimports", function () {
           done(e);
         }
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("enclose", function (done) {
+  it("enclose", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--fields-enclosed-by='\"'");
         pCallback(null, "", "");
       }
@@ -85,26 +90,28 @@ describe("mysqlimports", function () {
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
           db_name: "testdb",
-          fields_enclosed_by: '"',
-        },
-      },
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          fields_enclosed_by: '"'
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_parent", function (done) {
+  it("apply_settings_parent", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
@@ -114,34 +121,36 @@ describe("mysqlimports", function () {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
     const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
 
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
-          db_name: "testdb",
-        },
-      },
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_key", function (done) {
+  it("apply_settings_key", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
@@ -151,34 +160,36 @@ describe("mysqlimports", function () {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       "/downloads/test.csv": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
     const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
 
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
-          db_name: "testdb",
-        },
-      },
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("apply_settings_all", function (done) {
+  it("apply_settings_all", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
         assert.include(pCmd, "--silent");
         pCallback(null, "", "");
@@ -188,56 +199,58 @@ describe("mysqlimports", function () {
     const oExecutor = new ExecutorClass();
     const oSettings = {
       "*": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         bind_address: "127.0.0.1",
-        silent: true,
-      },
+        silent: true
+      }
     };
     const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
 
     const oTemplate = {
       root: {
         "/downloads/test.csv": {
-          db_name: "testdb",
-        },
-      },
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb"
+        }
+      }
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );
   });
 
-  it("erorExecutingCmd", function (done) {
+  it("erorExecutingCmd", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback) {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         pCallback(new Error("error"), null, "some stderr");
       }
     }
     const oExecutor = new ExecutorClass();
     const oTested = new MySQLImportsMod(new ETLMock());
 
-    const oTemplate = load_file("./mysqlimports/basic.yml");
+    const oTemplate = loadFile("./mysqlimports/basic.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done("Expected error");
       },
-      function () {
-        //console.log( pError );
+      function() {
+        // console.log( pError );
         done();
       }
     );
   });
 
-  it("basic", function (done) {
+  it("basic", function(done) {
     class ExecutorClass extends NoOpExecutor {
-      exec(pCmd: string, pCmdOpts: any, pCallback: Callback) {
+      exec(pCmd: string, pCmdOpts: any, pCallback: Callback): void {
         switch (pCmdOpts.context) {
           case "/downloads/test.csv":
             assert.include(pCmd, "testdb");
@@ -267,14 +280,14 @@ describe("mysqlimports", function () {
     const oExecutor = new ExecutorClass();
     const oTested = new MySQLImportsMod(new ETLMock());
 
-    const oTemplate = load_file("./mysqlimports/basic.yml");
+    const oTemplate = loadFile("./mysqlimports/basic.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function () {
+      function() {
         done();
       },
-      function (pError: Error) {
-        //console.log( pError );
+      function(pError: Error) {
+        // console.log( pError );
         done(pError);
       }
     );

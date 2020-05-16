@@ -33,6 +33,36 @@ describe("etl", function() {
     });
   }
 
+  it("etlSetsDefault", function(done) {
+    const oExecutor: any = {};
+    const oTested = new ETL(oExecutor);
+    const oTester = new TestMod(oTested);
+
+    const oETL = {
+      etlSets: {
+        default: ["abc"]
+      },
+      abc: {
+        tester: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested.process(oETL, {}).then(
+      function() {
+        try {
+          assert.equal(1, oTester.calls());
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        done(pError);
+      }
+    );
+  });
+
   it("etlSets", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);

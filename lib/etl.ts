@@ -358,11 +358,11 @@ class ETL extends EventEmitter {
     if (pConfig["etl"]) return pConfig["etl"];
     if (!pConfig["etlSets"]) {
       throw new Error(
-        'Either etl or etlSets (+ "etlSet" param) must be provided in template.'
+        'Either etl or etlSets (+ "etlSet" param, or "default" etlSet) must be provided in template.'
       );
     }
     const oResolvedETLs = this._resolveEtlSets(pConfig["etlSets"] as ETLSets);
-    return oResolvedETLs[pParameters["etlSet"]];
+    return oResolvedETLs[pParameters["etlSet"] || "default"];
   }
   process(pConfig: any, pParameters?: any): Promise<any> {
     LOGGER.info("Starting ETL...");

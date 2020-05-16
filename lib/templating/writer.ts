@@ -1,12 +1,10 @@
-import JSONPath from "JSONPath";
+import { JSONPath } from "jsonpath-plus";
 
 export default class Writer {
   _rawValue(token: any[]): any {
     return token[1];
   }
   _evaluateValue(path: string, json: any): any {
-    // console.log('path=' + path + ', json=');
-    // console.dir(json);
     // eslint-disable-next-line new-cap
     return JSONPath({ json: json, path: path });
   }

@@ -7,7 +7,6 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
-    "rootDir": "lib",
     "allowJs": true,
     "checkJs": false,
     "removeComments": true,
@@ -30,5 +29,5 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["lib/**/*"]
+  "include": ["lib", "types"]
 }

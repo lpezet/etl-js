@@ -5,17 +5,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build",
     "tsc": "tsc",
-    "prepublish": "tsc",
+    "prepublish": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts .",
-    "mocha-single": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
+    "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
     "release": "release-it",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
-    "test": "nyc mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*.spec.ts\"",
+    "test": "nyc --reporter=html --reporter=text-summary mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --bail --check-leaks --reporter spec \"./tests/**/*.spec.ts\"",
     "posttest": "nyc check-coverage",
     "docs-gen": "doctoc README.md Mods.md --github --no-title",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
@@ -61,7 +59,7 @@
   },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
-    "JSONPath": "^0.11.2",
+    "jsonpath-plus": "^4.0.0",
     "log4js": "^6.1.2",
     "ssh2": "^0.8.4"
   },

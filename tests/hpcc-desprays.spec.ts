@@ -29,7 +29,8 @@ describe("hpcc-desprays", function() {
   }
 
   it("mod", function(done) {
-    const oTested = new HPCCDespraysMod(new ETLMock());
+    const oTested = new HPCCDespraysMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -55,7 +56,9 @@ describe("hpcc-desprays", function() {
       year: "2018"
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCDespraysMod(new ETLMock());
+    const oTested = new HPCCDespraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
         // console.dir( pData );
@@ -93,7 +96,9 @@ describe("hpcc-desprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCDespraysMod(new ETLMock());
+    const oTested = new HPCCDespraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done("Expecting error.");
@@ -122,7 +127,9 @@ describe("hpcc-desprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCDespraysMod(new ETLMock());
+    const oTested = new HPCCDespraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done("Expecting error.");
@@ -149,7 +156,9 @@ describe("hpcc-desprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCDespraysMod(new ETLMock());
+    const oTested = new HPCCDespraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done();
@@ -178,7 +187,8 @@ describe("hpcc-desprays", function() {
         password: "foobar"
       }
     };
-    const oTested = new HPCCDespraysMod(new ETLMock(), oSettings);
+    const oTested = new HPCCDespraysMod(oSettings);
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -192,7 +202,7 @@ describe("hpcc-desprays", function() {
       function() {
         done();
       },
-      function(pError) {
+      function(pError: Error) {
         // console.log( pError );
         done(pError);
       }
@@ -201,9 +211,10 @@ describe("hpcc-desprays", function() {
 
   it("missingRequired", function(done) {
     const oExecutor = new NoOpExecutor();
-    const oTested = new HPCCDespraysMod(new ETLMock(), {
+    const oTested = new HPCCDespraysMod({
       "*": { server: "1.2.3.4" }
     });
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -248,9 +259,10 @@ describe("hpcc-desprays", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCDespraysMod(new ETLMock(), {
+    const oTested = new HPCCDespraysMod({
       "*": { server: "1.2.3.4", username: "foo", password: "bar" }
     });
+    oTested.register(new ETLMock());
 
     const oTemplate = loadFile("./hpcc-desprays/basic.yml");
 

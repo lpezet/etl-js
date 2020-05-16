@@ -1,23 +1,14 @@
 import { createLogger } from "../../lib/logger";
-import Mod from "../../lib/mod";
-import { IETL } from "../../lib/etl";
+import { AbstractMod } from "../../lib/mod";
 import { Executor } from "../../lib/executors";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class TestMod implements Mod {
+export default class TestMod extends AbstractMod<any> {
   mSettings: any;
   mCalls: number;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("tester", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("tester", pSettings || {});
     this.mCalls = 0;
   }
   calls(): number {

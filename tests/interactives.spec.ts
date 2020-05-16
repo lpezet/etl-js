@@ -49,8 +49,9 @@ describe("interactives", function() {
     done();
   });
 
-  it("mod", function(done) {
-    const oTested = new InteractivesMod(new ETLMock());
+  it("register", function(done) {
+    const oTested = new InteractivesMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -108,7 +109,7 @@ describe("interactives", function() {
   it("basic", function(done) {
     const fs = new FakeStream();
     const oSettings = { input: fs, output: fs };
-    const oTested = new InteractivesMod(new ETLMock(), oSettings);
+    const oTested = new InteractivesMod(oSettings);
 
     const oTemplate = {
       root: {

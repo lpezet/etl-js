@@ -27,7 +27,8 @@ describe("mysqls", function() {
   }
 
   it("mod", function(done) {
-    const oTested = new MySQLsMod(new ETLMock());
+    const oTested = new MySQLsMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -47,7 +48,7 @@ describe("mysqls", function() {
         silent: true
       }
     };
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -100,7 +101,7 @@ describe("mysqls", function() {
         silent: true
       }
     };
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -140,7 +141,7 @@ describe("mysqls", function() {
         silent: true
       }
     };
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -180,7 +181,7 @@ describe("mysqls", function() {
         silent: true
       }
     };
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -205,7 +206,7 @@ describe("mysqls", function() {
   /*
   it("nullExecutor", function (done) {
     var oSettings = {};
-    var oTested = new MySQLsMod(new ETLMock(), oSettings);
+    var oTested = new MySQLsMod(oSettings);
 
     var oTemplate = {
       root: {
@@ -239,7 +240,7 @@ describe("mysqls", function() {
     }
     const oExecutor = new ExecutorClass();
     const oSettings = {};
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
     oTested._run = function() {
       throw new Error("Error generated for testing purposes.");
     };
@@ -275,7 +276,7 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {};
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
     oTested._wrapRun = function() {
       throw new Error("Error generated for testing purposes.");
     };
@@ -310,7 +311,7 @@ describe("mysqls", function() {
     }
     const oExecutor = new ExecutorClass();
     const oSettings = {};
-    const oTested = new MySQLsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
       root: {

@@ -1,19 +1,14 @@
 import { createLogger } from "../../lib/logger";
-import Mod from "../../lib/mod";
-import { IETL } from "../../lib/etl";
+import { AbstractMod } from "../../lib/mod";
 import { Executor } from "../../lib/executors";
 import Context from "../../lib/context";
 import * as Promises from "../../lib/promises";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class CollectMod implements Mod {
-  constructor(pETL: IETL) {
-    if (pETL) {
-      pETL.mod("collects", this, function(_pSettings: any) {
-        // nop
-      });
-    }
+export default class CollectMod extends AbstractMod<any> {
+  constructor() {
+    super("collects", {});
   }
   _do(
     pParent: string,

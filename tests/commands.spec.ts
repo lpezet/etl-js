@@ -28,8 +28,9 @@ describe("commands", function() {
     }
   }
 
-  it("mod", function(done) {
-    const oTested = new CommandsMod(new ETLMock());
+  it("register", function(done) {
+    const oTested = new CommandsMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });

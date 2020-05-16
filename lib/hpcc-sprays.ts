@@ -1,6 +1,5 @@
 import * as Promises from "./promises";
-import { IETL } from "./etl";
-import Mod from "./mod";
+import { AbstractMod } from "./mod";
 import TemplateEngine from "./templating/engine";
 import { createLogger } from "./logger";
 import { Executor } from "./executors";
@@ -40,19 +39,10 @@ const asPromised = function(
   func(pPreviousData);
 };
 
-export default class HPCCSpraysMod implements Mod {
-  mSettings: any;
+export default class HPCCSpraysMod extends AbstractMod<any> {
   mTemplateEngine: TemplateEngine;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("hpcc-sprays", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("hpcc-sprays", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {

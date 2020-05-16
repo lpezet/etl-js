@@ -21,8 +21,9 @@ describe("files", function() {
     }
   }
 
-  it("mod", function(done) {
-    const oTested = new FilesMod(new ETLMock());
+  it("register", function(done) {
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -35,7 +36,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -75,7 +77,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./files/basic.yml");
 
@@ -110,7 +113,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -144,7 +148,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./files/basic.yml");
 
@@ -180,7 +185,8 @@ describe("files", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = {
       root: {
@@ -277,7 +283,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = {
       root: {
@@ -318,7 +325,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = {
       root: {
@@ -361,7 +369,8 @@ describe("files", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = {
       root: {
@@ -422,7 +431,8 @@ describe("files", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new FilesMod(new ETLMock());
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
 
     const oConfig = {
       root: {

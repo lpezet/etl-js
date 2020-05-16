@@ -29,7 +29,8 @@ describe("hpcc-sprays", function() {
   }
 
   it("mod", function(done) {
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -57,7 +58,9 @@ describe("hpcc-sprays", function() {
       single: "hello"
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
         // console.dir( pData );
@@ -110,7 +113,9 @@ describe("hpcc-sprays", function() {
       years: [2018, 2019, 2020]
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
         // console.dir( pData );
@@ -163,7 +168,9 @@ describe("hpcc-sprays", function() {
       year: "2018"
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
         // console.dir( pData );
@@ -198,7 +205,9 @@ describe("hpcc-sprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done("Expecting error.");
@@ -227,7 +236,9 @@ describe("hpcc-sprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done("Expecting error.");
@@ -254,7 +265,9 @@ describe("hpcc-sprays", function() {
       }
     };
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
       function() {
         done();
@@ -284,7 +297,7 @@ describe("hpcc-sprays", function() {
         password: "foobar"
       }
     };
-    const oTested = new HPCCSpraysMod(new ETLMock(), oSettings);
+    const oTested = new HPCCSpraysMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -309,7 +322,9 @@ describe("hpcc-sprays", function() {
 
   it("xml", function(done) {
     const oExecutor = new NoOpExecutor();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = loadFile("./hpcc-sprays/xml.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
@@ -324,7 +339,9 @@ describe("hpcc-sprays", function() {
 
   it("fixed", function(done) {
     const oExecutor = new NoOpExecutor();
-    const oTested = new HPCCSpraysMod(new ETLMock());
+    const oTested = new HPCCSpraysMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = loadFile("./hpcc-sprays/fixed.yml");
 
     oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
@@ -339,7 +356,7 @@ describe("hpcc-sprays", function() {
 
   it("missingFormat", function(done) {
     const oExecutor = new NoOpExecutor();
-    const oTested = new HPCCSpraysMod(new ETLMock(), {
+    const oTested = new HPCCSpraysMod({
       "*": { server: "1.2.3.4" }
     });
 
@@ -363,7 +380,7 @@ describe("hpcc-sprays", function() {
 
   it("invalidFormat", function(done) {
     const oExecutor = new NoOpExecutor();
-    const oTested = new HPCCSpraysMod(new ETLMock(), {
+    const oTested = new HPCCSpraysMod({
       "*": { server: "1.2.3.4" }
     });
 
@@ -423,7 +440,7 @@ describe("hpcc-sprays", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCSpraysMod(new ETLMock(), {
+    const oTested = new HPCCSpraysMod({
       "*": { server: "1.2.3.4", username: "foo", password: "bar" }
     });
 

@@ -90,7 +90,8 @@ describe("etl-commands", function() {
     const oSettings = {};
     const oExecutor = new ExecutorClass();
     const oETL = new ETL(oExecutor, oSettings);
-    new CommandsMod(oETL);
+    const oCommandsMod = new CommandsMod();
+    oCommandsMod.register(oETL);
 
     oETL.process(mETLTemplate).then(
       function() {
@@ -131,7 +132,8 @@ describe("etl-commands", function() {
     const oSettings = {};
     const oExecutor = new ExecutorClass();
     const oETL = new ETL(oExecutor, oSettings);
-    new CommandsMod(oETL);
+    const oCommandsMod = new CommandsMod();
+    oCommandsMod.register(oETL);
 
     oETL.process(oETLConfigLite).then(
       function() {
@@ -154,7 +156,8 @@ describe("etl-commands", function() {
     const oSettings = {};
     const oExecutor = new ExecutorClass();
     const oETL = new ETL(oExecutor, oSettings);
-    new CommandsMod(oETL);
+    const oCommandsMod = new CommandsMod();
+    oCommandsMod.register(oETL);
 
     // eslint-disable-next-line @typescript-eslint/camelcase
     mETLTemplate.activity2.commands.gonnafail1.exit_on_test_failed = false;
@@ -183,7 +186,7 @@ describe("etl-commands", function() {
     const oSettings = {};
     const oExecutor = new ExecutorClass();
     const oETL = new ETL(oExecutor, oSettings);
-    new CommandsMod(oETL);
+    new CommandsMod().register(oETL);
 
     mETLTemplate.activity2.commands.gonnafail1.test = "stop";
     mETLTemplate.etl.push("step3");
@@ -213,7 +216,8 @@ describe("etl-commands", function() {
     const oSettings = {};
     const oExecutor = new ExecutorClass();
     const oETL = new ETL(oExecutor, oSettings);
-    new CommandsMod(oETL);
+    const oCommandsMod = new CommandsMod();
+    oCommandsMod.register(oETL);
 
     mETLTemplate.activity2.commands.gonnafail1.test = "stop";
     // eslint-disable-next-line @typescript-eslint/camelcase

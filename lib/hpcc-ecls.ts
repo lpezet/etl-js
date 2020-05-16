@@ -3,8 +3,7 @@ import * as fs from "fs";
 import * as Promises from "./promises";
 import TemplateEngine from "./templating/engine";
 import { createLogger } from "./logger";
-import Mod from "./mod";
-import { IETL } from "./etl";
+import { AbstractMod } from "./mod";
 import Context from "./context";
 import { Executor } from "./executors";
 
@@ -71,20 +70,10 @@ const promiseExecutor = (
   });
 };
 
-export default class HPCCECLsMod implements Mod {
-  mSettings: any;
+export default class HPCCECLsMod extends AbstractMod<any> {
   mTemplateEngine: TemplateEngine;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    // const that = this;
-    if (pETL) {
-      pETL.mod("hpcc-ecls", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("hpcc-ecls", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {

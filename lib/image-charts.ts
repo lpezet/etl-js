@@ -1,8 +1,7 @@
 import * as Promises from "./promises";
 import TemplateEngine from "./templating/engine";
 import { createLogger } from "./logger";
-import Mod from "./mod";
-import { IETL } from "./etl";
+import { AbstractMod } from "./mod";
 import Context from "./context";
 import { Executor } from "./executors";
 
@@ -71,19 +70,10 @@ const getDataFileContent = function(
   });
 };
 
-export default class ImageChartsMod implements Mod {
-  mSettings: any;
+export default class ImageChartsMod extends AbstractMod<any> {
   mTemplateEngine: TemplateEngine;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("image_charts", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("image-charts", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {

@@ -27,8 +27,9 @@ describe("image-charts", function() {
     return { env: {}, vars: {} };
   }
 
-  it("mod", function(done) {
-    const oTested = new ImageChartsMod(new ETLMock());
+  it("register", function(done) {
+    const oTested = new ImageChartsMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -41,7 +42,7 @@ describe("image-charts", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new ImageChartsMod(new ETLMock());
+    const oTested = new ImageChartsMod();
 
     const oConfig = {
       root: {
@@ -82,7 +83,7 @@ describe("image-charts", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new ImageChartsMod(new ETLMock());
+    const oTested = new ImageChartsMod();
 
     const oConfig = {
       root: {
@@ -117,7 +118,7 @@ describe("image-charts", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new ImageChartsMod(new ETLMock());
+    const oTested = new ImageChartsMod();
 
     const oConfig = {
       root: {

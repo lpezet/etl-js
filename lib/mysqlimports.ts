@@ -1,7 +1,6 @@
-import Mod from "./mod";
+import { AbstractMod } from "./mod";
 import { Executor } from "./executors";
 import Context from "./context";
-import { IETL } from "./etl";
 import { createLogger } from "./logger";
 import * as Promises from "./promises";
 import TemplateEngine from "./templating/engine";
@@ -33,19 +32,11 @@ const asPromised = function(
   func(pPreviousData);
 };
 
-export default class MySQLImportsMod implements Mod {
+export default class MySQLImportsMod extends AbstractMod<any> {
   mSettings: any;
   mTemplateEngine: TemplateEngine;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("mysqlimports", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("mysqlimports", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {

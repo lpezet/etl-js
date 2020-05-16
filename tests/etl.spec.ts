@@ -28,15 +28,18 @@ describe("etl", function() {
   ): Promise<Mod> {
     return import(pMod).then(m => {
       if (m["default"]) m = m.default;
-      const Factory = m.bind.apply(m, [null, pETL, pSettings || {}]);
-      return new Factory() as Mod;
+      const Factory = m.bind.apply(m, [null, pSettings || {}]);
+      const oMod = new Factory() as Mod;
+      oMod.register(pETL);
+      return oMod;
     });
   }
 
   it("etlSetsDefault", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
-    const oTester = new TestMod(oTested);
+    const oTester = new TestMod();
+    oTester.register(oTested);
 
     const oETL = {
       etlSets: {
@@ -66,7 +69,8 @@ describe("etl", function() {
   it("etlSets", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
-    const oTester = new TestMod(oTested);
+    const oTester = new TestMod();
+    oTester.register(oTested);
 
     const oETL = {
       etlSets: {
@@ -202,7 +206,7 @@ describe("etl", function() {
 
   it("skip", function(done) {
     class SkipModClass implements Mod {
-      constructor(pETL: IETL) {
+      register(pETL: IETL): void {
         pETL.mod("skipMod", this);
       }
       handle(
@@ -219,7 +223,7 @@ describe("etl", function() {
 
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
-    new SkipModClass(oTested);
+    new SkipModClass().register(oTested);
     let oTester: TestMod;
     let oModder: ModMod;
     registerMod(oTested, "./etl/test")
@@ -270,7 +274,7 @@ describe("etl", function() {
 
   it("exit", function(done) {
     class ModClass implements Mod {
-      constructor(pETL: IETL) {
+      register(pETL: IETL): void {
         pETL.mod("exitMod", this);
       }
       handle(
@@ -286,7 +290,7 @@ describe("etl", function() {
     }
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
-    new ModClass(oTested);
+    new ModClass().register(oTested);
     let oModder: ModMod;
     let oTester: TestMod;
     registerMod(oTested, "./etl/test")
@@ -334,13 +338,15 @@ describe("etl", function() {
   });
 
   it("envVariables", function(done) {
-    class ModClass {
+    class ModClass implements Mod {
       mEnvKey: string;
       mEnvValue: any;
-      constructor(pETL: IETL, pEnvKey: string) {
-        pETL.mod("enver", this);
+      constructor(pEnvKey: string) {
         this.mEnvKey = pEnvKey;
         this.mEnvValue = undefined;
+      }
+      register(pETL: IETL): void {
+        pETL.mod("enver", this);
       }
       envValue(): any {
         return this.mEnvValue;
@@ -366,7 +372,7 @@ describe("etl", function() {
     }
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
-    new ModClass(oTested, "hello");
+    new ModClass("hello").register(oTested);
     const oETL = {
       etl: ["abc"],
       abc: {
@@ -468,7 +474,7 @@ describe("etl", function() {
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     class AwesomeMod implements Mod {
-      constructor(pETL: IETL) {
+      register(pETL: IETL): void {
         pETL.mod("awesome", this);
       }
       handle(
@@ -480,7 +486,7 @@ describe("etl", function() {
         throw new Error("Error generated for testing purposes.");
       }
     }
-    new AwesomeMod(oTested);
+    new AwesomeMod().register(oTested);
     const oETL = {
       etl: ["step1", "step2"],
       step1: {

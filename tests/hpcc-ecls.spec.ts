@@ -30,7 +30,8 @@ describe("hpcc-ecls", function() {
   }
 
   it("mod", function(done) {
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -57,7 +58,8 @@ describe("hpcc-ecls", function() {
         server: "127.0.0.2"
       }
     };
-    const oTested = new HPCCECLsMod(new ETLMock(), oSettings);
+    const oTested = new HPCCECLsMod(oSettings);
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -108,7 +110,8 @@ describe("hpcc-ecls", function() {
         password: "foobar"
       }
     };
-    const oTested = new HPCCECLsMod(new ETLMock(), oSettings);
+    const oTested = new HPCCECLsMod(oSettings);
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -146,7 +149,9 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = {
       root: {
         abc: {
@@ -173,7 +178,9 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = {
       root: {
         abc: {
@@ -211,7 +218,9 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = {
       root: {
         "summary_{{ years }}": {
@@ -264,7 +273,9 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
+
     const oTemplate = {
       root: {
         "summary_{{ year }}": {
@@ -308,7 +319,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {
@@ -353,7 +365,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/file.yml");
 
@@ -389,7 +402,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/file.yml");
 
@@ -423,7 +437,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/file.yml");
 
@@ -460,7 +475,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     fs.writeFileSync("test.ecl", "hello world!");
     const oTemplate = {
@@ -507,7 +523,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
@@ -539,7 +556,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
@@ -572,7 +590,8 @@ describe("hpcc-ecls", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
@@ -604,7 +623,8 @@ describe("hpcc-ecls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new HPCCECLsMod(new ETLMock());
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
 
     const oTemplate = {
       root: {

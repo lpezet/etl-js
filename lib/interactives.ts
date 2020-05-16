@@ -1,7 +1,6 @@
-import Mod from "./mod";
+import { AbstractMod } from "./mod";
 import { Executor } from "./executors";
 import Context from "./context";
-import { IETL } from "./etl";
 import { createLogger } from "./logger";
 import * as Promises from "./promises";
 import * as readline from "readline";
@@ -42,18 +41,10 @@ const asPromised = function(
   pFunc(pResults);
 };
 
-export default class InteractivesMod implements Mod {
+export default class InteractivesMod extends AbstractMod<any> {
   mSettings: any;
-  constructor(pETL: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("interactives", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("interactives", pSettings || {});
   }
   _exec(
     pParent: string,

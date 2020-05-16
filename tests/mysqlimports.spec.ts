@@ -27,8 +27,9 @@ describe("mysqlimports", function() {
     }
   }
 
-  it("mod", function(done) {
-    const oTested = new MySQLImportsMod(new ETLMock());
+  it("register", function(done) {
+    const oTested = new MySQLImportsMod();
+    oTested.register(new ETLMock());
     assert.deepEqual(oTested.mSettings, { test: true });
     done();
   });
@@ -126,7 +127,7 @@ describe("mysqlimports", function() {
         silent: true
       }
     };
-    const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLImportsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -165,7 +166,7 @@ describe("mysqlimports", function() {
         silent: true
       }
     };
-    const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLImportsMod(oSettings);
 
     const oTemplate = {
       root: {
@@ -204,7 +205,7 @@ describe("mysqlimports", function() {
         silent: true
       }
     };
-    const oTested = new MySQLImportsMod(new ETLMock(), oSettings);
+    const oTested = new MySQLImportsMod(oSettings);
 
     const oTemplate = {
       root: {

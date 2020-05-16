@@ -57,8 +57,8 @@ describe("etl-files", function() {
     }
     const oSettings = {};
     const oETL = new ETL(new ExecutorClass(), oSettings);
-    new FilesMod(oETL);
-    new CollectMod(oETL);
+    new FilesMod().register(oETL);
+    new CollectMod().register(oETL);
 
     oETL.process(mETLTemplate).then(
       function(_pData) {
@@ -88,8 +88,8 @@ describe("etl-files", function() {
     };
     const oSettings = {};
     const oETL = new ETL(new ExecutorClass(), oSettings);
-    new FilesMod(oETL);
-    new CollectMod(oETL);
+    new FilesMod().register(oETL);
+    new CollectMod().register(oETL);
 
     oETL.process(mETLTemplate).then(
       function(_pData) {
@@ -118,8 +118,8 @@ describe("etl-files", function() {
     };
     const oSettings = {};
     const oETL = new ETL(new ExecutorClass(), oSettings);
-    new FilesMod(oETL);
-    new CollectMod(oETL);
+    new FilesMod().register(oETL);
+    new CollectMod().register(oETL);
 
     oETL.process(mETLTemplate).then(
       function(_pData) {
@@ -149,8 +149,8 @@ describe("etl-files", function() {
     };
     const oSettings = {};
     const oETL = new ETL(new ExecutorClass(), oSettings);
-    new FilesMod(oETL);
-    new CollectMod(oETL);
+    new FilesMod().register(oETL);
+    new CollectMod().register(oETL);
 
     oETL.process(mETLTemplate).then(
       function(_pData) {
@@ -185,8 +185,8 @@ describe("etl-files", function() {
     };
     const oSettings = {};
     const oETL = new ETL(new ExecutorClass(), oSettings);
-    new FilesMod(oETL);
-    new CollectMod(oETL);
+    new FilesMod().register(oETL);
+    new CollectMod().register(oETL);
 
     oETL.process(mETLTemplate).then(
       function(_pData) {

@@ -1,5 +1,4 @@
-import Mod from "./mod";
-import { IETL } from "./etl";
+import { AbstractMod } from "./mod";
 import TemplateEngine from "./templating/engine";
 import * as util from "util";
 import * as Promises from "./promises";
@@ -35,19 +34,11 @@ const CHAIN_EVAL = function(pValue: any): boolean {
   return false;
 };
 
-export default class CommandsMod implements Mod {
-  mSettings: any;
+// export default class CommandsMod implements Mod {
+export default class CommandsMod extends AbstractMod<any> {
   mTemplateEngine: TemplateEngine;
-  constructor(pETL?: IETL, pSettings?: any) {
-    this.mSettings = pSettings || {};
-    if (pETL) {
-      pETL.mod("commands", this, (pSettings: any) => {
-        this.mSettings = {
-          ...this.mSettings,
-          ...pSettings
-        };
-      });
-    }
+  constructor(pSettings?: any) {
+    super("commands", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluateToIndex(

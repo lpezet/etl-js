@@ -8,34 +8,52 @@ Extract, Transform, and Load sharable and repeatable.
 [![Test Coverage][coveralls-image]][coveralls-url]
 [![Known Vulnerabilities][vulnerabilities-image]][vulnerabilities-url]
 
-
 ```js
-const ETLJS = require('@lpezet/etl-js');
-const Executor = require('@lpezet/etl-js/lib/executors').local;
-const Commands = require('@lpezet/etl-js/lib/commands');
-
+const { ETL, Local, CommandsMod } = require("@lpezet/etl-js");
 var template = {
-	etl: [ 'step1' ],
-	step1: {
-		commands: {
-			say_hello: {
-				command: "printf 'hello world!'"
-			}
-		}
-	}
+  etlSets: {
+    default: ["step1"]
+  },
+  step1: {
+    commands: {
+      say_hello: {
+        command: "printf 'hello world!'"
+      }
+    }
+  }
 };
+var myETL = new ETL(new Local());
+new CommandsMod().register(myETL);
 
-var ETL = new ETLJS( new Executor() );
-new Commands( ETL );
+myETL.process(template);
+```
 
-ETL.process( template );
+Or with TypeScript:
+
+```ts
+import { ETL, Local, CommandsMod } from "@lpezet/etl-js";
+const template: any = {
+  etlSets: {
+    default: ["step1"]
+  },
+  step1: {
+    commands: {
+      say_hello: {
+        command: "printf 'hello world!'"
+      }
+    }
+  }
+};
+const myETL = new ETL(new Local());
+new CommandsMod(myETL).register(myETL);
+
+myETL.process(template);
 ```
 
 # Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Installation](#installation)
 - [Features](#features)
@@ -65,71 +83,72 @@ $ npm install @lpezet/etl-js
 
 # Features
 
-	* Template-based process (JSON, YAML) to express steps and activities as part of ETL
-	* Extensible behavior via mods
-	* Tags allowing more dynamic behavior through activities and mods.
-	
+    * Template-based process (JSON, YAML) to express steps and activities as part of ETL
+    * Extensible behavior via mods
+    * Tags allowing more dynamic behavior through activities and mods.
+
 # Concept
 
 ETL-JS has been born from the need to script different activities as part of simple yet important extract, load, and transform processes.
 The idea is to be able to share and easily repeat activities over and over as needed, and leverage existing tools as much as possible.
 
-An ETL template is basically composed of an *etl* and its activities as such:
+An ETL template is basically composed of an _etl_ (legacy) or _etlSets_ and its activities as such:
 
 ```yml
-etl:
- - activity1
- - activity2
+etlSets:
+  default:
+    - activity1
+    - activity2
 activity1:
- step1:
-  something: "something"
- step2:
-  somethingelse: "somethingelse"
+  step1:
+    something: "something"
+  step2:
+    somethingelse: "somethingelse"
 activity2:
- step1:
-  some: "some"
+  step1:
+    some: "some"
 ```
 
-Each *activity* contains *step* handled by [Mods](#mods). Each *mod* can contain additional step within them.
+Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ can contain additional step within them.
 
 # Security
 
 Commands, scripts and more can be executed as part of the Mods defined in the template. Therefore, you should make sure to use only the Mods you trust in your ETL Template.
 
-
 # Usage
 
 The quickest way to get started is to use ETL-JS via command line, with [`ETL-JS CLI`](https://github.com/lpezet/etl-js-cli).
 
-  Install the executable:
+Install the executable:
 
 ```bash
 $ npm install -g @lpezet/etl-js-cli
 ```
 
-  Initialize process:
-  
+Initialize process:
+
 ```bash
 $ etl-js init
 ```
 
-  Edit `settings.yml`, to specify the type of executor to use:
-  
+Edit `settings.yml`, to specify the type of executor to use:
+
 ```yml
 etl:
   executor: local1
-  
+
 executors:
   local1:
     type: local
 ```
 
-  Create ETL template, hello.yml:
+Create ETL template, hello.yml:
 
 ```yml
-etl:
-  - step1
-  - step2
+etlSets:
+  default:
+    - step1
+    - step2
 step1:
   commands:
     orion_pic:
@@ -144,7 +163,7 @@ step2:
 This ETL template makes use of tags, which will be explained a little later.
 WARNING: This template will effectively download a JPG file. Open it as your own risk.
 
-  Run template:
+Run template:
 
 ```bash
 $ etl-js run hello.yaml
@@ -161,8 +180,8 @@ For more details, see the [Mods](Mods.md) page.
 Mods can decide whether to **skip** the remaining steps for a given activity, or even terminate (**exit**) the process.
 Use cases can be:
 
-* Mod detects that no new data has been found, decides to exit the ETL process.
-* Mod detects that data didn't change and decides not to continue the current activity of doing work already done before
+- Mod detects that no new data has been found, decides to exit the ETL process.
+- Mod detects that data didn't change and decides not to continue the current activity of doing work already done before
 
 It's up to Mods to expose that functionality. For example, the **Commands Mod** expose the following properties:
 
@@ -170,7 +189,6 @@ It's up to Mods to expose that functionality. For example, the **Commands Mod** 
 skip_on_test_failed: true|false
 exit_on_test_failed: true|false
 ```
-
 
 ## Tags
 
@@ -180,9 +198,10 @@ That's where tags come in.
 You have seen those tags already in the [Getting Started](#getting-started) section. Here it is again:
 
 ```yml
-etl:
-  - step1
-  - step2
+etlSets:
+  default:
+    - step1
+    - step2
 step1:
   commands:
     orion_pic:
@@ -194,7 +213,7 @@ step2:
       source: https://www.nasa.gov/sites/default/files/thumbnails/image/{{ $.vars.file_to_download }}
 ```
 
-The tag here is `{{ $.vars.file_to_download }}`. It basically refers to the `var` of the step1 command *orion_pic*.
+The tag here is `{{ $.vars.file_to_download }}`. It basically refers to the `var` of the step1 command _orion_pic_.
 
 The context used in tags is as follows:
 
@@ -209,7 +228,9 @@ Here's another example using tags and making use of the `result_as_json` attribu
 
 ```js
 var template = {
-  etl: [ 'step1', 'step2' ],
+  etlSets: {
+    default: [ 'step1', 'step2' ]
+  },
   step1: {
     commands: {
       "file_to_download": {
@@ -229,18 +250,17 @@ var template = {
 };
 ```
 
-In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each file stores in `files_to_download` variable, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
+In `step2`, the `files` mod is used to specify a dynamic file to download with tags. Each file stored in `files_to_download` variable, will be downloaded from `https://images-assets.nasa.gov/image/` and stored in `/tmp/`.
 
 ## Events
 
 ETL will emit some events during the ETL process.
 
-- *activityDone( activityId, error, data, activityIndex, totalActivities )* - An activity has been completed (with or without error). The **activityId** is the name of the activity as specified in the template, the **activityIndex** is the order number the activity has been executed and the **totalActivities** represent the total number of activities to be run.
-
+- _activityDone( activityId, error, data, activityIndex, totalActivities )_ - An activity has been completed (with or without error). The **activityId** is the name of the activity as specified in the template, the **activityIndex** is the order number the activity has been executed and the **totalActivities** represent the total number of activities to be run.
 
 ## Results
 
-##### *OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags.*
+##### _OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._
 
 The ETL `process()` method returns a Promise. Upon success, the data **resolved** will contain the results of the process and each activity.
 
@@ -248,7 +268,9 @@ Reusing the advanced template from the [Tags](#tags) section:
 
 ```js
 var template = {
-  etl: [ 'step1', 'step2' ],
+  etlSets: {
+    default: [ 'step1', 'step2' ]
+  },
   step1: {
     commands: {
       "file_to_download": {
@@ -270,6 +292,7 @@ ETL.process( template ).then(function( pResults ) {
   console.log( util.inspect(pResults, false, null, true) );
 });
 ```
+
 , the result would be (some omission for brevity):
 
 ```js
@@ -310,10 +333,9 @@ ETL.process( template ).then(function( pResults ) {
            _stderr: '' } } } }
 ```
 
-
 # License
 
-  [MIT](LICENSE)
+[MIT](LICENSE)
 
 [npm-image]: https://badge.fury.io/js/%40lpezet%2Fetl-js.svg
 [npm-url]: https://npmjs.com/package/@lpezet/etl-js

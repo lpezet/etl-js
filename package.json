@@ -8,7 +8,7 @@
     "tsc": "tsc",
     "prepublish": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
     "clean": "rimraf dist",
-    "lint": "eslint --ext .ts .",
+    "lint": "eslint --ext .ts lib/ tests/",
     "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
     "release": "release-it",
     "fix": "eslint -ext .ts lib/ tests/ --fix",

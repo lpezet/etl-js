@@ -2,6 +2,8 @@ import * as path from "path";
 import { Client } from "ssh2";
 import * as Fs from "fs";
 
+const DEBUG = false;
+
 type Callback = (
   err: Error | null,
   stdout: string,
@@ -49,16 +51,25 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
           // pCallback( err, "", "", null, conn );
           return;
         }
-
+        if (DEBUG) console.log("### ssh-client: stream....");
         stream
           .on("close", function(pCode: any) {
             code = pCode;
             // signal = pSignal;
-            // console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);
+            if (DEBUG) {
+              // console.log("Stream :: close :: code: " + code + ", signal: " + signal);
+              console.log("### ssh-client: close() (1) code = " + pCode);
+              console.log("### ssh-client: stdout?" + (stdout ? true : false));
+              console.log(stdout);
+            }
             doCallback(conn);
           })
-          .on("data", function(pData: any) {
-            stdout = pData;
+          .on("data", function(pData: Buffer) {
+            // console.log("### ssh-client: data = " + typeof pData);
+            // console.log(pData);
+            stdout = stdout
+              ? stdout.concat(pData.toString())
+              : pData.toString();
           })
           .on("error", function(_pData: any) {
             // console.log('error');
@@ -68,20 +79,25 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
           .on("end", function(_pData: any) {
             // TODO?
             // stdout = data;
+            if (DEBUG) console.log("### ssh-client: end()");
           })
           .on("exit", function(_pData: any) {
             // TODO?
             // stdout = data;
+            if (DEBUG) console.log("### ssh-client: exit()");
           })
-          .stderr.on("data", function(pData: any) {
-            stderr = pData;
-            if (timeoutCallback) clearInterval(timeoutCallback);
-            timeoutCallback = setInterval(doCallback, 100);
+          .stderr.on("data", function(pData: Buffer) {
+            stderr = stdout
+              ? stderr.concat(pData.toString())
+              : pData.toString();
+            // if (timeoutCallback) clearInterval(timeoutCallback);
+            // timeoutCallback = setInterval(doCallback, 100);
             // No documentation saying this would be the end of it. When calling dfuplus, nothing happens afterwards.
             // pCallback( err, stdout, stderr, null, conn );
           })
           .on("close", function(_code: any, _signal: any) {
             // TODO?
+            if (DEBUG) console.log("### ssh-client: close() (2)");
           });
       });
     })

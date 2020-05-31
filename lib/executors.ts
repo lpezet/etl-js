@@ -2,8 +2,10 @@ import { SSHClient } from "./ssh-client";
 import * as Fs from "fs";
 import * as childProcess from "child_process";
 import { createLogger } from "./logger";
+import { platform } from "os";
 
-const LOGGER = createLogger("etljs::main");
+const LOCAL_LOGGER = createLogger("etljs::executors::local");
+const REMOTE_LOGGER = createLogger("etljs::executors::remote");
 const SSH_CLIENT = new SSHClient();
 
 export type Callback = (
@@ -13,16 +15,24 @@ export type Callback = (
 ) => void;
 
 export interface Executor {
+  ready(): Promise<void>;
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void;
   writeFile(pFilename: string, pContent: any, pCallback: Callback): void;
+  os(): string;
 }
 
 export class NoOpExecutor implements Executor {
+  ready(): Promise<void> {
+    return Promise.resolve();
+  }
   exec(_pCmd: string, _pCmdOptions: any, _pCallback: Callback): void {
     // nop
   }
   writeFile(_pFilename: string, _pContent: any, _pCallback: Callback): void {
     // nop
+  }
+  os(): string {
+    return platform();
   }
 }
 
@@ -32,14 +42,17 @@ export class Local implements Executor {
   constructor(pSettings?: any) {
     this.mSettings = pSettings;
   }
+  ready(): Promise<void> {
+    return Promise.resolve();
+  }
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void {
-    LOGGER.debug("Executing command [%s] locally...", pCmd);
+    LOCAL_LOGGER.debug("Executing command [%s] locally...", pCmd);
     childProcess.exec(pCmd, pCmdOptions, function(
       error: childProcess.ExecException | null,
       stdout: string,
       stderr: string
     ) {
-      LOGGER.debug("Done executing command [%s] locally.", pCmd);
+      LOCAL_LOGGER.debug("Done executing command [%s] locally.", pCmd);
       stdout = Buffer.isBuffer(stdout) ? stdout.toString("utf8") : stdout;
       stderr = Buffer.isBuffer(stderr) ? stderr.toString("utf8") : stderr;
       pCallback(error, stdout, stderr);
@@ -50,14 +63,14 @@ export class Local implements Executor {
       err: NodeJS.ErrnoException | null
     ) {
       if (err) {
-        LOGGER.error(
+        LOCAL_LOGGER.error(
           "Error writing content to local file [%s].",
           pFilename,
           err
         );
         pCallback(err, "", "");
       } else {
-        LOGGER.debug(
+        LOCAL_LOGGER.debug(
           "Successfully wrote content to local file [%s].",
           pFilename
         );
@@ -65,13 +78,75 @@ export class Local implements Executor {
       }
     });
   }
+  os(): string {
+    return platform();
+  }
 }
 
 export class Remote {
   mSettings: any;
-
+  mOS: string;
   constructor(pSettings: any) {
     this.mSettings = pSettings;
+    this.mOS = "NA";
+  }
+  ready(): Promise<void> {
+    if (this.mOS === "NA") {
+      return this._detectOS();
+    } else {
+      return Promise.resolve();
+    }
+  }
+  _detectOS(): Promise<void> {
+    // var cmd = "uname -a";
+    const cmd = "echo -n $OSTYPE";
+    return new Promise((resolve, reject) => {
+      REMOTE_LOGGER.debug("Detecting OS...");
+      this.exec(cmd, {}, (err, stdout, _stderr) => {
+        if (err) {
+          REMOTE_LOGGER.error("Unexpected error detecting os.", err);
+          reject(err);
+        } else {
+          stdout = stdout ? stdout.replace(/[\n\r]+/g, "") : "";
+          // const osType=(stdout || "").toLowerCase();
+          if (stdout === "" || stdout === "-n $OSTYPE") {
+            // Try Windows
+            REMOTE_LOGGER.debug("Checking Windows...");
+            this.exec("systeminfo", {}, (err, stdout, stderr) => {
+              if (err) {
+                REMOTE_LOGGER.error(
+                  "Unexpected error detecting os (while checking Windows). Stderr=[" +
+                    stderr +
+                    "]",
+                  err
+                );
+                reject(err);
+              } else {
+                const osName = new RegExp(/OS Name:(.*)/).exec(stdout || "");
+                if (osName && osName.length > 1) {
+                  const os = osName[1].replace("Microsoft", "").trim();
+                  REMOTE_LOGGER.debug("Found Windows: [" + os + "]");
+                  this.mOS = os;
+                } else {
+                  REMOTE_LOGGER.error(
+                    "Problem detected Windows version. Will set OS to Windows without version. Stdout=[" +
+                      stdout +
+                      "]"
+                  );
+                  this.mOS = "Windows";
+                }
+                resolve();
+              }
+            });
+          } else {
+            const os = stdout.trim();
+            REMOTE_LOGGER.debug("Detected Linux/Unix/Mac: [" + os + "]");
+            this.mOS = os;
+            resolve();
+          }
+        }
+      });
+    });
   }
   _getSshOpts(): any {
     const opts: any = {
@@ -88,7 +163,7 @@ export class Remote {
     return opts;
   }
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void {
-    LOGGER.debug(
+    REMOTE_LOGGER.debug(
       "Executing command [%s] remotely on [%s]...",
       pCmd,
       this.mSettings.host
@@ -100,18 +175,18 @@ export class Remote {
     let oCmd = pCmd;
     if (pCmdOptions["cwd"]) {
       oCmd = "cd " + pCmdOptions["cwd"] + "; " + oCmd;
-      LOGGER.debug(
+      REMOTE_LOGGER.debug(
         "Changing directory. New command to execute remotely: [%s]",
         oCmd
       );
     }
-    LOGGER.info("Cmd=%s", oCmd);
-    LOGGER.debug("Opts=%j", opts);
+    REMOTE_LOGGER.info("Cmd=%s", oCmd);
+    REMOTE_LOGGER.debug("Opts=%j", opts);
     SSH_CLIENT.exec(opts, oCmd, function(err, stdout, stderr, _server, conn) {
       try {
         stdout = Buffer.isBuffer(stdout) ? stdout.toString("utf8") : stdout;
         stderr = Buffer.isBuffer(stderr) ? stderr.toString("utf8") : stderr;
-        LOGGER.debug("Command [%s] executed remotely.", pCmd);
+        REMOTE_LOGGER.debug("Command [%s] executed remotely.", pCmd);
         pCallback(err, stdout, stderr);
       } finally {
         if (conn) {
@@ -121,7 +196,7 @@ export class Remote {
     });
   }
   writeFile(pFilename: string, pContent: any, pCallback: Callback): void {
-    LOGGER.debug("Writing content to remote file [%s]...", pFilename);
+    REMOTE_LOGGER.debug("Writing content to remote file [%s]...", pFilename);
     const opts = this._getSshOpts();
     SSH_CLIENT.writeFile(opts, pFilename, pContent, function(
       err,
@@ -132,14 +207,14 @@ export class Remote {
     ) {
       try {
         if (err) {
-          LOGGER.error(
+          REMOTE_LOGGER.error(
             "Error writing content to remote file [%s].",
             pFilename,
             err
           );
           pCallback(err, "", "");
         } else {
-          LOGGER.debug(
+          REMOTE_LOGGER.debug(
             "Successfully wrote content to remote file [%s].",
             pFilename
           );
@@ -151,5 +226,9 @@ export class Remote {
         }
       }
     });
+  }
+  os(): string {
+    // throw new Error("Not yet implemented.");
+    return this.mOS;
   }
 }

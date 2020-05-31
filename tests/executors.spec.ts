@@ -71,6 +71,10 @@ const setupSshServer = function(): ssh2.Server {
           session.on("exec", function(accept, _reject, _info) {
             const stream = accept();
             stream.write("hello\n");
+            stream.write("world\n");
+            stream.write("how\n");
+            stream.write("u\n");
+            stream.write("doing?\n");
             stream.exit(0);
             stream.end();
           });
@@ -408,6 +412,42 @@ describe("executors", function() {
           function(err, stdout, _stderr) {
             try {
               assert.include("" + stdout, "hello");
+              if (err) {
+                done(err);
+              } else {
+                done();
+              }
+            } catch (e) {
+              done(e);
+            } finally {
+              server.close();
+            }
+          }
+        );
+      });
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it("remoteExecStdout", function(done) {
+    let server: ssh2.Server;
+    try {
+      server = setupSshServer();
+      server.listen(0, "127.0.0.1", function() {
+        // console.log('Listening on port ' + this.address().port);
+        const executor = new Remote({
+          host: "127.0.0.1",
+          port: server.address().port,
+          username: "foo",
+          password: "bar"
+        });
+        executor.exec(
+          "echo dontmatter",
+          { cwd: "/tmp", env: { TOTO: "TITI" } },
+          function(err, stdout, _stderr) {
+            try {
+              assert.equal(stdout, "hello\nworld\nhow\nu\ndoing?\n");
               if (err) {
                 done(err);
               } else {

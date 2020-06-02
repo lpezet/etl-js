@@ -1,11 +1,22 @@
 import { assert } from "chai";
-import { Local, Remote } from "../lib/executors";
+import { Local, NoOpExecutor, Remote } from "../lib/executors";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as ssh2 from "ssh2";
 import { ParsedKey } from "ssh2-streams";
+
+/*
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 
 const setupSshServer = function(): ssh2.Server {
   const utils = ssh2.utils;
@@ -215,6 +226,57 @@ const setupSshServerSftpError = function(): ssh2.Server {
 };
 
 describe("executors", function() {
+  it("noOpReady", function(done) {
+    const executor = new NoOpExecutor();
+    executor
+      .ready()
+      .then(
+        () => done(),
+        (err: Error) => {
+          done(err);
+        }
+      )
+      .catch((err: Error) => {
+        done(err);
+      });
+  });
+  it("noOpOS", function(done) {
+    const executor = new NoOpExecutor();
+    executor
+      .ready()
+      .then(
+        () => {
+          const os = executor.os();
+          assert.isNotNull(os);
+          done();
+        },
+        (err: Error) => {
+          done(err);
+        }
+      )
+      .catch((err: Error) => {
+        done(err);
+      });
+  });
+
+  it("noOpExec", function(done) {
+    const executor = new NoOpExecutor();
+    executor.exec('echo "hello!"', {}, function(err, stdout, stderr) {
+      assert.isNull(err);
+      assert.isNull(stderr);
+      assert.equal(stdout, "");
+      done();
+    });
+  });
+  it("noOpWriteFile", function(done) {
+    const executor = new NoOpExecutor();
+    executor.writeFile("", "", function(err, stdout, stderr) {
+      assert.isNull(err);
+      assert.isNull(stderr);
+      assert.equal(stdout, "");
+      done();
+    });
+  });
   it("localExec", function(done) {
     const executor = new Local();
     executor.exec('echo "hello!"', {}, function(err, stdout, _stderr) {
@@ -222,6 +284,40 @@ describe("executors", function() {
       assert.include(stdout, "hello!");
       done();
     });
+  });
+
+  it("localReady", function(done) {
+    const executor = new Local();
+    executor
+      .ready()
+      .then(
+        () => done(),
+        (err: Error) => {
+          done(err);
+        }
+      )
+      .catch((err: Error) => {
+        done(err);
+      });
+  });
+
+  it("localOS", function(done) {
+    const executor = new Local();
+    executor
+      .ready()
+      .then(
+        () => {
+          const os = executor.os();
+          assert.isNotNull(os);
+          done();
+        },
+        (err: Error) => {
+          done(err);
+        }
+      )
+      .catch((err: Error) => {
+        done(err);
+      });
   });
 
   it("localWriteFile", function(done) {
@@ -356,6 +452,76 @@ describe("executors", function() {
             server.close();
           }
         });
+      });
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it("remoteReady", function(done) {
+    let server: ssh2.Server;
+    try {
+      server = setupSshServer();
+      server.listen(0, "127.0.0.1", function() {
+        // console.log('Listening on port ' + this.address().port);
+        const executor = new Remote({
+          host: "127.0.0.1",
+          port: server.address().port,
+          username: "foo",
+          privateKey: fs.readFileSync("tests/executors.key")
+        });
+        executor
+          .ready()
+          .then(
+            () => {
+              done();
+            },
+            (err: Error) => {
+              done(err);
+            }
+          )
+          .catch((err: Error) => {
+            done(err);
+          })
+          .finally(() => {
+            server.close();
+          });
+      });
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it("remoteOS", function(done) {
+    let server: ssh2.Server;
+    try {
+      server = setupSshServer();
+      server.listen(0, "127.0.0.1", function() {
+        // console.log('Listening on port ' + this.address().port);
+        const executor = new Remote({
+          host: "127.0.0.1",
+          port: server.address().port,
+          username: "foo",
+          privateKey: fs.readFileSync("tests/executors.key")
+        });
+        executor
+          .ready()
+          .then(
+            () => {
+              const os = executor.os();
+              assert.isNotNull(os);
+              done();
+            },
+            (err: Error) => {
+              done(err);
+            }
+          )
+          .catch((err: Error) => {
+            done(err);
+          })
+          .finally(() => {
+            server.close();
+          });
       });
     } catch (e) {
       done(e);

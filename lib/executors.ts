@@ -25,11 +25,11 @@ export class NoOpExecutor implements Executor {
   ready(): Promise<void> {
     return Promise.resolve();
   }
-  exec(_pCmd: string, _pCmdOptions: any, _pCallback: Callback): void {
-    // nop
+  exec(_pCmd: string, _pCmdOptions: any, pCallback: Callback): void {
+    pCallback(null, "", null);
   }
-  writeFile(_pFilename: string, _pContent: any, _pCallback: Callback): void {
-    // nop
+  writeFile(_pFilename: string, _pContent: any, pCallback: Callback): void {
+    pCallback(null, "", null);
   }
   os(): string {
     return platform();

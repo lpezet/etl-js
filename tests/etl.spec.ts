@@ -97,6 +97,37 @@ describe("etl", function() {
     );
   });
 
+  it("etlSetsSingleValue", function(done) {
+    const oExecutor: any = {};
+    const oTested = new ETL(oExecutor);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+
+    const oETL = {
+      etlSets: {
+        mySet: "abc"
+      },
+      abc: {
+        tester: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested.process(oETL, { etlSet: "mySet" }).then(
+      function() {
+        try {
+          assert.equal(1, oTester.calls());
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        done(pError);
+      }
+    );
+  });
+
   it("invalidETLSet", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);

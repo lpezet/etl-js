@@ -314,39 +314,48 @@ class ETL extends EventEmitter {
       // console.log('## Working on: ' + k);
       let nv: any[] = []; // new values
       let oResolveLater = false;
-      s.value.forEach(v => {
-        const oValType = typeof v;
-        switch (oValType) {
-          case "string":
-            nv.push(v);
-            break;
-          case "object": {
-            const oRef: string = (v as ETLSetRef).etlSet;
+      const val = s.value;
+      if (Array.isArray(val)) {
+        s.value.forEach(v => {
+          const oValType = typeof v;
+          switch (oValType) {
+            case "string":
+              nv.push(v);
+              break;
+            case "object": {
+              const oRef: string = (v as ETLSetRef).etlSet;
 
-            // TODO: throw error if not present
-            if (!oResolved[oRef]) {
-              // console.log( 'Need to resolve later: ' + k);
-              if (s != undefined) {
-                if (s.tries > 5) {
-                  throw new Error(
-                    "Infinite loop detected with (at least) entry [" + k + "]."
-                  );
+              // TODO: throw error if not present
+              if (!oResolved[oRef]) {
+                // console.log( 'Need to resolve later: ' + k);
+                if (s != undefined) {
+                  if (s.tries > 5) {
+                    throw new Error(
+                      "Infinite loop detected with (at least) entry [" +
+                        k +
+                        "]."
+                    );
+                  }
+                  s.tries++;
+                  oStack.push(s); // resolve it later
                 }
-                s.tries++;
-                oStack.push(s); // resolve it later
-              }
 
-              oResolveLater = true;
-            } else {
-              nv = nv.concat(oResolved[oRef]);
+                oResolveLater = true;
+              } else {
+                nv = nv.concat(oResolved[oRef]);
+              }
+              break;
             }
-            break;
+            default:
+              throw new Error(
+                k + ": value type " + oValType + " not supported."
+              );
           }
-          default:
-            throw new Error(k + ": value type " + oValType + " not supported.");
-        }
-        if (oResolveLater) return;
-      });
+          if (oResolveLater) return;
+        });
+      } else {
+        nv.push(val);
+      }
       if (!oResolveLater) {
         // console.log("### Resolved " + k);
         oResolved[k] = nv;

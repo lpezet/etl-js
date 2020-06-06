@@ -1,6 +1,6 @@
 {
   "name": "@lpezet/etl-js",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "ETL made simple and reproducible.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "prepublish": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts lib/ tests/",
-    "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
+    "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000 --",
     "release": "release-it",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",

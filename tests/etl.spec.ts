@@ -97,6 +97,37 @@ describe("etl", function() {
     );
   });
 
+  it("etlSetsActivityInstead", function(done) {
+    const oExecutor: any = {};
+    const oTested = new ETL(oExecutor);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+
+    const oETL = {
+      etlSets: {
+        mySet: ["abc"]
+      },
+      abc: {
+        tester: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested.process(oETL, { etlSet: "abc" }).then(
+      function() {
+        try {
+          assert.equal(1, oTester.calls());
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        done(pError);
+      }
+    );
+  });
+
   it("etlSetsSingleValue", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
@@ -164,7 +195,7 @@ describe("etl", function() {
       });
   });
 
-  it("resolve_etlsets", function() {
+  it("resolveETLSets", function() {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);
 
@@ -500,7 +531,7 @@ describe("etl", function() {
     });
   });
 
-  it("mod_throwing_error", function(done) {
+  it("modThrowingError", function(done) {
     const oExecutor: any = {};
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
@@ -538,7 +569,7 @@ describe("etl", function() {
     );
   });
 
-  it("missing_mod", function(done) {
+  it("missingMod", function(done) {
     const oExecutor: any = {};
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
@@ -563,7 +594,7 @@ describe("etl", function() {
     );
   });
 
-  it("registering_mod_dynamically", function(done) {
+  it("registeringModDynamically", function(done) {
     const oExecutor: any = {};
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);

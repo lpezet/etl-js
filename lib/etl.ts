@@ -8,11 +8,17 @@ import { createLogger } from "./logger";
 const LOGGER = createLogger("etljs::main");
 
 const EXIT_OR_SKIP_CONDITION = function(
-  _pValue: string,
+  _pValue: any,
   _pChainName: string
 ): boolean {
-  // console.log('##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j', pChainName, pValue);
-  // return pValue && (pValue['skip'] || pValue['exit']);
+  /*
+  console.log(
+    "##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
+    _pChainName,
+    _pValue
+  );
+  */
+  // return pValue && (pValue["skip"] || pValue["exit"]);
   return false;
 };
 
@@ -92,7 +98,7 @@ const doStepProcess = (
   pActivityId: string,
   pKey: string,
   pStep: any,
-  pHandler: Mod,
+  pMod: Mod,
   _pResults: any,
   pContext: any,
   pExecutor: Executor
@@ -110,7 +116,7 @@ const doStepProcess = (
         LOGGER.debug("[%s] Executing step %s...", pActivityId, pKey);
         // return new Promise(function(resolve, reject) {
         // return
-        return pHandler
+        return pMod
           .handle(pActivityId, pStep, pExecutor, pContext) // pCurrentActivityData, pResults, pContext )
           .then((pData: any) => {
             // console.log('######## handle!!!!');
@@ -236,7 +242,7 @@ class ETL extends EventEmitter {
             pActivityIndex,
             pTotalActivities
           );
-          LOGGER.info("[%s] Activity results: %j", pActivityId, pData);
+          LOGGER.debug("[%s] Activity results: %j", pActivityId, pData);
           // console.log(' pData=' );
           // console.log( JSON.stringify( pData ) );
 
@@ -371,7 +377,13 @@ class ETL extends EventEmitter {
       );
     }
     const oResolvedETLs = this._resolveEtlSets(pConfig["etlSets"] as ETLSets);
-    return oResolvedETLs[pParameters["etlSet"] || "default"];
+    const etlSet = oResolvedETLs[pParameters["etlSet"] || "default"];
+    if (etlSet) return etlSet;
+    LOGGER.warn(
+      "Could not find etlSet [%s]. Using it as an activity name instead.",
+      pParameters["etlSet"]
+    );
+    return [pParameters["etlSet"]]; // as activity
   }
   process(pConfig: any, pParameters?: any): Promise<any> {
     LOGGER.info("Starting ETL...");
@@ -398,7 +410,7 @@ class ETL extends EventEmitter {
         if (!oActivity) {
           // TODO
           LOGGER.warn(
-            "No configuration for activity [%s] (%s/%s). Skipping.",
+            "Nothing defined for activity [%s] (%s/%s). Skipping.",
             oActivityId,
             i + 1,
             oTotalActivities
@@ -419,8 +431,6 @@ class ETL extends EventEmitter {
           );
         }
       }
-      // Promises.seq( oStepProcesses, {} )
-      // console.log('####### oStepProcesses = ' + oActivityProcesses.length);
       return Promises.chain(oActivityProcesses, {}, EXIT_OR_SKIP_CONDITION, {
         name: "activities"
       }).then(

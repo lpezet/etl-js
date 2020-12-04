@@ -36,23 +36,37 @@ export class NoOpExecutor implements Executor {
   }
 }
 
+export type LocalSettings = {
+  echo: boolean;
+  [key: string]: any;
+}
+
+const DefaultLocalSettings : LocalSettings = {
+  echo: false
+}
+
 export class Local implements Executor {
-  mSettings: any;
+  mSettings: LocalSettings;
 
   constructor(pSettings?: any) {
-    this.mSettings = pSettings;
+    this.mSettings = pSettings || DefaultLocalSettings;
   }
   ready(): Promise<void> {
     return Promise.resolve();
   }
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void {
     LOCAL_LOGGER.debug("Executing command [%s] locally...", pCmd);
+    var that = this;
     childProcess.exec(pCmd, pCmdOptions, function(
       error: childProcess.ExecException | null,
       stdout: string,
       stderr: string
     ) {
       LOCAL_LOGGER.debug("Done executing command [%s] locally.", pCmd);
+      if (that.mSettings.echo) {
+        if (stdout) console.log(stdout);
+        if (stderr) console.log(stderr);
+      }
       stdout = Buffer.isBuffer(stdout) ? stdout.toString("utf8") : stdout;
       stderr = Buffer.isBuffer(stderr) ? stderr.toString("utf8") : stderr;
       pCallback(error, stdout, stderr);

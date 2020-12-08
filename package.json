@@ -1,6 +1,6 @@
 {
   "name": "@lpezet/etl-js",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "description": "ETL made simple and reproducible.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "prepublish": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts lib/ tests/",
-    "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000",
+    "mocha-single": "nyc --reporter=html mocha --require ts-node/register --require source-map-support/register --require tests/helpers/mocha-bootstrap.js --timeout=1000 --",
     "release": "release-it",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
@@ -59,8 +59,11 @@
   },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
+    "google-auth-library": "^6.0.1",
     "jsonpath-plus": "^4.0.0",
     "log4js": "^6.1.2",
+    "open": "^7.0.4",
+    "server-destroy": "^1.0.1",
     "ssh2": "^0.8.4"
   },
   "devDependencies": {
@@ -86,7 +89,7 @@
     "mocha": "^7.1.2",
     "nyc": "^14.1.1",
     "prettier": "^1.19.0",
-    "release-it": "^13.5.8",
+    "release-it": "^13.6.6",
     "rimraf": "^3.0.2",
     "sinon": "^6.3.4",
     "sinon-chai": "^3.2.0",

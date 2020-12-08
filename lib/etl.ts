@@ -8,11 +8,17 @@ import { createLogger } from "./logger";
 const LOGGER = createLogger("etljs::main");
 
 const EXIT_OR_SKIP_CONDITION = function(
-  _pValue: string,
+  _pValue: any,
   _pChainName: string
 ): boolean {
-  // console.log('##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j', pChainName, pValue);
-  // return pValue && (pValue['skip'] || pValue['exit']);
+  /*
+  console.log(
+    "##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
+    _pChainName,
+    _pValue
+  );
+  */
+  // return pValue && (pValue["skip"] || pValue["exit"]);
   return false;
 };
 
@@ -92,7 +98,7 @@ const doStepProcess = (
   pActivityId: string,
   pKey: string,
   pStep: any,
-  pHandler: Mod,
+  pMod: Mod,
   _pResults: any,
   pContext: any,
   pExecutor: Executor
@@ -110,7 +116,7 @@ const doStepProcess = (
         LOGGER.debug("[%s] Executing step %s...", pActivityId, pKey);
         // return new Promise(function(resolve, reject) {
         // return
-        return pHandler
+        return pMod
           .handle(pActivityId, pStep, pExecutor, pContext) // pCurrentActivityData, pResults, pContext )
           .then((pData: any) => {
             // console.log('######## handle!!!!');
@@ -236,7 +242,7 @@ class ETL extends EventEmitter {
             pActivityIndex,
             pTotalActivities
           );
-          LOGGER.info("[%s] Activity results: %j", pActivityId, pData);
+          LOGGER.debug("[%s] Activity results: %j", pActivityId, pData);
           // console.log(' pData=' );
           // console.log( JSON.stringify( pData ) );
 
@@ -314,39 +320,48 @@ class ETL extends EventEmitter {
       // console.log('## Working on: ' + k);
       let nv: any[] = []; // new values
       let oResolveLater = false;
-      s.value.forEach(v => {
-        const oValType = typeof v;
-        switch (oValType) {
-          case "string":
-            nv.push(v);
-            break;
-          case "object": {
-            const oRef: string = (v as ETLSetRef).etlSet;
+      const val = s.value;
+      if (Array.isArray(val)) {
+        s.value.forEach(v => {
+          const oValType = typeof v;
+          switch (oValType) {
+            case "string":
+              nv.push(v);
+              break;
+            case "object": {
+              const oRef: string = (v as ETLSetRef).etlSet;
 
-            // TODO: throw error if not present
-            if (!oResolved[oRef]) {
-              // console.log( 'Need to resolve later: ' + k);
-              if (s != undefined) {
-                if (s.tries > 5) {
-                  throw new Error(
-                    "Infinite loop detected with (at least) entry [" + k + "]."
-                  );
+              // TODO: throw error if not present
+              if (!oResolved[oRef]) {
+                // console.log( 'Need to resolve later: ' + k);
+                if (s != undefined) {
+                  if (s.tries > 5) {
+                    throw new Error(
+                      "Infinite loop detected with (at least) entry [" +
+                        k +
+                        "]."
+                    );
+                  }
+                  s.tries++;
+                  oStack.push(s); // resolve it later
                 }
-                s.tries++;
-                oStack.push(s); // resolve it later
-              }
 
-              oResolveLater = true;
-            } else {
-              nv = nv.concat(oResolved[oRef]);
+                oResolveLater = true;
+              } else {
+                nv = nv.concat(oResolved[oRef]);
+              }
+              break;
             }
-            break;
+            default:
+              throw new Error(
+                k + ": value type " + oValType + " not supported."
+              );
           }
-          default:
-            throw new Error(k + ": value type " + oValType + " not supported.");
-        }
-        if (oResolveLater) return;
-      });
+          if (oResolveLater) return;
+        });
+      } else {
+        nv.push(val);
+      }
       if (!oResolveLater) {
         // console.log("### Resolved " + k);
         oResolved[k] = nv;
@@ -395,7 +410,7 @@ class ETL extends EventEmitter {
         if (!oActivity) {
           // TODO
           LOGGER.warn(
-            "No configuration for activity [%s] (%s/%s). Skipping.",
+            "Nothing defined for activity [%s] (%s/%s). Skipping.",
             oActivityId,
             i + 1,
             oTotalActivities
@@ -416,8 +431,6 @@ class ETL extends EventEmitter {
           );
         }
       }
-      // Promises.seq( oStepProcesses, {} )
-      // console.log('####### oStepProcesses = ' + oActivityProcesses.length);
       return Promises.chain(oActivityProcesses, {}, EXIT_OR_SKIP_CONDITION, {
         name: "activities"
       }).then(

@@ -373,7 +373,13 @@ class ETL extends EventEmitter {
     if (pConfig["etl"]) return pConfig["etl"];
     if (pConfig["etlSets"]) {
       const oResolvedETLs = this._resolveEtlSets(pConfig["etlSets"] as ETLSets);
-      return oResolvedETLs[pParameters["etlSet"] || "default"];
+      const etlSet = oResolvedETLs[pParameters["etlSet"] || "default"];
+      if (etlSet) return etlSet;
+      LOGGER.warn(
+        "Could not find etlSet [%s]. Using it as an activity name instead.",
+        pParameters["etlSet"]
+      );
+      return [pParameters["etlSet"]]; // as activity
     } else {
       if (pConfig === "" || (Array.isArray(pConfig) && pConfig.length === 0)) {
         throw new Error(

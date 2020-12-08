@@ -54,7 +54,7 @@ describe("etl", function() {
     oTested.process(oETL, {}).then(
       function() {
         try {
-          assert.equal(1, oTester.calls());
+          assert.equal(oTester.calls(), 1);
           done();
         } catch (pError) {
           done(pError);
@@ -81,7 +81,7 @@ describe("etl", function() {
     oTested.process(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
-          assert.equal(1, oTester.calls());
+          assert.equal(oTester.calls(), 1);
           done();
         } catch (pError) {
           done(pError);
@@ -112,7 +112,7 @@ describe("etl", function() {
     oTested.process(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
-          assert.equal(1, oTester.calls());
+          assert.equal(oTester.calls(), 1);
           done();
         } catch (pError) {
           done(pError);
@@ -143,7 +143,7 @@ describe("etl", function() {
     oTested.process(oETL, { etlSet: "abc" }).then(
       function() {
         try {
-          assert.equal(1, oTester.calls());
+          assert.equal(oTester.calls(), 1);
           done();
         } catch (pError) {
           done(pError);
@@ -174,7 +174,7 @@ describe("etl", function() {
     oTested.process(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
-          assert.equal(1, oTester.calls());
+          assert.equal(oTester.calls(), 1);
           done();
         } catch (pError) {
           done(pError);
@@ -209,7 +209,7 @@ describe("etl", function() {
         oTested.process(oETL, { etlSet: "unknown" }).then(
           function() {
             try {
-              assert.equal(0, oTester.calls());
+              assert.equal(oTester.calls(), 0);
               done();
             } catch (pError) {
               done(pError);
@@ -346,8 +346,8 @@ describe("etl", function() {
         oTested.process(oETL).then(
           function() {
             try {
-              assert.equal(2, oTester.calls());
-              assert.equal(0, oModder.calls());
+              assert.equal(oTester.calls(), 2);
+              assert.equal(oModder.calls(), 0);
               done();
             } catch (pError) {
               done(pError);
@@ -412,8 +412,8 @@ describe("etl", function() {
         oTested.process(oETL).then(
           function(_pData: any) {
             try {
-              assert.equal(1, oTester.calls());
-              assert.equal(0, oModder.calls());
+              assert.equal(oTester.calls(), 1);
+              assert.equal(oModder.calls(), 0);
               done();
             } catch (e) {
               done(e);

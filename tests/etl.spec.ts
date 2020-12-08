@@ -66,6 +66,33 @@ describe("etl", function() {
     );
   });
 
+  it("noEtlSets", function(done) {
+    const oExecutor: any = {};
+    const oTested = new ETL(oExecutor);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+    const oETL = {
+      abc: {
+        tester: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested.process(oETL, { etlSet: "mySet" }).then(
+      function() {
+        try {
+          assert.equal(1, oTester.calls());
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        done(pError);
+      }
+    );
+  });
+
   it("etlSets", function(done) {
     const oExecutor: any = {};
     const oTested = new ETL(oExecutor);

@@ -4,12 +4,12 @@ import * as Fs from "fs";
 
 const DEBUG = false;
 
-type Callback = (
+export type Callback = (
   err: Error | null,
-  stdout: string,
-  stderr: string,
-  server: any,
-  conn: Client
+  stdout?: string | undefined,
+  stderr?: string | undefined,
+  server?: any | undefined,
+  conn?: Client | undefined
 ) => void;
 
 /**
@@ -134,7 +134,10 @@ function ssh2WriteToFile(
       pCallback(err, stdout, stderr, server, conn);
       return;
     }
-
+    if (!conn) {
+      pCallback(new Error("No server provided. Quitting."));
+      return;
+    }
     conn.sftp(function sftpOpen(err, sftp) {
       if (err) {
         pCallback(err, "", "", server, conn);
@@ -164,7 +167,17 @@ function ssh2WriteToFile(
   });
 }
 
-export class SSHClient {
+export interface ISSHClient {
+  exec(pClientOpts: any, pCmd: string, pCallback: Callback): void;
+  writeFile(
+    pClientOpts: any,
+    pFilename: string,
+    pContent: any,
+    pCallback: Callback
+  ): void;
+}
+
+export class SSHClient implements ISSHClient {
   exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
     if (pClientOpts.privateKey && Fs.existsSync(pClientOpts.privateKey)) {
       pClientOpts.privateKey = Fs.readFileSync(pClientOpts.privateKey, {

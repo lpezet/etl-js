@@ -1,8 +1,9 @@
 import * as path from "path";
 import { Client } from "ssh2";
 import * as Fs from "fs";
+import { createLogger } from "./logger";
 
-const DEBUG = false;
+const LOGGER = createLogger("etljs::ssh-clients");
 
 export type Callback = (
   err: Error | null,
@@ -17,7 +18,11 @@ export type Callback = (
  * @param pCmd command
  * @param pCallback callback
  */
-function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
+const ssh2Exec = (
+  pClientOpts: any,
+  pCmd: string,
+  pCallback: Callback
+): void => {
   let stdout: string;
   let stderr: string;
   let err: Error;
@@ -51,16 +56,16 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
           // pCallback( err, "", "", null, conn );
           return;
         }
-        if (DEBUG) console.log("### ssh-client: stream....");
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: stream....");
         stream
           .on("close", function(pCode: any) {
             code = pCode;
             // signal = pSignal;
-            if (DEBUG) {
+            if (LOGGER.isDebugEnabled()) {
               // console.log("Stream :: close :: code: " + code + ", signal: " + signal);
-              console.log("### ssh-client: close() (1) code = " + pCode);
-              console.log("### ssh-client: stdout?" + (stdout ? true : false));
-              console.log(stdout);
+              LOGGER.debug("### ssh-client: close() (1) code = " + pCode);
+              LOGGER.debug("### ssh-client: stdout?" + (stdout ? true : false));
+              LOGGER.debug(stdout);
             }
             doCallback(conn);
           })
@@ -79,12 +84,12 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
           .on("end", function(_pData: any) {
             // TODO?
             // stdout = data;
-            if (DEBUG) console.log("### ssh-client: end()");
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: end()");
           })
           .on("exit", function(_pData: any) {
             // TODO?
             // stdout = data;
-            if (DEBUG) console.log("### ssh-client: exit()");
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: exit()");
           })
           .stderr.on("data", function(pData: Buffer) {
             stderr = stdout
@@ -97,7 +102,9 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
           })
           .on("close", function(_code: any, _signal: any) {
             // TODO?
-            if (DEBUG) console.log("### ssh-client: close() (2)");
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("### ssh-client: close() (2)");
+            }
           });
       });
     })
@@ -107,7 +114,7 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
       // pCallback(err, "", "", null, conn);
     })
     .connect(pClientOpts);
-}
+};
 
 /**
  * @param pClientOpts client options
@@ -115,12 +122,12 @@ function ssh2Exec(pClientOpts: any, pCmd: string, pCallback: Callback): void {
  * @param pContent content
  * @param pCallback callback
  */
-function ssh2WriteToFile(
+const ssh2WriteToFile = (
   pClientOpts: any,
   pRemoteFile: string,
   pContent: any,
   pCallback: Callback
-): void {
+): void => {
   pRemoteFile = pRemoteFile.replace(/[\\]/g, "/"); // windows needs this
   const remotePath = path.dirname(pRemoteFile);
   ssh2Exec(pClientOpts, "mkdir -p " + remotePath, function(
@@ -165,7 +172,7 @@ function ssh2WriteToFile(
       }
     });
   });
-}
+};
 
 export interface ISSHClient {
   exec(pClientOpts: any, pCmd: string, pCallback: Callback): void;

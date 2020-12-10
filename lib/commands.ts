@@ -127,152 +127,54 @@ export default class CommandsMod extends AbstractMod<any> {
         };
 
         const oCmdSpecs = pSpecs;
-        try {
-          LOGGER.debug("[%s] Executing command [%s]...", pParent, pKey);
-          let oCwd = oCmdSpecs["cwd"];
-          if (oCwd && oCwd.indexOf("{{") >= 0) {
-            oCwd = this._evaluateToIndex(oCwd, pContext, pTemplateIndex);
-          }
+        // try {
+        LOGGER.debug("[%s] Executing command [%s]...", pParent, pKey);
+        let oCwd = oCmdSpecs["cwd"];
+        if (oCwd && oCwd.indexOf("{{") >= 0) {
+          oCwd = this._evaluateToIndex(oCwd, pContext, pTemplateIndex);
+        }
 
-          let oTest = oCmdSpecs["test"];
-          if (oTest && oTest.indexOf("{{") >= 0) {
-            oTest = this._evaluateToIndex(oTest, pContext, pTemplateIndex);
-          }
-          if (Array.isArray(oTest)) oTest = oTest[0];
-          let oCmd = oCmdSpecs["command"];
-          if (oCmd && oCmd.indexOf("{{") >= 0) {
-            oCmd = this._evaluateToIndex(oCmd, pContext, pTemplateIndex);
-          }
-          if (Array.isArray(oCmd)) oCmd = oCmd[0];
-          const oEnv = oCmdSpecs["env"];
+        let oTest = oCmdSpecs["test"];
+        if (oTest && oTest.indexOf("{{") >= 0) {
+          oTest = this._evaluateToIndex(oTest, pContext, pTemplateIndex);
+        }
+        if (Array.isArray(oTest)) oTest = oTest[0];
+        let oCmd = oCmdSpecs["command"];
+        if (oCmd && oCmd.indexOf("{{") >= 0) {
+          oCmd = this._evaluateToIndex(oCmd, pContext, pTemplateIndex);
+        }
+        if (Array.isArray(oCmd)) oCmd = oCmd[0];
+        const oEnv = oCmdSpecs["env"];
 
-          const oCmdOptions: any = {};
-          oCmdOptions["context"] = pKey;
-          if (oCwd) oCmdOptions["cwd"] = oCwd;
+        const oCmdOptions: any = {};
+        oCmdOptions["context"] = pKey;
+        if (oCwd) oCmdOptions["cwd"] = oCwd;
 
-          if (oEnv) {
-            oCmdOptions["env"] = {};
-            Object.keys(oEnv).forEach(k => {
-              oCmdOptions["env"][k] = oEnv[k];
-            });
-          }
+        if (oEnv) {
+          oCmdOptions["env"] = {};
+          Object.keys(oEnv).forEach(k => {
+            oCmdOptions["env"][k] = oEnv[k];
+          });
+        }
 
-          const execCommand = function(
-            pCmd: string,
-            pCmdOptions: any
-          ): Promise<any> {
-            return new Promise(function(resolve, reject) {
-              const data: Data = {
-                exit: false,
-                pass: true,
-                skip: false
-              };
-              try {
-                LOGGER.debug(
-                  "[%s] Running command: [%s] with options [%j]",
-                  pParent,
-                  pCmd,
-                  pCmdOptions
-                );
-                pExecutor.exec(pCmd, pCmdOptions, function(
-                  error,
-                  stdout,
-                  stderr
-                ) {
-                  if (error) data.error = error;
-                  data._stdout = stdout;
-                  data._stderr = stderr;
-                  try {
-                    if (error) {
-                      LOGGER.error(
-                        "[%s] Command [%s] exited.",
-                        pParent,
-                        pKey,
-                        error
-                      );
-                      // reject( util.format.apply(null, [ '[%s] Command [%s] exited with code %s: %s.', pParent, pKey, error.code, error ] ));
-                      data.result = stderr;
-                      data.message = util.format.apply(null, [
-                        "[%s] Command [%s] exited.",
-                        pParent,
-                        pKey,
-                        error
-                      ]);
-                      if (oCmdSpecs["ignore_errors"]) {
-                        resolve(data);
-                      } else {
-                        reject(data);
-                      }
-                    } else {
-                      LOGGER.debug(
-                        "[%s] Command [%s] completed.",
-                        pParent,
-                        pKey
-                      );
-                      // resolve( stdout );
-                      data.result = stdout;
-                      if (oCmdSpecs["result_as_json"] === true) {
-                        try {
-                          data.result = JSON.parse(stdout || "{}");
-                        } catch (e) {
-                          LOGGER.warn(
-                            "[%s] Error with command [%s]. Could not parse stdout as JSON: [%s] not a valid JSON string.",
-                            pParent,
-                            pKey,
-                            stdout
-                          );
-                        }
-                      }
-
-                      if (oCmdSpecs["var"]) {
-                        const oVarKey = pSpecs["var"];
-                        LOGGER.debug(
-                          "[%s] Saving result of command [%] to var [%s].",
-                          pParent,
-                          pKey,
-                          oVarKey
-                        );
-                        pContext.vars[oVarKey] = data.result;
-                      }
-
-                      resolve(data);
-                    }
-                  } catch (e) {
-                    data.error = e;
-                    if (oCmdSpecs["ignore_errors"]) {
-                      resolve(data);
-                    } else {
-                      reject(data);
-                    }
-                  }
-                });
-              } catch (e) {
-                LOGGER.error(
-                  "[%s] Unexpected error executing command: [%s] with options [%s]",
-                  pParent,
-                  pCmd,
-                  pCmdOptions
-                );
-                data.error = e;
-                if (oCmdSpecs["ignore_errors"]) {
-                  resolve(data);
-                } else {
-                  reject(data);
-                }
-              }
-            });
-          };
-
-          const execTest = function(pTest: string): Promise<any> {
-            LOGGER.info("[%s] Testing for command [%s]...", pParent, pKey);
-            const oTest = "(" + pTest + ') && echo "continue" || echo "stop"';
-            return new Promise(function(resolve, reject) {
-              const data: Data = {
-                exit: false,
-                skip: false,
-                pass: false
-              };
-              pExecutor.exec(oTest, { context: pKey }, function(
+        const execCommand = function(
+          pCmd: string,
+          pCmdOptions: any
+        ): Promise<any> {
+          return new Promise(function(resolve, reject) {
+            const data: Data = {
+              exit: false,
+              pass: true,
+              skip: false
+            };
+            try {
+              LOGGER.debug(
+                "[%s] Running command: [%s] with options [%j]",
+                pParent,
+                pCmd,
+                pCmdOptions
+              );
+              pExecutor.exec(pCmd, pCmdOptions, function(
                 error,
                 stdout,
                 stderr
@@ -280,96 +182,190 @@ export default class CommandsMod extends AbstractMod<any> {
                 if (error) data.error = error;
                 data._stdout = stdout;
                 data._stderr = stderr;
-                let func = null;
                 try {
                   if (error) {
                     LOGGER.error(
-                      "[%s] Test failed for command [%s]. Skipping command.",
+                      "[%s] Command [%s] exited.",
                       pParent,
                       pKey,
                       error
+                    );
+                    // reject( util.format.apply(null, [ '[%s] Command [%s] exited with code %s: %s.', pParent, pKey, error.code, error ] ));
+                    data.result = stderr;
+                    data.message = util.format.apply(null, [
+                      "[%s] Command [%s] exited.",
+                      pParent,
+                      pKey,
+                      error
+                    ]);
+                    if (oCmdSpecs["ignore_errors"]) {
+                      resolve(data);
+                    } else {
+                      reject(data);
+                    }
+                  } else {
+                    LOGGER.debug("[%s] Command [%s] completed.", pParent, pKey);
+                    // resolve( stdout );
+                    data.result = stdout;
+                    if (oCmdSpecs["result_as_json"] === true) {
+                      try {
+                        data.result = JSON.parse(stdout || "{}");
+                      } catch (e) {
+                        LOGGER.warn(
+                          "[%s] Error with command [%s]. Could not parse stdout as JSON: [%s] not a valid JSON string.",
+                          pParent,
+                          pKey,
+                          stdout
+                        );
+                      }
+                    }
+
+                    if (oCmdSpecs["var"]) {
+                      const oVarKey = pSpecs["var"];
+                      LOGGER.debug(
+                        "[%s] Saving result of command [%] to var [%s].",
+                        pParent,
+                        pKey,
+                        oVarKey
+                      );
+                      pContext.vars[oVarKey] = data.result;
+                    }
+
+                    resolve(data);
+                  }
+                } catch (e) {
+                  data.error = e;
+                  if (oCmdSpecs["ignore_errors"]) {
+                    resolve(data);
+                  } else {
+                    reject(data);
+                  }
+                }
+              });
+            } catch (e) {
+              LOGGER.error(
+                "[%s] Unexpected error executing command: [%s] with options [%s]",
+                pParent,
+                pCmd,
+                pCmdOptions
+              );
+              data.error = e;
+              if (oCmdSpecs["ignore_errors"]) {
+                resolve(data);
+              } else {
+                reject(data);
+              }
+            }
+          });
+        };
+
+        const execTest = function(pTest: string): Promise<any> {
+          LOGGER.info("[%s] Testing for command [%s]...", pParent, pKey);
+          const oTest = "(" + pTest + ') && echo "continue" || echo "stop"';
+          return new Promise(function(resolve, reject) {
+            const data: Data = {
+              exit: false,
+              skip: false,
+              pass: false
+            };
+            pExecutor.exec(oTest, { context: pKey }, function(
+              error,
+              stdout,
+              stderr
+            ) {
+              if (error) data.error = error;
+              data._stdout = stdout;
+              data._stderr = stderr;
+              let func = null;
+              try {
+                if (error) {
+                  LOGGER.error(
+                    "[%s] Test failed for command [%s]. Skipping command.",
+                    pParent,
+                    pKey,
+                    error
+                  );
+                  if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
+                  if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
+                  func = reject;
+                } else {
+                  if (!stdout) {
+                    LOGGER.error(
+                      "[%s] Unexpected test result (stdout=[%s]). Skipping command %s.",
+                      pParent,
+                      stdout,
+                      pKey
                     );
                     if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
                     if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
                     func = reject;
                   } else {
-                    if (!stdout) {
-                      LOGGER.error(
-                        "[%s] Unexpected test result (stdout=[%s]). Skipping command %s.",
+                    if (stdout.match(/continue/g)) {
+                      LOGGER.info(
+                        "[%s] Test passed for command [%s].",
                         pParent,
-                        stdout,
                         pKey
                       );
+                      // resolve();
+                      data.pass = true;
+                      func = resolve;
+                    } else {
+                      LOGGER.info(
+                        "[%s] Test failed. Skipping command [%s] (exit_on_test_failed=%s).",
+                        pParent,
+                        pKey,
+                        oCmdSpecs["exit_on_test_failed"]
+                      );
+                      LOGGER.debug(
+                        "[%s] Test output for command [%s]: [%s]",
+                        pParent,
+                        pKey,
+                        stdout
+                      );
+                      // reject( stdout );
+                      // var oData = { error: error, exit: false, context: pParent + '..' + pKey };
                       if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
                       if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
-                      func = reject;
-                    } else {
-                      if (stdout.match(/continue/g)) {
-                        LOGGER.info(
-                          "[%s] Test passed for command [%s].",
-                          pParent,
-                          pKey
-                        );
-                        // resolve();
-                        data.pass = true;
-                        func = resolve;
-                      } else {
-                        LOGGER.info(
-                          "[%s] Test failed. Skipping command [%s] (exit_on_test_failed=%s).",
-                          pParent,
-                          pKey,
-                          oCmdSpecs["exit_on_test_failed"]
-                        );
-                        LOGGER.debug(
-                          "[%s] Test output for command [%s]: [%s]",
-                          pParent,
-                          pKey,
-                          stdout
-                        );
-                        // reject( stdout );
-                        // var oData = { error: error, exit: false, context: pParent + '..' + pKey };
-                        if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
-                        if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
-                        data.pass = false;
-                        // reject( oData )
-                        func = resolve;
-                      }
+                      data.pass = false;
+                      // reject( oData )
+                      func = resolve;
                     }
                   }
-                } catch (e) {
-                  data.error = e;
-                  if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
-                  if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
-                  data.pass = false;
-                  func = reject;
-                  // func = resolve;
                 }
-                func(data);
-              });
+              } catch (e) {
+                data.error = e;
+                if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
+                if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
+                data.pass = false;
+                func = reject;
+                // func = resolve;
+              }
+              func(data);
             });
-          };
+          });
+        };
 
-          if (oTest) {
-            execTest(oTest)
-              .then(
-                function(result: any) {
-                  LOGGER.debug("[%s] After command test...", pParent);
-                  if (result["pass"]) {
-                    LOGGER.debug("...pass=%s", result["pass"]);
-                    return execCommand(oCmd, oCmdOptions);
-                  } else {
-                    return Promise.resolve(result);
-                  }
-                },
-                function(data) {
-                  LOGGER.info(
-                    "[%s] Error in test. Command [%s] will be skipped.",
-                    pParent,
-                    pKey
-                  );
-                  // return Promise.reject ( error );
-                  return Promise.resolve(data); // { error: error, pass: false } );
-                  /*
+        if (oTest) {
+          execTest(oTest)
+            .then(
+              function(result: any) {
+                LOGGER.debug("[%s] After command test...", pParent);
+                if (result["pass"]) {
+                  LOGGER.debug("...pass=%s", result["pass"]);
+                  return execCommand(oCmd, oCmdOptions);
+                } else {
+                  return Promise.resolve(result);
+                }
+              },
+              function(data) {
+                LOGGER.info(
+                  "[%s] Error in test. Command [%s] will be skipped.",
+                  pParent,
+                  pKey
+                );
+                // return Promise.reject ( error );
+                return Promise.resolve(data); // { error: error, pass: false } );
+                /*
                           console.log('##### Error from running test command !!!!');
                           if ( error['exit'] ) {
                               console.log('##### After returning from test error, exiting.');
@@ -380,79 +376,37 @@ export default class CommandsMod extends AbstractMod<any> {
                               asPromised( resolve, error);
                           }
                           */
-                }
-              )
-              // .catch( function( pError ) {
-              //	LOGGER.info('Unexpected error from test.');
-              //	//return Promise.reject ( error );
-              //	return Promise.resolve( data ); //{ error: error, pass: false } );
-              // })
-              .then(
-                function(result) {
-                  // console.log('##### then() after executing command!!!!!');
-                  if (result["pass"]) {
-                    LOGGER.info(
-                      "[%s] ...command [%s] executed.",
-                      pParent,
-                      pKey
-                    );
-                    // console.dir( result );
-                  } else {
-                    LOGGER.debug(
-                      "[%s] ...command [%s] skipped (test failed).",
-                      pParent,
-                      pKey
-                    );
-                  }
-                  asPromised(resolve, result);
-                },
-                function(error) {
-                  // TODO: WARNING: Problem is here, we don't know if it's the Promise.reject() from error from test or error from executing the command itself.
-                  // console.log('##### error() after executing command!!!!!');
-                  LOGGER.error(
-                    "[%s] Error while executing command [%s].",
-                    pParent,
-                    pKey,
-                    error
-                  );
-                  const data = {
-                    error: error,
-                    result: null,
-                    message: null,
-                    exit: false
-                  };
-                  if (oCmdSpecs["exit_on_error"]) data.exit = true;
-                  if (oCmdSpecs["ignore_errors"]) {
-                    asPromised(resolve, data);
-                  } else {
-                    asPromised(reject, data);
-                  }
-                  /*
-                          if ( error['exit'] && ! error[] ) {
-                              //resolve();
-                              asPromised( reject, error);
-                          } else {
-                              asPromised( resolve, error);
-                          }
-                          */
-                }
-              );
-          } else {
-            LOGGER.info("[%s] No test for [%s]...", pParent, pKey);
-            execCommand(oCmd, oCmdOptions).then(
+              }
+            )
+            // .catch( function( pError ) {
+            //	LOGGER.info('Unexpected error from test.');
+            //	//return Promise.reject ( error );
+            //	return Promise.resolve( data ); //{ error: error, pass: false } );
+            // })
+            .then(
               function(result) {
-                LOGGER.info("[%s] ...command [%s] executed.", pParent, pKey);
-                // resolve();
+                // console.log('##### then() after executing command!!!!!');
+                if (result["pass"]) {
+                  LOGGER.info("[%s] ...command [%s] executed.", pParent, pKey);
+                  // console.dir( result );
+                } else {
+                  LOGGER.debug(
+                    "[%s] ...command [%s] skipped (test failed).",
+                    pParent,
+                    pKey
+                  );
+                }
                 asPromised(resolve, result);
               },
               function(error) {
+                // TODO: WARNING: Problem is here, we don't know if it's the Promise.reject() from error from test or error from executing the command itself.
+                // console.log('##### error() after executing command!!!!!');
                 LOGGER.error(
                   "[%s] Error while executing command [%s].",
                   pParent,
                   pKey,
                   error
                 );
-                // resolve();
                 const data = {
                   error: error,
                   result: null,
@@ -465,9 +419,48 @@ export default class CommandsMod extends AbstractMod<any> {
                 } else {
                   asPromised(reject, data);
                 }
+                /*
+                          if ( error['exit'] && ! error[] ) {
+                              //resolve();
+                              asPromised( reject, error);
+                          } else {
+                              asPromised( resolve, error);
+                          }
+                          */
               }
             );
-          }
+        } else {
+          LOGGER.info("[%s] No test for [%s]...", pParent, pKey);
+          execCommand(oCmd, oCmdOptions).then(
+            function(result) {
+              LOGGER.info("[%s] ...command [%s] executed.", pParent, pKey);
+              // resolve();
+              asPromised(resolve, result);
+            },
+            function(error) {
+              LOGGER.error(
+                "[%s] Error while executing command [%s].",
+                pParent,
+                pKey,
+                error
+              );
+              // resolve();
+              const data = {
+                error: error,
+                result: null,
+                message: null,
+                exit: false
+              };
+              if (oCmdSpecs["exit_on_error"]) data.exit = true;
+              if (oCmdSpecs["ignore_errors"]) {
+                asPromised(resolve, data);
+              } else {
+                asPromised(reject, data);
+              }
+            }
+          );
+        }
+        /*
         } catch (e) {
           LOGGER.error(
             "[%s] Unexpected error executing command %s.",
@@ -490,7 +483,7 @@ export default class CommandsMod extends AbstractMod<any> {
           asPromised(reject, data);
           // }
           // asPromised( reject, ); //TODO: check for "exit"....
-        }
+        }*/
       });
     };
   }

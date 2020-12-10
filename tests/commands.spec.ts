@@ -35,6 +35,38 @@ describe("commands", function() {
     done();
   });
 
+  it("tagsUnbalanced", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        pCallback(null, pCmd, "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new CommandsMod();
+
+    const oTemplate = {
+      root: {
+        "hello_{{years}}_suffix": {
+          command: "echo {{ binary }}"
+        }
+      }
+    };
+    const oContext: Context = {
+      env: {},
+      vars: {},
+      binary: ["0", "1"],
+      years: ["2018", "2019", "2020"]
+    };
+    oTested
+      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .then(() => {
+        done("Expected error saying templateis unbalanced.");
+      })
+      .catch(() => {
+        done();
+      });
+  });
+
   it("tagsAdvanced", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
@@ -323,27 +355,24 @@ describe("commands", function() {
       }
     );
   });
-
-  // TODO: Somehow, right now, when a command fails, it will keep going...
   /*
-  it("null_executor", function (done) {
-    var oSettings = {};
-    var oTested = new CommandsMod(undefined, oSettings);
-    var oTemplate = {
+  it("null_executor", function(done) {
+    const oTested = new CommandsMod();
+    const oTemplate = {
       root: {
         "001_test": {
-          command: "gunzip test.gz",
-        },
-      },
+          command: "gunzip test.gz"
+        }
+      }
     };
-    var oExecutor = true ? null : null;
+    let oExecutor: Executor;
     oTested
       .handle("root", oTemplate["root"], oExecutor, { env: {}, vars: {} })
       .then(
-        function () {
+        function() {
           done();
         },
-        function (pError: Error) {
+        function(pError: Error) {
           done(pError);
         }
       );

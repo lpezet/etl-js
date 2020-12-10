@@ -94,6 +94,71 @@ describe("files", function() {
       );
   });
 
+  it("downloadThrowsError", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+
+    const oExecutor = new ExecutorClass();
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
+
+    const oConfig = loadFile("./files/basic.yml");
+
+    oTested
+      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
+      .then(
+        function(_pData: any) {
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          done();
+        }
+      );
+  });
+
+  it("downloadPermsError", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        if (pCmd.includes("chmod")) {
+          pCallback(new Error("Error generated for testing purposes."));
+        } else {
+          pCallback(null, "", "");
+        }
+      }
+    }
+
+    const oExecutor = new ExecutorClass();
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
+
+    const oTemplate = {
+      root: {
+        "/tmp/file.txt": {
+          source: "https://abc.def.com/file.txt",
+          mode: "600",
+          owner: "toto",
+          group: "titi"
+        }
+      }
+    };
+
+    oTested
+      .handle("root", oTemplate["root"], oExecutor, { env: {}, vars: {} })
+      .then(
+        function(pData: any) {
+          console.log("#### Error ???");
+          console.log(pData);
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          done();
+        }
+      );
+  });
+
   it("contentError", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
@@ -213,7 +278,7 @@ describe("files", function() {
       );
   });
 
-  it("source_with_perms", function(done) {
+  it("sourceWithPerms", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         if (pCmd.startsWith('[ ! -d $(dirname "/tmp/file.txt") ]')) {
@@ -311,7 +376,7 @@ describe("files", function() {
       );
   });
 
-  it("content_with_perms", function(done) {
+  it("contentWithPerms", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "chmod 600");
@@ -352,6 +417,47 @@ describe("files", function() {
         function(pError: Error) {
           // console.log( pError );
           done(pError);
+        }
+      );
+  });
+
+  it("permsError", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        if (pCmd.includes("chmod")) {
+          pCallback(new Error("Error generated for testing purposes."));
+        } else {
+          pCallback(null, "", "");
+        }
+      }
+      writeFile(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        pCallback(null, "", "");
+      }
+    }
+
+    const oExecutor = new ExecutorClass();
+    const oTested = new FilesMod();
+    oTested.register(new ETLMock());
+
+    const oConfig = {
+      root: {
+        "/tmp/file.txt": {
+          content: "Hello world",
+          mode: "600",
+          owner: "toto",
+          group: "titi"
+        }
+      }
+    };
+
+    oTested
+      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
+      .then(
+        () => {
+          done(new Error("Expected error."));
+        },
+        () => {
+          done();
         }
       );
   });

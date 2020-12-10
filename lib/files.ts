@@ -355,72 +355,60 @@ export default class FilesMod extends AbstractMod<any> {
       // console.dir( pActivityContext );
       // console.log('files: Global Context=');
       // console.dir( pGlobalContext );
-      try {
-        // TODO:
-        // pActivityContext[ pParent ]['files'] = {};
-        // oData = pActivityContext[ pParent ] or ['files']....TBC
-        const oData = { files: {} };
-        const oPromises: ((data: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
-          const oTarget = i;
+      const oData = { files: {} };
+      const oPromises: ((data: any) => Promise<any>)[] = [];
+      Object.keys(pConfig).forEach(i => {
+        const oTarget = i;
 
-          if (pConfig[i].source) {
-            const oSource = pConfig[i].source;
-            // logger.debug('[%s] File(s): source=[%s], target=[%s]...', pParent, oSource, oTarget);
-            oPromises.push(
-              this._download(
-                pParent,
-                pExecutor,
-                oTarget,
-                oSource,
-                pConfig[i],
-                pContext
-              )
-            );
-          } else if (pConfig[i].content) {
-            const oContent = pConfig[i].content;
-            LOGGER.debug(
-              "[%s] Creating file [%s] with content...",
+        if (pConfig[i].source) {
+          const oSource = pConfig[i].source;
+          // logger.debug('[%s] File(s): source=[%s], target=[%s]...', pParent, oSource, oTarget);
+          oPromises.push(
+            this._download(
               pParent,
-              oTarget
-            );
-            oPromises.push(
-              this._create(
-                pParent,
-                pExecutor,
-                oTarget,
-                oContent,
-                pConfig[i],
-                pContext
-              )
-            );
-          }
-        });
-
-        Promises.seq(oPromises, oData).then(
-          function(pData) {
-            LOGGER.debug("[%s] Done processing files.", pParent);
-            // resolve( pData );
-            // console.log('files.handle(): pData=');
-            // console.dir( pData );
-            // console.log('oData=');
-            // console.dir(oData);
-
-            resolve(pData);
-          },
-          function(pError) {
-            LOGGER.error(
-              "[%s] Error creating/getting file(s).",
+              pExecutor,
+              oTarget,
+              oSource,
+              pConfig[i],
+              pContext
+            )
+          );
+        } else if (pConfig[i].content) {
+          const oContent = pConfig[i].content;
+          LOGGER.debug(
+            "[%s] Creating file [%s] with content...",
+            pParent,
+            oTarget
+          );
+          oPromises.push(
+            this._create(
               pParent,
-              pError
-            );
-            reject(pError);
-          }
-        );
-      } catch (e) {
-        LOGGER.error("[%s] Unexpected error processing step.", pParent, e);
-        reject(e);
-      }
+              pExecutor,
+              oTarget,
+              oContent,
+              pConfig[i],
+              pContext
+            )
+          );
+        }
+      });
+
+      Promises.seq(oPromises, oData).then(
+        function(pData) {
+          LOGGER.debug("[%s] Done processing files.", pParent);
+          // resolve( pData );
+          // console.log('files.handle(): pData=');
+          // console.dir( pData );
+          // console.log('oData=');
+          // console.dir(oData);
+
+          resolve(pData);
+        },
+        function(pError) {
+          LOGGER.error("[%s] Error creating/getting file(s).", pParent, pError);
+          reject(pError);
+        }
+      );
     });
   }
 }

@@ -32,11 +32,112 @@ describe("hpcc-ecls", function() {
   it("mod", function(done) {
     const oTested = new HPCCECLsMod();
     oTested.register(new ETLMock());
-    assert.deepEqual(oTested.mSettings, { test: true });
+    assert.deepEqual(oTested.mSettings, {
+      test: true,
+      eclplus: "/usr/bin/eclplus"
+    });
     done();
   });
 
-  it("apply_settings_and_config", function(done) {
+  it("applySettingsFromKey", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        assert.include(pCmd, "server=127.0.0.2");
+        assert.include(pCmd, "username=foobar");
+        assert.include(pCmd, "password=foobar");
+        pCallback(null, "", "");
+      }
+      writeFile(
+        _pFilename: string,
+        _pContent: string,
+        pCallback: Callback
+      ): void {
+        pCallback(null, "", "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
+      "000_content": {
+        server: "127.0.0.2"
+      }
+    };
+    const oTested = new HPCCECLsMod(oSettings);
+    oTested.register(new ETLMock());
+
+    const oTemplate = {
+      root: {
+        "000_content": {
+          cluster: "thor",
+          content: "something",
+          format: "default",
+          output: "test.txt",
+          username: "foobar",
+          password: "foobar"
+        }
+      }
+    };
+
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function() {
+        done();
+      },
+      function(pError) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
+  });
+
+  it("applySettingsFromParent", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        assert.include(pCmd, "server=127.0.0.2");
+        assert.include(pCmd, "username=foobar");
+        assert.include(pCmd, "password=foobar");
+        pCallback(null, "", "");
+      }
+      writeFile(
+        _pFilename: string,
+        _pContent: string,
+        pCallback: Callback
+      ): void {
+        pCallback(null, "", "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oSettings = {
+      root: {
+        server: "127.0.0.2"
+      }
+    };
+    const oTested = new HPCCECLsMod(oSettings);
+    oTested.register(new ETLMock());
+
+    const oTemplate = {
+      root: {
+        "000_content": {
+          cluster: "thor",
+          content: "something",
+          format: "default",
+          output: "test.txt",
+          username: "foobar",
+          password: "foobar"
+        }
+      }
+    };
+
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function() {
+        done();
+      },
+      function(pError) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
+  });
+
+  it("applySettingsAndConfig", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "server=127.0.0.1");
@@ -86,7 +187,7 @@ describe("hpcc-ecls", function() {
     );
   });
 
-  it("apply_settings", function(done) {
+  it("applySettings", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "server=127.0.0.1");
@@ -171,7 +272,7 @@ describe("hpcc-ecls", function() {
     );
   });
 
-  it("errorThrownFromCmdExecutor", function(done) {
+  it("errorThrownFromPrepareFileExecutor", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
         throw new Error("Error generated for testing purposes.");
@@ -186,6 +287,35 @@ describe("hpcc-ecls", function() {
         abc: {
           cluster: "thor",
           file: "/tmp/my.ecl",
+          output: "/tmp/2018/test.csv"
+        }
+      }
+    };
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function() {
+        done("Expecting error");
+      },
+      function() {
+        done();
+      }
+    );
+  });
+
+  it("errorThrownFromExecExecutor", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCECLsMod();
+    oTested.register(new ETLMock());
+
+    const oTemplate = {
+      root: {
+        abc: {
+          cluster: "thor",
+          content: "OUTPUT('Hello world');",
           output: "/tmp/2018/test.csv"
         }
       }

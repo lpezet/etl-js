@@ -21,16 +21,21 @@ export type Data = {
   _stderr?: string | null;
 };
 
+export type SettingsType = {
+  eclplus?: string;
+  [key: string]: any;
+};
+
 const asPromised = (
   pPreviousData: any,
   pKey: string,
   func: Function,
-  data: any
+  pData: any
 ): void => {
   if (!pPreviousData["hpcc-ecls"][pKey]) pPreviousData["hpcc-ecls"][pKey] = {};
-  pPreviousData["hpcc-ecls"][pKey] = data;
-  if (data["exit"]) {
-    pPreviousData["_exit"] = data["exit"];
+  pPreviousData["hpcc-ecls"][pKey] = pData;
+  if (pData["exit"]) {
+    pPreviousData["_exit"] = pData["exit"];
     pPreviousData["_exit_from"] = pKey;
   }
   /*
@@ -70,27 +75,49 @@ const promiseExecutor = (
   });
 };
 
+const createCommandArgsFromConfig = (pConfig: any): string[] => {
+  const oCmdArgs = [];
+  oCmdArgs.push("action=query");
+  Object.keys(pConfig).forEach(i => {
+    i = String(i).toLowerCase();
+
+    if (pConfig[i] == null) {
+      // TODO: log???
+      return;
+    }
+    switch (i) {
+      case "server":
+        oCmdArgs.push("server=" + pConfig[i]);
+        break;
+      case "username":
+        oCmdArgs.push("username=" + pConfig[i]);
+        break;
+      case "password":
+        oCmdArgs.push("password=" + pConfig[i]);
+        break;
+      case "cluster":
+        oCmdArgs.push("cluster=" + pConfig[i]);
+        break;
+      case "output":
+        if (pConfig[i]) oCmdArgs.push("output=" + pConfig[i]);
+        break;
+      case "format":
+        oCmdArgs.push("format=" + pConfig[i]);
+        break;
+      default:
+        // TODO
+        break;
+    }
+  });
+  return oCmdArgs;
+};
+
 export default class HPCCECLsMod extends AbstractMod<any> {
   mTemplateEngine: TemplateEngine;
-  constructor(pSettings?: any) {
+  constructor(pSettings?: SettingsType) {
     super("hpcc-ecls", pSettings || {});
+    this.mSettings.eclplus = this.mSettings.eclplus || "/usr/bin/eclplus";
     this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-      var oContext = JSON.parse(JSON.stringify(pContext.global));
-      oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-      console.log('Merged context=');
-      console.dir( oContext );
-      var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-      console.log('Result=');
-      console.dir( oResult );
-      */
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
   _readConfig(pParent: string, pKey: string, pConfig: any): any {
     const oDefaults: any = {
@@ -153,9 +180,6 @@ export default class HPCCECLsMod extends AbstractMod<any> {
           pContext,
           pTemplateIndex
         );
-      } catch (e) {
-        LOGGER.error("[%s] Error executing ecl.", pParent);
-        return Promise.reject(e); // ???
       } finally {
         LOGGER.debug("[%s] Done executing ecl.", pParent);
       }
@@ -173,49 +197,9 @@ export default class HPCCECLsMod extends AbstractMod<any> {
     const oTemplateIndex = pTemplateIndex || 0;
     return new Promise((resolve, reject) => {
       try {
-        const oCmdArgs = [];
-        oCmdArgs.push("action=query");
-        Object.keys(pConfig).forEach(i => {
-          i = String(i).toLowerCase();
-
-          if (pConfig[i] == null) {
-            // TODO: log???
-            return;
-          }
-          switch (i) {
-            case "server":
-              oCmdArgs.push("server=" + pConfig[i]);
-              break;
-            case "username":
-              oCmdArgs.push("username=" + pConfig[i]);
-              break;
-            case "password":
-              oCmdArgs.push("password=" + pConfig[i]);
-              break;
-            case "cluster":
-              oCmdArgs.push("cluster=" + pConfig[i]);
-              break;
-            case "output":
-              if (pConfig[i]) {
-                let oOutput: string = pConfig[i];
-                if (oOutput.includes("{{")) {
-                  const oOutputs = this._evaluate(oOutput, pContext);
-                  if (oOutputs) oOutput = oOutputs[oTemplateIndex];
-                }
-                oCmdArgs.push("output=" + oOutput);
-              }
-              break;
-            case "format":
-              oCmdArgs.push("format=" + pConfig[i]);
-              break;
-            default:
-              // TODO
-              break;
-          }
-        });
-
+        const oCmdArgs = createCommandArgsFromConfig(pConfig);
         oCmdArgs.push("@" + TEMP_ECL_FILE);
-        const oCmd = "/usr/bin/eclplus " + oCmdArgs.join(" ");
+        const oCmd = this.mSettings.eclplus + " " + oCmdArgs.join(" ");
 
         this._prepareFile(
           pPreviousData,
@@ -288,19 +272,14 @@ export default class HPCCECLsMod extends AbstractMod<any> {
     _pKey: string,
     pConfig: any,
     pExecutor: Executor,
-    pContext: Context,
-    pTemplateIndex: number
+    _pContext: Context,
+    _pTemplateIndex: number
   ): Promise<any> {
     const getContent = (): Promise<any> => {
       if (pConfig["content"]) {
         return Promise.resolve(pConfig["content"]);
       }
-      let oFileURI = pConfig["file"] || "";
-      if (oFileURI !== "" && oFileURI.indexOf("{{") >= 0) {
-        const oFileURIs = this._evaluate(oFileURI, pContext) || [];
-        // TODO: check index out of bound
-        oFileURI = oFileURIs[pTemplateIndex];
-      }
+      const oFileURI = pConfig["file"] || "";
       if (oFileURI.startsWith("file://")) {
         let oPath = oFileURI.substring(7); // removing "file://"
         // console.log('file path=' + oPath);
@@ -331,18 +310,12 @@ export default class HPCCECLsMod extends AbstractMod<any> {
 
     return getContent().then(
       (pContent: string) => {
-        let oContent = pContent;
-        if (pContent.includes("{{")) {
-          const oContents = this._evaluate(oContent, pContext) || [];
-          // TODO: check index out of bound
-          oContent = oContents[pTemplateIndex];
-        }
         return promiseExecutor(
           pExecutor,
           // eslint-disable-next-line @typescript-eslint/unbound-method
           pExecutor.writeFile,
           TEMP_ECL_FILE,
-          oContent
+          pContent
         );
       },
       function(pError: Error) {
@@ -369,28 +342,14 @@ export default class HPCCECLsMod extends AbstractMod<any> {
         // console.log('###############################################');
         // console.log( JSON.stringify( oResolvedConfig, null, 2 ) );
         // console.log('###############################################');
-
         Object.keys(oResolvedConfig).forEach(k => {
           const oECLConfig = this._readConfig(pParent, k, oResolvedConfig[k]);
           oPromises.push(
             this._wrapRun(pParent, k, oECLConfig, pExecutor, pContext, 0)
           );
         });
-
-        /*
-              for (var i in pConfig) {
-                  var oConfig = pConfig[i];
-                  var oKeys = i.indexOf("{{") < 0 ? [i]: that._evaluate( i, pContext );
-                  oKeys.forEach( function( e, j ) {
-                      var oECLConfig = that._read_config( pParent, e, oConfig, j );
-                      oPromises.push( that._wrap_run( pParent, e, oECLConfig, pExecutor, pContext, j ) );
-                  });
-              }
-              */
-
         Promises.seq(oPromises, oData).then(
           function() {
-            // resolve( pData );
             resolve(oData);
           },
           function(pError) {

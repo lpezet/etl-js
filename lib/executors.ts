@@ -1,4 +1,4 @@
-import { SSHClient } from "./ssh-client";
+import { ISSHClient, SSHClient } from "./ssh-client";
 import * as Fs from "fs";
 import * as childProcess from "child_process";
 import { createLogger } from "./logger";
@@ -6,7 +6,6 @@ import { platform } from "os";
 
 const LOCAL_LOGGER = createLogger("etljs::executors::local");
 const REMOTE_LOGGER = createLogger("etljs::executors::remote");
-const SSH_CLIENT = new SSHClient();
 
 export type Callback = (
   error?: Error | null, // child_process.ExecException | null,
@@ -100,9 +99,11 @@ export class Local implements Executor {
 export class Remote {
   mSettings: any;
   mOS: string;
+  mSSHClient: ISSHClient;
   constructor(pSettings: any) {
     this.mSettings = pSettings;
-    this.mOS = "NA";
+    this.mOS = pSettings.os || "NA";
+    this.mSSHClient = pSettings.sshClient || new SSHClient();
   }
   ready(): Promise<void> {
     if (this.mOS === "NA") {
@@ -118,7 +119,7 @@ export class Remote {
       REMOTE_LOGGER.debug("Detecting OS...");
       this.exec(cmd, {}, (err, stdout, _stderr) => {
         if (err) {
-          REMOTE_LOGGER.error("Unexpected error detecting os.", err);
+          REMOTE_LOGGER.error("Error detecting os.", err);
           reject(err);
         } else {
           stdout = stdout ? stdout.replace(/[\n\r]+/g, "") : "";
@@ -129,7 +130,7 @@ export class Remote {
             this.exec("systeminfo", {}, (err, stdout, stderr) => {
               if (err) {
                 REMOTE_LOGGER.error(
-                  "Unexpected error detecting os (while checking Windows). Stderr=[" +
+                  "Error detecting os (while checking Windows). Stderr=[" +
                     stderr +
                     "]",
                   err
@@ -196,7 +197,13 @@ export class Remote {
     }
     REMOTE_LOGGER.info("Cmd=%s", oCmd);
     REMOTE_LOGGER.debug("Opts=%j", opts);
-    SSH_CLIENT.exec(opts, oCmd, function(err, stdout, stderr, _server, conn) {
+    this.mSSHClient.exec(opts, oCmd, function(
+      err,
+      stdout,
+      stderr,
+      _server,
+      conn
+    ) {
       try {
         stdout = Buffer.isBuffer(stdout) ? stdout.toString("utf8") : stdout;
         stderr = Buffer.isBuffer(stderr) ? stderr.toString("utf8") : stderr;
@@ -212,7 +219,7 @@ export class Remote {
   writeFile(pFilename: string, pContent: any, pCallback: Callback): void {
     REMOTE_LOGGER.debug("Writing content to remote file [%s]...", pFilename);
     const opts = this._getSshOpts();
-    SSH_CLIENT.writeFile(opts, pFilename, pContent, function(
+    this.mSSHClient.writeFile(opts, pFilename, pContent, function(
       err,
       stdout,
       stderr,

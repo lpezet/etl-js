@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { Local, NoOpExecutor, Remote } from "../lib/executors";
+import { Callback, ISSHClient } from "../lib/ssh-client";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
@@ -8,6 +9,7 @@ import * as ssh2 from "ssh2";
 import { ParsedKey } from "ssh2-streams";
 
 /*
+import { configureLogger } from "../lib/logger";
 configureLogger({
   appenders: {
     console: { type: "console", layout: { type: "colored" } }
@@ -490,6 +492,211 @@ describe("executors", function() {
     } catch (e) {
       done(e);
     }
+  });
+
+  it("remoteOSFromSettings", function(done) {
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, _pCmd: string, _pCallback: Callback): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient, os: "Windows 10" });
+    executor
+      .ready()
+      .then(() => {
+        if (executor.os() === "Windows 10") {
+          done();
+        } else {
+          done(new Error("OS must be [Windows 10] as specified in settings."));
+        }
+      })
+      .catch((err: Error) => {
+        done(err);
+      });
+  });
+
+  it("remoteOSWithUnexpectedError", function(done) {
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, _pCmd: string, _pCallback: Callback): void {
+        throw new Error("error generated for testing purposes.");
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient });
+    executor
+      .ready()
+      .then(() => {
+        done(
+          new Error("Supposed to reject error generated while detecting OS.")
+        );
+      })
+      .catch(() => {
+        done();
+      });
+  });
+
+  it("remoteOSWithError", function(done) {
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, _pCmd: string, pCallback: Callback): void {
+        pCallback(new Error("Error generated for testing purposes."));
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient });
+    executor
+      .ready()
+      .then(() => {
+        done(
+          new Error("Supposed to reject error generated while detecting OS.")
+        );
+      })
+      .catch(() => {
+        done();
+      });
+  });
+
+  it("remoteOSWindowsWithError", function(done) {
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, pCmd: string, pCallback: Callback): void {
+        if (pCmd.startsWith("echo")) {
+          pCallback(null, "");
+        } else if (pCmd === "systeminfo") {
+          pCallback(new Error("Error generated for testing purposes."));
+        }
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient });
+    executor
+      .ready()
+      .then(() => {
+        done(
+          new Error("Supposed to reject error generated while detecting OS.")
+        );
+      })
+      .catch(() => {
+        done();
+      });
+  });
+
+  it("remoteOSWindows", function(done) {
+    const SYS_INFO = `Host Name: 			DRG
+OS Name: 			Microsoft Windows 7 Ultimate
+OS Version: 			6.1.7600 N/A Build 7600
+OS Manufacturer: 		Microsoft Corporation
+OS Configuration: 		Standalone Workstation
+OS Build Type: 			Multiprocessor Free
+Registered Owner: 		Mike Ribson
+Registered Organization:	SY0-201.com
+Product ID: 			00426-065-0543977-86656
+Original Install Date: 		7/10/2009, 4:42:31 AM
+System Boot Time: 		8/22/2009, 12:46:35 PM
+System Manufacturer: 		Hewlett-Packard
+System Model: 			HP Pavilion dv7 Notebook PC
+System Type: 			x64-based PC`;
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, pCmd: string, pCallback: Callback): void {
+        if (pCmd.startsWith("echo")) {
+          pCallback(null, "");
+        } else if (pCmd === "systeminfo") {
+          pCallback(null, SYS_INFO);
+        }
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient });
+    executor
+      .ready()
+      .then(() => {
+        if (executor.os() === "Windows 7 Ultimate") {
+          done();
+        } else {
+          done(new Error("OS must be [Windows 7 Ultimate]."));
+        }
+      })
+      .catch((err: Error) => {
+        done(err);
+      });
+  });
+
+  it("remoteOSWindowsUnrecognizedSystemInfoOutput", function(done) {
+    const SYS_INFO = "Stuff We Do Not Expect";
+    class MockSSHClient implements ISSHClient {
+      exec(_pClientOpts: any, pCmd: string, pCallback: Callback): void {
+        if (pCmd.startsWith("echo")) {
+          pCallback(null, "");
+        } else if (pCmd === "systeminfo") {
+          pCallback(null, SYS_INFO);
+        }
+      }
+      writeFile(
+        _pClientOpts: any,
+        _pFilename: string,
+        _pContent: any,
+        _pCallback: Callback
+      ): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const sshClient = new MockSSHClient();
+    const executor = new Remote({ sshClient: sshClient });
+    executor
+      .ready()
+      .then(() => {
+        if (executor.os() === "Windows") {
+          done();
+        } else {
+          done(
+            new Error(
+              "OS must be [Windows] when systeminfo output not supported."
+            )
+          );
+        }
+      })
+      .catch((err: Error) => {
+        done(err);
+      });
   });
 
   it("remoteOS", function(done) {

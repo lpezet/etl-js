@@ -371,19 +371,24 @@ class ETL extends EventEmitter {
   }
   _resolveActivities(pConfig: any, pParameters: any): any {
     if (pConfig["etl"]) return pConfig["etl"];
-    if (!pConfig["etlSets"]) {
-      throw new Error(
-        'Either etl or etlSets (+ "etlSet" param, or "default" etlSet) must be provided in template.'
+    if (pConfig["etlSets"]) {
+      const oResolvedETLs = this._resolveEtlSets(pConfig["etlSets"] as ETLSets);
+      const etlSet = oResolvedETLs[pParameters["etlSet"] || "default"];
+      if (etlSet) return etlSet;
+      LOGGER.warn(
+        "Could not find etlSet [%s]. Using it as an activity name instead.",
+        pParameters["etlSet"]
       );
+      return [pParameters["etlSet"]]; // as activity
+    } else {
+      if (pConfig === "" || (Array.isArray(pConfig) && pConfig.length === 0)) {
+        throw new Error(
+          "Either etl, etlSets, or some root element must be provided in template."
+        );
+      }
+      const root = Object.keys(pConfig)[0];
+      return [root];
     }
-    const oResolvedETLs = this._resolveEtlSets(pConfig["etlSets"] as ETLSets);
-    const etlSet = oResolvedETLs[pParameters["etlSet"] || "default"];
-    if (etlSet) return etlSet;
-    LOGGER.warn(
-      "Could not find etlSet [%s]. Using it as an activity name instead.",
-      pParameters["etlSet"]
-    );
-    return [pParameters["etlSet"]]; // as activity
   }
   process(pConfig: any, pParameters?: any): Promise<any> {
     LOGGER.info("Starting ETL...");
@@ -393,6 +398,7 @@ class ETL extends EventEmitter {
         activities: []
       };
       const oETLActivities = this._resolveActivities(pConfig, pParameters);
+      LOGGER.debug("Processing activities: %j", oETLActivities);
       if (!oETLActivities) {
         LOGGER.warn("Nothing to run.");
         return Promise.resolve(oResult);

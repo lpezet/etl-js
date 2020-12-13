@@ -38,11 +38,11 @@ export class NoOpExecutor implements Executor {
 export type LocalSettings = {
   echo: boolean;
   [key: string]: any;
-}
+};
 
-const DefaultLocalSettings : LocalSettings = {
+const DefaultLocalSettings: LocalSettings = {
   echo: false
-}
+};
 
 export class Local implements Executor {
   mSettings: LocalSettings;
@@ -55,7 +55,7 @@ export class Local implements Executor {
   }
   exec(pCmd: string, pCmdOptions: any, pCallback: Callback): void {
     LOCAL_LOGGER.debug("Executing command [%s] locally...", pCmd);
-    var that = this;
+    const that = this;
     childProcess.exec(pCmd, pCmdOptions, function(
       error: childProcess.ExecException | null,
       stdout: string,

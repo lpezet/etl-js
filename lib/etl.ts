@@ -109,7 +109,10 @@ const doStepProcess = (
         pCurrentActivityData &&
         (pCurrentActivityData["skip"] || pCurrentActivityData["exit"])
       ) {
-        LOGGER.debug("[%s] Skipping step %s.", pActivityId, pKey);
+        LOGGER.debug("[%s] Skipping step %s (skip/exit).", pActivityId, pKey);
+        return Promise.resolve(pCurrentActivityData);
+      } else if (pMod.isDisabled()) {
+        LOGGER.warn("[%s] Skipping step %s (disabled).", pActivityId, pKey);
         return Promise.resolve(pCurrentActivityData);
       } else {
         // console.log('## etl: Returning handle() for ' + pActivityId);

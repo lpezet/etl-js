@@ -11,10 +11,7 @@ Extract, Transform, and Load sharable and repeatable.
 ```js
 const { ETL, Local, CommandsMod } = require("@lpezet/etl-js");
 var template = {
-  etlSets: {
-    default: ["step1"]
-  },
-  step1: {
+  myETLActivity: {
     commands: {
       say_hello: {
         command: "printf 'hello world!'"
@@ -33,10 +30,7 @@ Or with TypeScript:
 ```ts
 import { ETL, Local, CommandsMod } from "@lpezet/etl-js";
 const template: any = {
-  etlSets: {
-    default: ["step1"]
-  },
-  step1: {
+  myETLActivity: {
     commands: {
       say_hello: {
         command: "printf 'hello world!'"
@@ -45,7 +39,7 @@ const template: any = {
   }
 };
 const myETL = new ETL(new Local());
-new CommandsMod(myETL).register(myETL);
+new CommandsMod().register(myETL);
 
 myETL.process(template);
 ```
@@ -110,6 +104,16 @@ activity2:
 ```
 
 Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ can contain additional step within them.
+Templates can also simply contain a single activity, as shown earlier in the introduction.
+Something like this will therefore suffice:
+
+```yml
+activity1:
+  step1:
+    something: "something"
+  step2:
+    somethingelse: "somethingelse"
+```
 
 # Security
 

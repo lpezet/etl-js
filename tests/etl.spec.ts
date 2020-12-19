@@ -293,8 +293,39 @@ describe("etl", function() {
     });
   });
 
+  it("disabledMod", function(done) {
+    const oExecutor: any = {};
+    const oTested = new ETL(oExecutor);
+    const oTester = new TestMod({ disabled: true });
+    oTester.register(oTested);
+    assert.isTrue(oTester.isDisabled());
+    const oETL = {
+      etl: ["abc"],
+      abc: {
+        tester: {}
+      }
+    };
+    oTested.process(oETL).then(
+      function() {
+        try {
+          assert.equal(oTester.calls(), 0);
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
+  });
+
   it("skip", function(done) {
     class SkipModClass implements Mod {
+      isDisabled(): boolean {
+        return false;
+      }
       register(pETL: IETL): void {
         pETL.mod("skipMod", this);
       }
@@ -363,6 +394,9 @@ describe("etl", function() {
 
   it("exit", function(done) {
     class ModClass implements Mod {
+      isDisabled(): boolean {
+        return false;
+      }
       register(pETL: IETL): void {
         pETL.mod("exitMod", this);
       }
@@ -433,6 +467,9 @@ describe("etl", function() {
       constructor(pEnvKey: string) {
         this.mEnvKey = pEnvKey;
         this.mEnvValue = undefined;
+      }
+      isDisabled(): boolean {
+        return false;
       }
       register(pETL: IETL): void {
         pETL.mod("enver", this);
@@ -565,6 +602,9 @@ describe("etl", function() {
     class AwesomeMod implements Mod {
       register(pETL: IETL): void {
         pETL.mod("awesome", this);
+      }
+      isDisabled(): boolean {
+        return false;
       }
       handle(
         _pParent: string,

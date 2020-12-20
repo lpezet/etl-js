@@ -7,6 +7,7 @@ Extract, Transform, and Load sharable and repeatable.
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 [![Known Vulnerabilities][vulnerabilities-image]][vulnerabilities-url]
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flpezet%2Fetl-js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flpezet%2Fetl-js?ref=badge_shield)
 
 ```js
 const { ETL, Local, CommandsMod } = require("@lpezet/etl-js");
@@ -351,3 +352,6 @@ ETL.process( template ).then(function( pResults ) {
 [appveyor-url]: https://ci.appveyor.com/project/lpezet/etl-js
 [vulnerabilities-image]: https://snyk.io/test/github/lpezet/etl-js/badge.svg
 [vulnerabilities-url]: https://snyk.io/test/github/lpezet/etl-js
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flpezet%2Fetl-js.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flpezet%2Fetl-js?ref=badge_large)

@@ -2,7 +2,7 @@
   "name": "@lpezet/etl-js",
   "version": "2.1.1",
   "description": "ETL made simple and reproducible.",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "tsc": "tsc",

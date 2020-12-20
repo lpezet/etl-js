@@ -80,7 +80,7 @@ $ npm install @lpezet/etl-js
 
     * Template-based process (JSON, YAML) to express steps and activities as part of ETL
     * Extensible behavior via mods
-    * Tags allowing more dynamic behavior through activities and mods.
+    * Tags allowing more dynamic behavior
 
 # Concept
 
@@ -104,7 +104,7 @@ activity2:
     some: "some"
 ```
 
-Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ can contain additional step within them.
+Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ can contain additional steps within them.
 Templates can also simply contain a single activity, as shown earlier in the introduction.
 Something like this will therefore suffice:
 

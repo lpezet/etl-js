@@ -183,7 +183,8 @@ export default class CommandsMod extends AbstractMod<any> {
                 data._stdout = stdout;
                 data._stderr = stderr;
                 try {
-                  LOGGER.debug("[%s] Command [%s] executed. Error? %s (code=%s), Stderr? %s, Stdout? %s",
+                  LOGGER.debug(
+                    "[%s] Command [%s] executed. Error? %s (code=%s), Stderr? %s, Stdout? %s",
                     pParent,
                     pKey,
                     !!error,

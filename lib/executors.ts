@@ -7,8 +7,33 @@ import { platform } from "os";
 const LOCAL_LOGGER = createLogger("etljs::executors::local");
 const REMOTE_LOGGER = createLogger("etljs::executors::remote");
 
+export class ExecutorError extends Error {
+  cause?: Error;
+  code?: number;
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.cause = cause;
+    this.name = "ExecutorError";
+  }
+}
+
+const fromErrnoExceptionToError = (
+  err: NodeJS.ErrnoException
+): ExecutorError => {
+  const e: ExecutorError = new ExecutorError(err.message, err);
+  e.stack = err.stack;
+  if (err.code) {
+    try {
+      e.code = parseInt(err.code);
+    } finally {
+      // nop
+    }
+  }
+  return e;
+};
+
 export type Callback = (
-  error?: Error | null, // child_process.ExecException | null,
+  error?: ExecutorError | null, // child_process.ExecException | null,
   stdout?: string | null,
   stderr?: string | null
 ) => void;
@@ -81,7 +106,7 @@ export class Local implements Executor {
           pFilename,
           err
         );
-        pCallback(err, "", "");
+        pCallback(fromErrnoExceptionToError(err), "", "");
       } else {
         LOCAL_LOGGER.debug(
           "Successfully wrote content to local file [%s].",

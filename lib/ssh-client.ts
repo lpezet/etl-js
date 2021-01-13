@@ -5,8 +5,18 @@ import { createLogger } from "./logger";
 
 const LOGGER = createLogger("etljs::ssh-clients");
 
+export class SSHClientError extends Error {
+  code?: number;
+  cause?: Error;
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.cause = cause;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
 export type Callback = (
-  err: Error | null,
+  err: SSHClientError | null,
   stdout?: string | undefined,
   stderr?: string | undefined,
   server?: any | undefined,
@@ -35,13 +45,24 @@ const ssh2Exec = (
    * @param conn client
    */
   function doCallback(conn: Client): void {
-    if (!err && (stderr || code)) {
-      err = new Error(stderr || code);
+    let error: SSHClientError | null = null;
+    if (err || (code && code !== "0")) {
+      error = new SSHClientError(err ? err.message : stderr, err);
+      if (code) {
+        try {
+          error.code = parseInt(code);
+        } finally {
+          // nop
+        }
+      }
     }
+    // if (!err && (stderr || code)) {
+    //  err = new Error(stderr || code);
+    // }
     if (!callbackCalled) {
       callbackCalled = true;
       if (timeoutCallback) clearInterval(timeoutCallback);
-      pCallback(err, stdout, stderr, null, conn);
+      pCallback(error, stdout, stderr, null, conn);
     }
   }
 

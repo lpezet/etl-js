@@ -183,6 +183,15 @@ export default class CommandsMod extends AbstractMod<any> {
                 data._stdout = stdout;
                 data._stderr = stderr;
                 try {
+                  LOGGER.debug("[%s] Command [%s] executed. Error? %s (code=%s), Stderr? %s, Stdout? %s",
+                    pParent,
+                    pKey,
+                    !!error,
+                    error ? error.code : "NA",
+                    !!stderr,
+                    !!stdout
+                  );
+                  if (error) console.log(error.code);
                   if (error) {
                     LOGGER.error(
                       "[%s] Command [%s] exited.",

@@ -22,6 +22,11 @@ const EXIT_OR_SKIP_CONDITION = function(
   return false;
 };
 
+export type ETLResult = {
+  exit: boolean;
+  activities: any;
+};
+
 type ETLSets = {
   [key: string]: Array<string | ETLSetRef>;
 };
@@ -50,6 +55,15 @@ export type ModCallback = (settings?: any) => void;
 
 export interface IETL {
   mod(pKey: string, pSource: Mod, pCallback?: ModCallback): void;
+  processActivity(
+    pActivityIndex: number,
+    pTotalActivities: number,
+    pActivityId: string,
+    pActivity: any,
+    _pPreviousActivityData: any,
+    pResults: any,
+    pContext: any
+  ): Promise<any>;
 }
 
 const doWrapActivityProcess = (
@@ -57,7 +71,7 @@ const doWrapActivityProcess = (
   pTotalSteps: number,
   pActivityId: string,
   pStep: any,
-  pResults: any,
+  pResults: ETLResult,
   pContext: any,
   pETL: ETL
 ): ((data: any) => Promise<any>) => {
@@ -77,7 +91,7 @@ const doWrapActivityProcess = (
       return Promise.resolve(pData); // TODO: resolve?
     } else {
       try {
-        return pETL._activityProcess(
+        return pETL.processActivity(
           pStepIndex,
           pTotalSteps,
           pActivityId,
@@ -95,11 +109,12 @@ const doWrapActivityProcess = (
 };
 
 const doStepProcess = (
+  pActivityIndex: number,
   pActivityId: string,
   pKey: string,
   pStep: any,
   pMod: Mod,
-  _pResults: any,
+  _pResult: ETLResult,
   pContext: any,
   pExecutor: Executor
 ): ((data: any) => void) => {
@@ -119,12 +134,20 @@ const doStepProcess = (
         LOGGER.debug("[%s] Executing step %s...", pActivityId, pKey);
         // return new Promise(function(resolve, reject) {
         // return
+        pContext.etl.activityId = pActivityId;
+        pContext.etl.activityIndex = pActivityIndex;
+        pContext.etl.stepName = pKey;
         return pMod
           .handle(pActivityId, pStep, pExecutor, pContext) // pCurrentActivityData, pResults, pContext )
           .then((pData: any) => {
             // console.log('######## handle!!!!');
             // console.log( JSON.stringify( pData ) );
             pData = pData || {};
+            // Reset ETL context
+            pContext.etl.activityId = null;
+            pContext.etl.activityIndex = 0;
+            pContext.etl.stepName = null;
+            // Setting skip/exit
             pCurrentActivityData.skip =
               pCurrentActivityData.skip || Boolean(pData["skip"]);
             pCurrentActivityData.exit =
@@ -143,7 +166,7 @@ const doStepProcess = (
   };
 };
 
-class ETL extends EventEmitter {
+class ETL extends EventEmitter implements IETL {
   mMods: { [key: string]: Mod };
   mSettings: any;
   mExecutor: any;
@@ -165,31 +188,33 @@ class ETL extends EventEmitter {
     if (pCallback) pCallback(modSettings);
   }
   _stepProcess(
+    pActivityIndex: number,
     pActivityId: string,
     pKey: string,
     pStep: any,
     pHandler: Mod,
-    _pResults: any,
+    _pResult: ETLResult,
     pContext: any
   ): any {
     // pCurrentActivityData: { exit: true|false, skip: true|false, steps: {} }
     return doStepProcess(
+      pActivityIndex,
       pActivityId,
       pKey,
       pStep,
       pHandler,
-      _pResults,
+      _pResult,
       pContext,
       this.mExecutor
     );
   }
-  _activityProcess(
+  processActivity(
     pActivityIndex: number,
     pTotalActivities: number,
     pActivityId: string,
     pActivity: any,
     _pPreviousActivityData: any,
-    pResults: any,
+    pResult: ETLResult,
     pContext: any
   ): Promise<any> {
     const oProcesses: ((res: any) => Promise<any>)[] = [];
@@ -210,11 +235,12 @@ class ETL extends EventEmitter {
           LOGGER.debug("[%s] ...adding mod [%s] to chain...", pActivityId, i);
           oProcesses.push(
             this._stepProcess(
+              pActivityIndex,
               pActivityId,
               i,
               pActivity[i],
               oMod,
-              pResults,
+              pResult,
               pContext
             )
           );
@@ -265,8 +291,8 @@ class ETL extends EventEmitter {
             exit: Boolean(pData["exit"]),
             skip: Boolean(pData["skip"])
           };
-          if (pData["exit"]) pResults.exit = pData["exit"];
-          pResults.activities.push(oResult);
+          if (pData["exit"]) pResult.exit = pData["exit"];
+          pResult.activities.push(oResult);
           // pResult[ pActivityId ] = pData;
           // TODO: replace with:
           // resolve( pPreviousStepData );
@@ -285,7 +311,7 @@ class ETL extends EventEmitter {
           // console.log('etl._process: (3) pDataResults = ' + pDataResults);
           // pContext[ pActivityId ] = pError; //TODO:????
           const oResult = { activity: pActivityId, error: pError };
-          pResults.activities.push(oResult);
+          pResult.activities.push(oResult);
 
           this.emit(
             "activityDone",
@@ -393,10 +419,25 @@ class ETL extends EventEmitter {
       return [root];
     }
   }
+  /*
+  handle(
+    pParent: string,
+    pConfig: any,
+    pExecutor: Executor,
+    pContext: Context
+  ): Promise<any> {
+    const oTotalActivities = pConfig.length;
+    const oActivityProcesses = [];
+    for (let i = 0; i < oTotalActivities; i++) {
+      const oActivityId = pConfig[i];
+      const oActivity = pConfig[oActivityId];
+    }
+  }
+  */
   process(pConfig: any, pParameters?: any): Promise<any> {
     LOGGER.info("Starting ETL...");
     try {
-      const oResult = {
+      const oResult: ETLResult = {
         exit: false,
         activities: []
       };
@@ -408,7 +449,11 @@ class ETL extends EventEmitter {
       }
       const oTotalActivities = oETLActivities.length;
       const oActivityProcesses = [];
-      const oContext: Context = { env: {}, vars: {} };
+      const oContext: Context = {
+        env: {},
+        vars: {},
+        etl: { activityId: null, activityIndex: 0, stepName: null }
+      };
       Object.keys(process.env).forEach(i => {
         oContext.env[i] = process.env[i] || "";
       });

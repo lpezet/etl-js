@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import ETL, { IETL } from "../lib/etl";
+import ETL, { ETLResult, IETL } from "../lib/etl";
 import Mod from "../lib/mod";
 import TestMod from "./etl/test";
 import { Executor } from "../lib/executors";
@@ -674,6 +674,82 @@ describe("etl", function() {
         done(err);
       }
     });
+  });
+
+  it("subActivities", function(done) {
+    const oExecutor: any = {};
+    const oSettings = {};
+    const oTested = new ETL(oExecutor, oSettings);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+
+    class SubActivitiesMod implements Mod {
+      mETL: IETL | null;
+      constructor() {
+        this.mETL = null;
+      }
+      register(pETL: IETL): void {
+        pETL.mod("subActivities", this);
+        this.mETL = pETL;
+      }
+      isDisabled(): boolean {
+        return false;
+      }
+      handle(
+        pParent: string,
+        _pConfig: any,
+        _pExecutor: Executor,
+        pContext: Context
+      ): Promise<any> {
+        if (!this.mETL) {
+          return Promise.reject(new Error("ETL must be set first."));
+        }
+        const activity = {
+          tester: {}
+        };
+        const oResult: ETLResult = {
+          exit: false,
+          activities: []
+        };
+        return this.mETL.processActivity(
+          pContext.etl.activityIndex,
+          1,
+          pParent + ".subActivity",
+          activity,
+          {},
+          oResult,
+          pContext
+        );
+      }
+    }
+    new SubActivitiesMod().register(oTested);
+    const oETL = {
+      etlSets: {
+        default: ["abc", "def"]
+      },
+      abc: {
+        tester: {},
+        subActivities: {}
+      },
+      def: {
+        subActivities: {},
+        tester: {}
+      }
+    };
+    oTested.process(oETL, {}).then(
+      function() {
+        try {
+          assert.equal(oTester.calls(), 4);
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        console.log(pError);
+        done(pError);
+      }
+    );
   });
 
   /*

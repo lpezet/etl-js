@@ -4,7 +4,7 @@ import { loadFile } from "./utils";
 import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
 import { Callback, NoOpExecutor } from "../lib/executors";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 
 describe("files", function() {
   beforeEach(function(done: () => void) {
@@ -30,17 +30,6 @@ describe("files", function() {
     ): Promise<any> {
       return Promise.resolve();
     }
-  }
-
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
   }
 
   it("register", function(done) {

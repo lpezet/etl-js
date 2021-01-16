@@ -3,7 +3,7 @@ import Mod from "../lib/mod";
 import { Callback, NoOpExecutor } from "../lib/executors";
 import ImageChartsMod from "../lib/image-charts";
 import { assert } from "chai";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 
 describe("image-charts", function() {
   beforeEach(function(done: () => void) {
@@ -29,17 +29,6 @@ describe("image-charts", function() {
     ): Promise<any> {
       return Promise.resolve();
     }
-  }
-
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
   }
 
   it("register", function(done) {

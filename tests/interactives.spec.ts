@@ -3,7 +3,7 @@ import InteractivesMod from "../lib/interactives";
 import { EventEmitter } from "events";
 import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 import { NoOpExecutor } from "../lib/executors";
 
 // const chai = require("chai");
@@ -12,16 +12,7 @@ import { NoOpExecutor } from "../lib/executors";
 
 describe("interactives", function() {
   const NOOP_EXEC = new NoOpExecutor();
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
-  }
+
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });

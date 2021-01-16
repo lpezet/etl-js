@@ -1,6 +1,6 @@
 import { IETL, ModCallback } from "../lib/etl";
 import Mod from "../lib/mod";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 import { Callback, NoOpExecutor } from "../lib/executors";
 import { assert } from "chai";
 import { loadFile } from "./utils";
@@ -14,17 +14,6 @@ describe("hpcc-sprays", function() {
   afterEach(function(done: Function) {
     done();
   });
-
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
-  }
 
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {

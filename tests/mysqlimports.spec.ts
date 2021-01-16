@@ -4,7 +4,7 @@ import Mod from "../lib/mod";
 import MySQLImportsMod from "../lib/mysqlimports";
 import { Callback, NoOpExecutor } from "../lib/executors";
 import { loadFile } from "./utils";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 
 describe("mysqlimports", function() {
   beforeEach(function(done: Function) {
@@ -15,16 +15,6 @@ describe("mysqlimports", function() {
     done();
   });
 
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
-  }
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });

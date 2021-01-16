@@ -2,7 +2,7 @@ import { assert } from "chai";
 import { loadFile } from "./utils";
 import HPCCDespraysMod from "../lib/hpcc-desprays";
 import { IETL, ModCallback } from "../lib/etl";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 import Mod from "../lib/mod";
 import { Callback, NoOpExecutor } from "../lib/executors";
 
@@ -14,17 +14,6 @@ describe("hpcc-desprays", function() {
   afterEach(function(done: () => void) {
     done();
   });
-
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
-  }
 
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {

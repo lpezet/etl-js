@@ -2,7 +2,7 @@ import { assert } from "chai";
 import { loadFile } from "./utils";
 import HPCCECLsMod from "../lib/hpcc-ecls";
 import { IETL, ModCallback } from "../lib/etl";
-import Context from "../lib/context";
+import Context, { emptyContext } from "../lib/context";
 import Mod from "../lib/mod";
 import { Callback, NoOpExecutor } from "../lib/executors";
 import * as fs from "fs";
@@ -16,17 +16,6 @@ describe("hpcc-ecls", function() {
   afterEach(function(done: Function) {
     done();
   });
-
-  /**
-   * @return Context
-   */
-  function emptyContext(): Context {
-    return {
-      env: {},
-      vars: {},
-      etl: { activityId: null, activityIndex: 0, stepName: null }
-    };
-  }
 
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {

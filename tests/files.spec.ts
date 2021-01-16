@@ -19,6 +19,28 @@ describe("files", function() {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });
     }
+    processActivity(
+      _pActivityIndex: number,
+      _pTotalActivities: number,
+      _pActivityId: string,
+      _pActivity: any,
+      _pPreviousActivityData: any,
+      _pResults: any,
+      _pContext: any
+    ): Promise<any> {
+      return Promise.resolve();
+    }
+  }
+
+  /**
+   * @return Context
+   */
+  function emptyContext(): Context {
+    return {
+      env: {},
+      vars: {},
+      etl: { activityId: null, activityIndex: 0, stepName: null }
+    };
   }
 
   it("register", function(done) {
@@ -47,12 +69,10 @@ describe("files", function() {
       }
     };
     const oContext: Context = {
-      env: {},
-      vars: {},
-
       tag1: "hello",
       tag2: "world",
-      tags: ["a", "b"]
+      tags: ["a", "b"],
+      ...emptyContext()
     };
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(_pData: any) {
@@ -83,7 +103,11 @@ describe("files", function() {
     const oConfig = loadFile("./files/basic.yml");
 
     oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
+      .handle("root", oConfig["root"], oExecutor, {
+        env: {},
+        vars: {},
+        etl: { activityId: null, activityIndex: 0, stepName: null }
+      })
       .then(
         function(_pData: any) {
           done("Expecting error.");
@@ -107,16 +131,14 @@ describe("files", function() {
 
     const oConfig = loadFile("./files/basic.yml");
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(_pData: any) {
-          done("Expecting error.");
-        },
-        function(_pError: Error) {
-          done();
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(_pData: any) {
+        done("Expecting error.");
+      },
+      function(_pError: Error) {
+        done();
+      }
+    );
   });
 
   it("downloadPermsError", function(done) {
@@ -145,18 +167,16 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oTemplate["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          console.log("#### Error ???");
-          console.log(pData);
-          done("Expecting error.");
-        },
-        function(_pError: Error) {
-          done();
-        }
-      );
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        console.log("#### Error ???");
+        console.log(pData);
+        done("Expecting error.");
+      },
+      function(_pError: Error) {
+        done();
+      }
+    );
   });
 
   it("contentError", function(done) {
@@ -189,16 +209,14 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oTemplate["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(_pData: any) {
-          done("Expecting error.");
-        },
-        function(_pError: Error) {
-          done();
-        }
-      );
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function(_pData: any) {
+        done("Expecting error.");
+      },
+      function(_pError: Error) {
+        done();
+      }
+    );
   });
 
   it("basic", function(done) {
@@ -218,21 +236,19 @@ describe("files", function() {
 
     const oConfig = loadFile("./files/basic.yml");
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        },
-        function(pError: Error) {
-          // console.log( pError );
-          done(pError);
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        assert.exists(pData);
+        assert.exists(pData["files"]);
+        assert.exists(pData["files"]["/tmp/file.txt"]);
+        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+        done();
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
   });
 
   it("source", function(done) {
@@ -261,21 +277,19 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        },
-        function(pError: Error) {
-          // console.log( pError );
-          done(pError);
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        assert.exists(pData);
+        assert.exists(pData["files"]);
+        assert.exists(pData["files"]["/tmp/file.txt"]);
+        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+        done();
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
   });
 
   it("sourceWithPerms", function(done) {
@@ -315,21 +329,19 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        },
-        function(pError: Error) {
-          // console.log( pError );
-          done(pError);
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        assert.exists(pData);
+        assert.exists(pData["files"]);
+        assert.exists(pData["files"]["/tmp/file.txt"]);
+        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+        done();
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
   });
 
   it("content", function(done) {
@@ -359,21 +371,19 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        },
-        function(pError: Error) {
-          // console.log( pError );
-          done(pError);
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        assert.exists(pData);
+        assert.exists(pData["files"]);
+        assert.exists(pData["files"]["/tmp/file.txt"]);
+        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+        done();
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
   });
 
   it("contentWithPerms", function(done) {
@@ -404,21 +414,19 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        function(pData: any) {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        },
-        function(pError: Error) {
-          // console.log( pError );
-          done(pError);
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      function(pData: any) {
+        assert.exists(pData);
+        assert.exists(pData["files"]);
+        assert.exists(pData["files"]["/tmp/file.txt"]);
+        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+        done();
+      },
+      function(pError: Error) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
   });
 
   it("permsError", function(done) {
@@ -450,16 +458,14 @@ describe("files", function() {
       }
     };
 
-    oTested
-      .handle("root", oConfig["root"], oExecutor, { env: {}, vars: {} })
-      .then(
-        () => {
-          done(new Error("Expected error."));
-        },
-        () => {
-          done();
-        }
-      );
+    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
+      () => {
+        done(new Error("Expected error."));
+      },
+      () => {
+        done();
+      }
+    );
   });
 
   it("templateSingleValue", function(done) {
@@ -488,15 +494,14 @@ describe("files", function() {
     };
 
     const oContext: Context = {
-      env: {},
-      vars: {},
       step1: {
         commands: {
           "001_doit": {
             result: "toto"
           }
         }
-      }
+      },
+      ...emptyContext()
     };
 
     oTested.handle("root", oConfig["root"], oExecutor, oContext).then(
@@ -553,15 +558,14 @@ describe("files", function() {
     };
 
     const oContext: Context = {
-      env: {},
-      vars: {},
       step1: {
         commands: {
           "001_doit": {
             result: ["toto", "titi"]
           }
         }
-      }
+      },
+      ...emptyContext()
     };
 
     oTested.handle("root", oConfig["root"], oExecutor, oContext).then(

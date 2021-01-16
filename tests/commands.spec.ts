@@ -19,12 +19,27 @@ describe("commands", function() {
    * @return Context
    */
   function emptyContext(): Context {
-    return { env: {}, vars: {} };
+    return {
+      env: {},
+      vars: {},
+      etl: { activityId: null, activityIndex: 0, stepName: null }
+    };
   }
 
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });
+    }
+    processActivity(
+      _pActivityIndex: number,
+      _pTotalActivities: number,
+      _pActivityId: string,
+      _pActivity: any,
+      _pPreviousActivityData: any,
+      _pResults: any,
+      _pContext: any
+    ): Promise<any> {
+      return Promise.resolve();
     }
   }
 
@@ -52,10 +67,9 @@ describe("commands", function() {
       }
     };
     const oContext: Context = {
-      env: {},
-      vars: {},
       binary: ["0", "1"],
-      years: ["2018", "2019", "2020"]
+      years: ["2018", "2019", "2020"],
+      ...emptyContext()
     };
     oTested
       .handle("root", oTemplate["root"], oExecutor, oContext)
@@ -100,9 +114,8 @@ describe("commands", function() {
       }
     };
     const oContext: Context = {
-      env: {},
-      vars: {},
-      years: ["2018", "2019", "2020"]
+      years: ["2018", "2019", "2020"],
+      ...emptyContext()
     };
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
@@ -161,9 +174,8 @@ describe("commands", function() {
       }
     };
     const oContext = {
-      env: {},
-      vars: {},
-      tag1: "hello"
+      tag1: "hello",
+      ...emptyContext()
     };
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(pData: any) {
@@ -217,7 +229,7 @@ describe("commands", function() {
         }
       }
     };
-    const oContext = { env: {}, vars: {} };
+    const oContext = emptyContext();
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(_pData) {
         try {
@@ -226,7 +238,8 @@ describe("commands", function() {
           // assert.isNotArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );
           assert.deepEqual(oContext, {
             env: {},
-            vars: { myvar: '[ "Toto", "Tutu" ]' }
+            vars: { myvar: '[ "Toto", "Tutu" ]' },
+            etl: { activityId: null, activityIndex: 0, stepName: null }
           });
           done();
         } catch (e) {
@@ -260,7 +273,7 @@ describe("commands", function() {
       }
     };
 
-    const oContext = { env: {}, vars: {} };
+    const oContext = emptyContext();
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(_pData) {
         try {
@@ -269,7 +282,8 @@ describe("commands", function() {
           // assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );
           assert.deepEqual(oContext, {
             env: {},
-            vars: { myvar: ["Toto", "Tutu"] }
+            vars: { myvar: ["Toto", "Tutu"] },
+            etl: { activityId: null, activityIndex: 0, stepName: null }
           });
           done();
         } catch (e) {
@@ -304,7 +318,7 @@ describe("commands", function() {
       }
     };
 
-    const oContext = { env: {}, vars: {} };
+    const oContext = emptyContext();
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
       function(_pData) {
         try {
@@ -314,7 +328,8 @@ describe("commands", function() {
           // assert.equal( pData[ 'commands' ][ '001_json' ][ 'result' ], "[ 'Toto', 'Tutu' ]" );
           assert.deepEqual(oContext, {
             env: {},
-            vars: { myvar: "[ 'Toto', 'Tutu' ]" }
+            vars: { myvar: "[ 'Toto', 'Tutu' ]" },
+            etl: { activityId: null, activityIndex: 0, stepName: null }
           });
           done();
         } catch (e) {
@@ -496,7 +511,8 @@ describe("commands", function() {
     oTested
       .handle("root", oTemplate["root"], oExecutor, {
         env: {},
-        vars: { myvar: "2019" }
+        vars: { myvar: "2019" },
+        etl: { activityId: null, activityIndex: 0, stepName: null }
       })
       .then(
         function() {

@@ -18,13 +18,28 @@ describe("image-charts", function() {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });
     }
+    processActivity(
+      _pActivityIndex: number,
+      _pTotalActivities: number,
+      _pActivityId: string,
+      _pActivity: any,
+      _pPreviousActivityData: any,
+      _pResults: any,
+      _pContext: any
+    ): Promise<any> {
+      return Promise.resolve();
+    }
   }
 
   /**
    * @return Context
    */
   function emptyContext(): Context {
-    return { env: {}, vars: {} };
+    return {
+      env: {},
+      vars: {},
+      etl: { activityId: null, activityIndex: 0, stepName: null }
+    };
   }
 
   it("register", function(done) {
@@ -57,9 +72,8 @@ describe("image-charts", function() {
       }
     };
     const oContext: Context = {
-      env: {},
-      vars: {},
-      year: "2018"
+      year: "2018",
+      ...emptyContext()
     };
     oTested.handle("root", oConfig["root"], oExecutor, oContext).then(
       function(pData: any) {

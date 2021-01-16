@@ -38,6 +38,17 @@ describe("mod", function() {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback(this.mSettings);
     }
+    processActivity(
+      _pActivityIndex: number,
+      _pTotalActivities: number,
+      _pActivityId: string,
+      _pActivity: any,
+      _pPreviousActivityData: any,
+      _pResults: any,
+      _pContext: any
+    ): Promise<any> {
+      return Promise.resolve();
+    }
   }
 
   it("register", function() {

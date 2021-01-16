@@ -18,11 +18,26 @@ describe("mysqls", function() {
    * @return Context
    */
   const emptyContext = (): Context => {
-    return { env: {}, vars: {} };
+    return {
+      env: {},
+      vars: {},
+      etl: { activityId: null, activityIndex: 0, stepName: null }
+    };
   };
   class ETLMock implements IETL {
     mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
       pCallback({ test: true });
+    }
+    processActivity(
+      _pActivityIndex: number,
+      _pTotalActivities: number,
+      _pActivityId: string,
+      _pActivity: any,
+      _pPreviousActivityData: any,
+      _pResults: any,
+      _pContext: any
+    ): Promise<any> {
+      return Promise.resolve();
     }
   }
 
@@ -61,9 +76,8 @@ describe("mysqls", function() {
     };
 
     const oContext: Context = {
-      env: {},
-      vars: {},
-      years: [2018, 2019, 2020]
+      years: [2018, 2019, 2020],
+      ...emptyContext()
     };
 
     oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(

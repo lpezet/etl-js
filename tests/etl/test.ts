@@ -22,7 +22,7 @@ export default class TestMod extends AbstractMod<any> {
         pParent,
         this.mSettings["hello"]
       );
-      resolve();
+      resolve(null);
     });
   }
 }

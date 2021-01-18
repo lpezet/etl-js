@@ -11,19 +11,29 @@ export abstract class AbstractMod<T extends ModSettings> implements Mod {
   mSettings?: T;
   mModName: string;
   mDisabled: boolean;
+  mETL: IETL | null;
   constructor(pModName: string, pSettings?: T) {
     this.mSettings = pSettings;
     this.mModName = pModName;
     this.mDisabled = pSettings?.disabled || false;
+    this.mETL = null;
   }
   register(pETL: IETL): void {
     if (pETL == null) throw new Error("ETL must not be null to register.");
+    this.mETL = pETL;
     pETL.mod(this.mModName, this, (pSettings: T) => {
       this.mSettings = {
         ...this.mSettings,
         ...pSettings
       };
     });
+
+  }
+  get name(): string {
+    return this.mModName;
+  }
+  get etl(): IETL | null {
+    return this.mETL;
   }
   isDisabled(): boolean {
     return this.mDisabled;

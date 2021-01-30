@@ -27,7 +27,6 @@ export abstract class AbstractMod<T extends ModSettings> implements Mod {
         ...pSettings
       };
     });
-
   }
   get name(): string {
     return this.mModName;

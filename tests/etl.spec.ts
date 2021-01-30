@@ -767,6 +767,41 @@ describe("etl", function() {
     });
   });
 
+  it("newActivitySchema", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oSettings = {};
+    const oTested = new ETL(oExecutor, oSettings);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+    const oETL = {
+      etlSets: {
+        default: ["abc", "def"]
+      },
+      abc: {
+        steps: {
+          tester: {}
+        }
+      },
+      def: {
+        tester: {}
+      }
+    };
+    oTested.process(oETL, {}).then(
+      function() {
+        try {
+          assert.equal(oTester.calls(), 2);
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        console.log(pError);
+        done(pError);
+      }
+    );
+  });
+
   it("subActivities", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};

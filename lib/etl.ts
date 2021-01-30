@@ -220,6 +220,19 @@ class ETL extends EventEmitter implements IETL {
       pExecutor
     );
   }
+  _resolveExecutorKey(pActivityId: string, pActivity: any): string {
+    let oExecutorKey: string = this.mSettings["executor"] || "default";
+    if (pActivity["executor"]) {
+      oExecutorKey = pActivity["executor"];
+    }
+    if (oExecutorKey === "") {
+      LOGGER.error(
+        "[%s] Executor not defined in neither activity nor settings.",
+        pActivityId
+      );
+    }
+    return oExecutorKey;
+  }
   processActivity(
     pActivityIndex: number,
     pTotalActivities: number,
@@ -231,27 +244,13 @@ class ETL extends EventEmitter implements IETL {
   ): Promise<any> {
     const oProcesses: ((res: any) => Promise<any>)[] = [];
     try {
-      //
       // TODO: Rename pPreviousStepData into pContext
       // pPreviousStepData[ pActivityId ] = {};
       let unknownModuleFound = false;
-      let oExecutorKey: string = this.mSettings["executor"] || "default";
-      if (pActivity["executor"]) {
-        oExecutorKey = pActivity["executor"];
-      }
-      if (oExecutorKey === "") {
-        LOGGER.error(
-          "[%s] Executor not defined in neither activity nor settings.",
-          pActivityId
-        );
-        return Promise.reject(
-          new Error(
-            "Executor not defined in neither activity nor settings for activity [" +
-              pActivityId +
-              "]."
-          )
-        );
-      }
+      const oExecutorKey: string = this._resolveExecutorKey(
+        pActivityId,
+        pActivity
+      );
       const oExecutor: Executor | undefined = this.mExecutors[oExecutorKey];
       if (oExecutor === undefined) {
         LOGGER.error(
@@ -269,8 +268,15 @@ class ETL extends EventEmitter implements IETL {
           )
         );
       }
-      Object.keys(pActivity).forEach(i => {
-        if (i === "executor") return;
+      let oActivities: any = pActivity["steps"];
+      if (!oActivities) {
+        LOGGER.warn(
+          "Using legacy structure for activities. Now expecting activityName: { steps: { ... } }."
+        );
+        oActivities = pActivity;
+      }
+      Object.keys(oActivities).forEach(i => {
+        if (i === "executor") return; // legacy structure
         const oMod = this.mMods[i];
         LOGGER.debug("[%s] Encountered [%s]...", pActivityId, i);
         // console.log('## etl: Activity ' + pActivityId + ' mod=' + i);

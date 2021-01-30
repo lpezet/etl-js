@@ -10,6 +10,18 @@ import Mod from "../lib/mod";
 // import { createLogger } from "../lib/logger";
 // const LOGGER = createLogger("etljs::etl:hpcc-frictionless:test");
 /*
+import { configureLogger } from "../lib";
+
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
+/*
 class TestMod extends AbstractMod<any> {
   mCalls: number = 0;
   get calls(): number {
@@ -114,7 +126,7 @@ describe("hpcc-sprays", function() {
     return etlTemplate;
   };
 
-  it.skip("real", function(done) {
+  it("real", function(done) {
     const oExecutor = new NoOpExecutor();
     const oTested = new HPCCFrictionlessMod();
     interface Activity {
@@ -154,7 +166,9 @@ describe("hpcc-sprays", function() {
         inflationData: {
           source:
             "https://raw.githubusercontent.com/frictionlessdata/examples/master/inflation/datapackage.json",
-          logicalFilenamePrefix: "~frictionless::inflation",
+          hpcc: {
+            logicalFilenamePrefix: "~frictionless::inflation"
+          },
           targetDir: "/tmp/",
           resources: ["inflation-gdp", "inflation-consumer-gdp"]
         }
@@ -167,16 +181,14 @@ describe("hpcc-sprays", function() {
     };
     oTested
       .handle("root", oTemplate["root"], oExecutor, oContext)
-      .then(data => {
-        console.log("### HELLO IN THEN!!!");
-        console.log(data);
+      .then(_data => {
+        // console.log("### HELLO IN THEN!!!");
+        // console.log(data);
         console.log("####### Activities:");
         console.log(oETL.activities);
         done();
       })
       .catch((e: Error) => {
-        console.log("#### ERROR!!!!");
-        console.log(e);
         done(e);
       });
   });

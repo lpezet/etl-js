@@ -4,14 +4,16 @@ import TemplateEngine from "./templating/engine";
 import { createLogger } from "./logger";
 import { Executor } from "./executors";
 import Context from "./context";
-import { Package } from "datapackage";
+// import { Package } from "datapackage";
 
 // import { IETL } from "./etl";
 // import { ifError } from "assert";
 
 const LOGGER = createLogger("etljs::hpcc-frictionless");
 
+/*
 const PRINTINFO = (pkg: Package): void => {
+  console.log("#############################################################################################");
   console.log("Package:");
   console.log(pkg);
   const resource = pkg.getResource("inflation-gdp");
@@ -28,15 +30,17 @@ const PRINTINFO = (pkg: Package): void => {
     console.log("Fields:");
     console.log(s.fields);
   }
+  console.log("#############################################################################################");
 };
+*/
 
 const CHAIN_EVAL = function(pValue: any): boolean {
   // console.log('#### CHAIN EVAL:');
   // console.log(JSON.stringify( pValue ));
+  const msg = "Expecting { exit: ..., skip: ..., results: [] } structure.";
   if (!pValue["results"]) {
-    throw new Error(
-      "Expecting { exit: ..., skip: ..., results: [] } structure."
-    );
+    LOGGER.error("Implementation error. ", msg);
+    throw new Error(msg);
   }
   const oResults = pValue["results"];
   for (let i = oResults.length - 1; i >= 0; i--) {
@@ -92,21 +96,27 @@ export default class HPCCFrictionlessMod extends AbstractMod<any> {
     if (source.indexOf("{{") >= 0) {
       source = this._evaluateToIndex(source, pContext, pTemplateIndex);
     }
-    let logicalFilenamePrefix = pSpecs["logicalFilenamePrefix"];
-    if (logicalFilenamePrefix === null || logicalFilenamePrefix === undefined) {
-      return [
-        () =>
-          Promise.reject(
-            new Error("Must specify property 'logicalFilenamePrefix'.")
-          )
-      ];
-    }
-    if (logicalFilenamePrefix.indexOf("{{") >= 0) {
-      logicalFilenamePrefix = this._evaluateToIndex(
-        logicalFilenamePrefix,
-        pContext,
-        pTemplateIndex
-      );
+    if (pSpecs["hpcc"]) {
+      const hpccConfig: any = pSpecs["hpcc"];
+      let logicalFilenamePrefix = hpccConfig["logicalFilenamePrefix"];
+      if (
+        logicalFilenamePrefix === null ||
+        logicalFilenamePrefix === undefined
+      ) {
+        return [
+          () =>
+            Promise.reject(
+              new Error("Must specify property 'logicalFilenamePrefix'.")
+            )
+        ];
+      }
+      if (logicalFilenamePrefix.indexOf("{{") >= 0) {
+        logicalFilenamePrefix = this._evaluateToIndex(
+          logicalFilenamePrefix,
+          pContext,
+          pTemplateIndex
+        );
+      }
     }
     let targetDir = pSpecs["targetDir"];
     if (targetDir === null || targetDir === undefined || targetDir === "") {
@@ -141,13 +151,15 @@ export default class HPCCFrictionlessMod extends AbstractMod<any> {
       }
       oPromises.push(
         async (_previousData: any): Promise<any> => {
+          // console.log("### Prev Data: ");
+          // console.log(_previousData);
           console.log("Loading frictionless datapackage from: [%s]", source);
-          const pkg = await Package.load(source);
-          PRINTINFO(pkg);
+          // const pkg = await Package.load(source);
+          // PRINTINFO(pkg);
+          return Promise.resolve({ exit: false, skip: false, results: "TODO" });
         }
       );
     });
-
     return oPromises;
   }
   _frictionless(

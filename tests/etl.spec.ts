@@ -1,11 +1,22 @@
 import { assert } from "chai";
 import ETL, { ETLResult, IETL } from "../lib/etl";
-import Mod from "../lib/mod";
+import Mod, { AbstractMod } from "../lib/mod";
 import TestMod from "./etl/test";
-import { Executor } from "../lib/executors";
+import { Callback, Executor, NoOpExecutor } from "../lib/executors";
 import Context from "../lib/context";
 import ModMod from "./etl/mod";
+/*
+import { configureLogger } from "../lib";
 
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 describe("etl", function() {
   beforeEach(function(done: () => void) {
     done();
@@ -36,7 +47,7 @@ describe("etl", function() {
   }
 
   it("etlSetsDefault", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod();
     oTester.register(oTested);
@@ -67,7 +78,7 @@ describe("etl", function() {
   });
 
   it("noEtlSets", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod();
     oTester.register(oTested);
@@ -94,7 +105,7 @@ describe("etl", function() {
   });
 
   it("etlSets", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod();
     oTester.register(oTested);
@@ -125,7 +136,7 @@ describe("etl", function() {
   });
 
   it("etlSetsActivityInstead", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod();
     oTester.register(oTested);
@@ -155,8 +166,88 @@ describe("etl", function() {
     );
   });
 
+  it("activitiesWithDifferentExecutor", function(done) {
+    let oExecCallStack: string[] = [];
+    class MyExecClass extends NoOpExecutor {
+      mName: string;
+      constructor(name: string) {
+        super();
+        this.mName = name;
+      }
+      exec(_pCmd: string, _pCmdOptions: any, _pCallback: Callback): void {
+        oExecCallStack.push(this.mName);
+      }
+    }
+    class MyModClass extends AbstractMod<any> {
+      handle(
+        _pParent: string,
+        _pConfig: any,
+        pExecutor: Executor,
+        _pContext: Context
+      ): Promise<any> {
+        pExecutor.exec("", {}, () => {
+          // nop
+        });
+        return Promise.resolve();
+      }
+    }
+    const oExec1: Executor = new MyExecClass("exec1");
+    const oExec2: Executor = new MyExecClass("exec2");
+    const oExec3: Executor = new MyExecClass("exec3");
+    const oExecutors = {
+      default: oExec2,
+      exec1: oExec1, // non-default one specified in ETL Template specifically
+      exec2: oExec2, // default as specified in Executors above
+      exec3: oExec3 // default coming from Settings
+    };
+    const oSettings: { executor?: string } = {
+      executor: "exec3"
+    };
+    const oTested = new ETL(oExecutors, oSettings);
+    const oMod: Mod = new MyModClass("execTest");
+    oMod.register(oTested);
+    const oETL = {
+      etlSets: {
+        testDefault: "test1",
+        testActivityExec: "test2"
+      },
+      test1: {
+        execTest: {}
+      },
+      test2: {
+        executor: "exec1",
+        execTest: {}
+      }
+    };
+    oTested
+      .process(oETL, { etlSet: "testDefault" })
+      .then(() => {
+        assert.isTrue(oExecCallStack.length == 1);
+        assert.equal(oExecCallStack[0], "exec3"); // since it's specified in Settings
+        oExecCallStack = [];
+        delete oSettings.executor;
+        return oTested.process(oETL, { etlSet: "testDefault" });
+      })
+      .then(() => {
+        assert.isTrue(oExecCallStack.length == 1);
+        assert.equal(oExecCallStack[0], "exec2"); // since it's specified in Executors under "default"
+        oExecCallStack = [];
+        return oTested.process(oETL, { etlSet: "testActivityExec" });
+      })
+      .then(() => {
+        assert.isTrue(oExecCallStack.length == 1);
+        assert.equal(oExecCallStack[0], "exec1");
+      })
+      .then(() => {
+        done();
+      })
+      .catch((e: Error) => {
+        done(e);
+      });
+  });
+
   it("etlSetsSingleValue", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod();
     oTester.register(oTested);
@@ -187,7 +278,7 @@ describe("etl", function() {
   });
 
   it("invalidETLSet", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     let oTester: TestMod;
     registerMod(oTested, "./etl/test")
@@ -223,7 +314,7 @@ describe("etl", function() {
   });
 
   it("resolveETLSets", function() {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
 
     const oSimpleNoRefETLSets = {
@@ -294,7 +385,7 @@ describe("etl", function() {
   });
 
   it("disabledMod", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     const oTester = new TestMod({ disabled: true });
     oTester.register(oTested);
@@ -341,7 +432,7 @@ describe("etl", function() {
       }
     }
 
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     new SkipModClass().register(oTested);
     let oTester: TestMod;
@@ -411,7 +502,7 @@ describe("etl", function() {
         });
       }
     }
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     new ModClass().register(oTested);
     let oModder: ModMod;
@@ -496,7 +587,7 @@ describe("etl", function() {
         // resolve(  );
       }
     }
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
     new ModClass("hello").register(oTested);
     const oETL = {
@@ -539,7 +630,7 @@ describe("etl", function() {
   it("events", function(done) {
     const EXPECTED_ACTIVITIES = ["step1", "step2", "step999", "step3"];
 
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     registerMod(oTested, "./etl/collect").then(() => {
@@ -596,7 +687,7 @@ describe("etl", function() {
   });
 
   it("modThrowingError", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     class AwesomeMod implements Mod {
@@ -637,7 +728,7 @@ describe("etl", function() {
   });
 
   it("missingMod", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     const oETL = {
@@ -662,7 +753,7 @@ describe("etl", function() {
   });
 
   it("registeringModDynamically", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     assert.equal(Object.keys(oTested.getMods()).length, 0);
@@ -677,7 +768,7 @@ describe("etl", function() {
   });
 
   it("subActivities", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
     const oTester = new TestMod();
@@ -881,7 +972,7 @@ describe("etl", function() {
 	});
 	*/
   it("basic", function(done) {
-    const oExecutor: any = {};
+    const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {
       mods: {
         tester: {

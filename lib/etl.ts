@@ -70,7 +70,7 @@ const doWrapActivityProcess = (
   pStepIndex: number,
   pTotalSteps: number,
   pActivityId: string,
-  pStep: any,
+  pActivity: any,
   pResults: ETLResult,
   pContext: any,
   pETL: ETL
@@ -95,7 +95,7 @@ const doWrapActivityProcess = (
           pStepIndex,
           pTotalSteps,
           pActivityId,
-          pStep,
+          pActivity,
           pData,
           pResults,
           pContext
@@ -166,15 +166,26 @@ const doStepProcess = (
   };
 };
 
+const isExecutor = (pObject: any): boolean => {
+  return pObject["writeFile"] !== undefined;
+};
+
 class ETL extends EventEmitter implements IETL {
   mMods: { [key: string]: Mod };
   mSettings: any;
-  mExecutor: any;
-  constructor(pExecutor: Executor, pSettings?: any) {
+  mExecutors: { [key: string]: Executor };
+  constructor(
+    pExecutors: { [key: string]: Executor } | Executor,
+    pSettings?: any
+  ) {
     super();
     this.mSettings = pSettings || {};
     this.mMods = {};
-    this.mExecutor = pExecutor;
+    if (isExecutor(pExecutors)) {
+      this.mExecutors = { default: pExecutors as Executor };
+    } else {
+      this.mExecutors = pExecutors as { [key: string]: Executor };
+    }
   }
   getMods(): { [key: string]: Mod } {
     return this.mMods;
@@ -194,7 +205,8 @@ class ETL extends EventEmitter implements IETL {
     pStep: any,
     pHandler: Mod,
     _pResult: ETLResult,
-    pContext: any
+    pContext: any,
+    pExecutor: Executor
   ): any {
     // pCurrentActivityData: { exit: true|false, skip: true|false, steps: {} }
     return doStepProcess(
@@ -205,7 +217,7 @@ class ETL extends EventEmitter implements IETL {
       pHandler,
       _pResult,
       pContext,
-      this.mExecutor
+      pExecutor
     );
   }
   processActivity(
@@ -223,7 +235,42 @@ class ETL extends EventEmitter implements IETL {
       // TODO: Rename pPreviousStepData into pContext
       // pPreviousStepData[ pActivityId ] = {};
       let unknownModuleFound = false;
+      let oExecutorKey: string = this.mSettings["executor"] || "default";
+      if (pActivity["executor"]) {
+        oExecutorKey = pActivity["executor"];
+      }
+      if (oExecutorKey === "") {
+        LOGGER.error(
+          "[%s] Executor not defined in neither activity nor settings.",
+          pActivityId
+        );
+        return Promise.reject(
+          new Error(
+            "Executor not defined in neither activity nor settings for activity [" +
+              pActivityId +
+              "]."
+          )
+        );
+      }
+      const oExecutor: Executor | undefined = this.mExecutors[oExecutorKey];
+      if (oExecutor === undefined) {
+        LOGGER.error(
+          "[%s] Could not find executor [%s] for activity.",
+          pActivityId,
+          oExecutorKey
+        );
+        return Promise.reject(
+          new Error(
+            "Could not find executor [" +
+              oExecutorKey +
+              "] for activity [" +
+              pActivityId +
+              "]."
+          )
+        );
+      }
       Object.keys(pActivity).forEach(i => {
+        if (i === "executor") return;
         const oMod = this.mMods[i];
         LOGGER.debug("[%s] Encountered [%s]...", pActivityId, i);
         // console.log('## etl: Activity ' + pActivityId + ' mod=' + i);
@@ -241,7 +288,8 @@ class ETL extends EventEmitter implements IETL {
               pActivity[i],
               oMod,
               pResult,
-              pContext
+              pContext,
+              oExecutor
             )
           );
         }

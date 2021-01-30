@@ -6,7 +6,7 @@ import FrictionlessDataMod from "../lib/frictionless-data";
 
 // import { createLogger } from "../lib/logger";
 // const LOGGER = createLogger("etljs::etl:hpcc-frictionless:test");
-
+/*
 import { configureLogger } from "../lib";
 
 configureLogger({
@@ -17,7 +17,7 @@ configureLogger({
     default: { appenders: ["console"], level: "all" }
   }
 });
-
+*/
 describe("frictionless-data", function() {
   beforeEach(function(done: Function) {
     done();

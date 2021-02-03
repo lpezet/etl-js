@@ -8,6 +8,17 @@ describe("logger", () => {
     logger = createLogger("logger");
   });
 
+  after(() => {
+    configureLogger({
+      appenders: {
+        console: { type: "console", layout: { type: "colored" } }
+      },
+      categories: {
+        default: { appenders: ["console"], level: "off" }
+      }
+    });
+  });
+
   it("configure logger", () => {
     expect(
       configureLogger({

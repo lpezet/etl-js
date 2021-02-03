@@ -70,6 +70,53 @@ describe("commands", function() {
       });
   });
 
+  it("commandArrayDefaultToFirst", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new CommandsMod();
+    const oTemplate = {
+      root: {
+        myCommand: {
+          command: ["toto", "titi"]
+        }
+      }
+    };
+    const oContext: Context = {
+      ...emptyContext()
+    };
+    oTested
+      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .then(() => {
+        done();
+      })
+      .catch((e: Error) => {
+        done(e);
+      });
+  });
+
+  it("testArrayDefaultToFirst", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new CommandsMod();
+    const oTemplate = {
+      root: {
+        myCommand: {
+          command: "hello",
+          test: ["toto", "titi"]
+        }
+      }
+    };
+    const oContext: Context = {
+      ...emptyContext()
+    };
+    oTested
+      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .then(() => {
+        done();
+      })
+      .catch((e: Error) => {
+        done(e);
+      });
+  });
+
   it("tagsAdvanced", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
@@ -272,6 +319,50 @@ describe("commands", function() {
           assert.deepEqual(oContext, {
             env: {},
             vars: { myvar: ["Toto", "Tutu"] },
+            etl: { activityId: null, activityIndex: 0, stepName: null }
+          });
+          done();
+        } catch (e) {
+          done(e);
+        }
+      },
+      function(pError) {
+        // console.log( pError );
+        done(pError);
+      }
+    );
+  });
+
+  it("result_as_json_no_stdout_default", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        pCallback(null, null);
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new CommandsMod();
+
+    const oTemplate = {
+      root: {
+        "001_json": {
+          command: "dontmatter",
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          result_as_json: true,
+          var: "myvar"
+        }
+      }
+    };
+
+    const oContext = emptyContext();
+    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
+      function(_pData) {
+        try {
+          // assert.exists( pData['commands'] );
+          // assert.exists( pData[ 'commands' ][ '001_json' ] );
+          // assert.isArray( pData[ 'commands' ][ '001_json' ][ 'result' ] );
+          assert.deepEqual(oContext, {
+            env: {},
+            vars: { myvar: {} },
             etl: { activityId: null, activityIndex: 0, stepName: null }
           });
           done();
@@ -586,6 +677,34 @@ describe("commands", function() {
       function() {
         // console.log( pError );
         done();
+      }
+    );
+  });
+
+  it("executor_throwing_exception_in_cmd_ignore", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, _pCallback: Callback): void {
+        throw new Error("Error generated for testing purposes.");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new CommandsMod();
+    const oTemplate = {
+      root: {
+        "001_unzip": {
+          command: "gunzip my.zip",
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          ignore_errors: true
+        }
+      }
+    };
+    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
+      function() {
+        done();
+      },
+      function(e: Error) {
+        // console.log( pError );
+        done(e);
       }
     );
   });

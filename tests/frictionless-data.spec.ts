@@ -204,4 +204,29 @@ describe("frictionless-data", function() {
         done(e);
       });
   });
+
+  it("tagsUnbalanced", function(done) {
+    const oExecutor = new NoOpExecutor();
+    const oTested = new FrictionlessDataMod();
+    const oTemplate = {
+      root: {
+        "hello_{{years}}_suffix": {
+          source: "./tests/frictionless-data/inflation/{{binary}}.json"
+        }
+      }
+    };
+    const oContext: Context = {
+      binary: ["0", "1"],
+      years: ["2018", "2019", "2020"],
+      ...emptyContext()
+    };
+    oTested
+      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .then(() => {
+        done("Expected error saying template is unbalanced.");
+      })
+      .catch(() => {
+        done();
+      });
+  });
 });

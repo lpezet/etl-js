@@ -271,7 +271,8 @@ class ETL extends EventEmitter implements IETL {
       let oActivities: any = pActivity["steps"];
       if (!oActivities) {
         LOGGER.warn(
-          "Using legacy structure for activities. Now expecting activityName: { steps: { ... } }."
+          "[%s] Using legacy structure for activity. Now expecting activityName: { steps: { ... } }.",
+          pActivityId
         );
         oActivities = pActivity;
       }
@@ -291,7 +292,7 @@ class ETL extends EventEmitter implements IETL {
               pActivityIndex,
               pActivityId,
               i,
-              pActivity[i],
+              oActivities[i],
               oMod,
               pResult,
               pContext,

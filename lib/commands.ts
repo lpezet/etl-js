@@ -521,6 +521,12 @@ export default class CommandsMod extends AbstractMod<any> {
         const oConfig: any = {};
         oConfig[pKey] = pSpecs;
         const oConfigs = this._evaluateObject(oConfig, pContext);
+        LOGGER.debug(
+          "[%s] Found tags in command key. Original:\n%j\nAfter reduction:\n%j",
+          pParent,
+          pSpecs,
+          oConfigs
+        );
         const oConfigKeys = Object.keys(oConfigs);
         LOGGER.debug(
           "[%s] Running multiple commands for key [%s] (%s in total)...",
@@ -532,7 +538,7 @@ export default class CommandsMod extends AbstractMod<any> {
         oConfigKeys.forEach((e, i) => {
           const oSpecs = oConfigs[e];
           // console.log("#### Running command [" + e + "] with:");
-          // console.dir( oSpecs );
+          // console.dir(oSpecs);
           oPromises.push(
             this._singleExec(pParent, e, oSpecs, pExecutor, pContext, i)
           );

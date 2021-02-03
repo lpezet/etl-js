@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import Writer from "../../lib/templating/writer";
+import { JMESPathWriter, JSONPathWriter } from "../../lib/templating/writer";
 
 describe("writer", function() {
   beforeEach(function(done: () => void) {
@@ -10,8 +10,8 @@ describe("writer", function() {
     done();
   });
 
-  it("basic", function(done) {
-    const oTested = new Writer();
+  it("jmesPathBasic", function(done) {
+    const oTested = new JMESPathWriter();
     const oTokens = [["text", "hello world!", 0, 12]];
     const oActual = oTested.renderTokens(oTokens);
     assert.isNotNull(oActual);
@@ -20,8 +20,8 @@ describe("writer", function() {
     done();
   });
 
-  it("simpleToken", function(done) {
-    const oTested = new Writer();
+  it("jmesPathSimpleToken", function(done) {
+    const oTested = new JMESPathWriter();
     const oTokens = [
       ["text", "hello ", 0, 6],
       ["name", "firstName", 6, 21],
@@ -36,8 +36,8 @@ describe("writer", function() {
     done();
   });
 
-  it("multipleTokens", function(done) {
-    const oTested = new Writer();
+  it("jmesPathMultipleTokens", function(done) {
+    const oTested = new JMESPathWriter();
     const oTokens = [
       ["text", "hello ", 0, 6],
       ["name", "firstName", 6, 21],
@@ -55,8 +55,95 @@ describe("writer", function() {
     done();
   });
 
-  it("arrayTokens", function(done) {
-    const oTested = new Writer();
+  it("jmesPathAdvanced", function(done) {
+    const oTested = new JMESPathWriter();
+    const oTokens = [
+      ["text", "hello ", 0, 6],
+      ["name", "people[].firstName", 6, 30],
+      ["text", " ", 30, 31],
+      ["name", "people[].lastName", 31, 54],
+      ["text", "!", 54, 55]
+    ];
+    const oActual = oTested.renderTokens(oTokens, {
+      people: [
+        { firstName: "Mr.", lastName: "Anderson" },
+        { firstName: "Neo", lastName: "" }
+      ]
+    });
+    assert.isNotNull(oActual);
+    assert.isArray(oActual);
+    assert.deepEqual(["hello Mr. Anderson!", "hello Neo !"], oActual);
+    done();
+  });
+
+  it("jsonPathBasic", function(done) {
+    const oTested = new JSONPathWriter();
+    const oTokens = [["text", "hello world!", 0, 12]];
+    const oActual = oTested.renderTokens(oTokens);
+    assert.isNotNull(oActual);
+    assert.isArray(oActual);
+    assert.deepEqual(["hello world!"], oActual);
+    done();
+  });
+
+  it("jsonPathSimpleToken", function(done) {
+    const oTested = new JSONPathWriter();
+    const oTokens = [
+      ["text", "hello ", 0, 6],
+      ["name", "firstName", 6, 21],
+      ["text", "!", 21, 22]
+    ];
+    const oActual = oTested.renderTokens(oTokens, {
+      firstName: "Mr. Anderson"
+    });
+    assert.isNotNull(oActual);
+    assert.isArray(oActual);
+    assert.deepEqual(["hello Mr. Anderson!"], oActual);
+    done();
+  });
+
+  it("jsonPathMultipleTokens", function(done) {
+    const oTested = new JSONPathWriter();
+    const oTokens = [
+      ["text", "hello ", 0, 6],
+      ["name", "firstName", 6, 21],
+      ["text", " ", 21, 22],
+      ["name", "lastName", 22, 36],
+      ["text", "!", 36, 37]
+    ];
+    const oActual = oTested.renderTokens(oTokens, {
+      firstName: "Mr.",
+      lastName: "Anderson"
+    });
+    assert.isNotNull(oActual);
+    assert.isArray(oActual);
+    assert.deepEqual(["hello Mr. Anderson!"], oActual);
+    done();
+  });
+
+  it("jsonPathAdvanced", function(done) {
+    const oTested = new JSONPathWriter();
+    const oTokens = [
+      ["text", "hello ", 0, 6],
+      ["name", "people[*].firstName", 6, 30],
+      ["text", " ", 30, 31],
+      ["name", "people[*].lastName", 31, 54],
+      ["text", "!", 54, 55]
+    ];
+    const oActual = oTested.renderTokens(oTokens, {
+      people: [
+        { firstName: "Mr.", lastName: "Anderson" },
+        { firstName: "Neo", lastName: "" }
+      ]
+    });
+    assert.isNotNull(oActual);
+    assert.isArray(oActual);
+    assert.deepEqual(["hello Mr. Anderson!", "hello Neo !"], oActual);
+    done();
+  });
+
+  it("jsonPathArrayTokens", function(done) {
+    const oTested = new JSONPathWriter();
     const oTokens = [
       ["text", "hello ", 0, 6],
       ["name", "firstName", 6, 21],
@@ -81,8 +168,8 @@ describe("writer", function() {
     done();
   });
 
-  it("tokensArrayValue", function(done) {
-    const oTested = new Writer();
+  it("jsonPathTokensArrayValue", function(done) {
+    const oTested = new JSONPathWriter();
     const oTokens = [
       ["text", "hello ", 0, 6],
       ["name", "firstName", 6, 21],

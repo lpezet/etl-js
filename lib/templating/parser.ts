@@ -131,7 +131,11 @@ function resolveTags(pTags?: string[] | string): string[] {
     : pTags;
 }
 
-export default class Parser {
+export interface IParser {
+  parseToTokens(pTemplate: string): any[][];
+}
+
+export default class Parser implements IParser {
   mOpeningTagRe: RegExp;
   mClosingTagRe: RegExp;
   mClosingCurlyRe: RegExp;

@@ -1,21 +1,30 @@
 import { JSONPath } from "jsonpath-plus";
+import * as jmespath from "jmespath";
 
-export default class Writer {
+const DEBUG = false;
+
+export interface IWriter {
+  renderTokens(pTokens: any[][], pContext?: any): string[];
+}
+
+export default abstract class Writer implements IWriter {
   _rawValue(token: any[]): any {
     return token[1];
   }
-  _evaluateValue(path: string, json: any): any {
-    // eslint-disable-next-line new-cap
-    return JSONPath({ json: json, path: path });
-  }
+  abstract _evaluateValue(path: string, json: any): any;
+
   _renderAndDuplicate(results: any[], values: any[], index: number): any[] {
-    // console.log('render: index=' + index + ', results=');
-    // console.dir( results );
+    if (DEBUG) {
+      console.log("render: index=" + index + ", results=");
+      console.dir(results);
+    }
     if (index >= values.length) return results;
 
     let vals = values[index];
-    // console.log('vals=');
-    // console.dir( vals );
+    if (DEBUG) {
+      console.log("vals=");
+      console.dir(vals);
+    }
     if (!Array.isArray(vals)) {
       // results.push( vals ); // ????
       for (let i = 0; i < results.length; i++) {
@@ -26,21 +35,36 @@ export default class Writer {
       return this._renderAndDuplicate(results, values, index + 1);
     } else {
       if (vals.length === 1 && Array.isArray(vals[0])) vals = vals[0]; // Case when element value is an array itself.
-      // console.log('It is an array!!!!');
+      if (DEBUG) console.log("It is an array!!!!");
       const newResults = [];
       if (vals.length === 0) {
         vals.push(""); // dummy value
       }
-      for (let i = 0; i < vals.length; i++) {
-        for (let j = 0; j < results.length; j++) {
-          const copy = results[j].slice();
+      if (vals.length === results.length) {
+        // Luke: Here instead of creating all possible combo, we assume (yes, might break) same vals length and simply add to each result array (push)
+        // See jsonPathAdvanced/jmesPathAdvanced tests for an example
+        for (let i = 0; i < results.length; i++) {
+          const copy = results[i].slice();
           copy.push(vals[i]);
-          // console.log('copy:');
-          // console.dir(copy);
+          if (DEBUG) {
+            console.log("copy (1):");
+            console.dir(copy);
+          }
           newResults.push(copy);
         }
+      } else {
+        for (let i = 0; i < vals.length; i++) {
+          for (let j = 0; j < results.length; j++) {
+            const copy = results[j].slice();
+            copy.push(vals[i]);
+            if (DEBUG) {
+              console.log("copy (0):");
+              console.dir(copy);
+            }
+            newResults.push(copy);
+          }
+        }
       }
-
       results = newResults;
     }
     return this._renderAndDuplicate(results, values, index + 1);
@@ -69,8 +93,10 @@ export default class Writer {
         value = this._evaluateValue(token[1], pContext);
       }
 
-      // console.log('i=' + i + ', value=');
-      // console.dir(value);
+      if (DEBUG) {
+        console.log("i=" + i + ", value=");
+        console.dir(value);
+      }
       if (value !== undefined) values.push(value);
       else values.push("");
     }
@@ -78,5 +104,18 @@ export default class Writer {
     const oArrays = this._renderAndDuplicate([[]], values, 0);
 
     return this._reduce(oArrays);
+  }
+}
+
+export class JSONPathWriter extends Writer {
+  _evaluateValue(path: string, json: any): any {
+    // eslint-disable-next-line new-cap
+    return JSONPath({ json: json, path: path });
+  }
+}
+
+export class JMESPathWriter extends Writer {
+  _evaluateValue(path: string, json: any): any {
+    return jmespath.search(json, path);
   }
 }

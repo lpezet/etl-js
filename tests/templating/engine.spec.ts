@@ -194,7 +194,7 @@ describe("engine", function() {
   it("basic", function() {
     const oTested = new Engine();
     const oActual = oTested.evaluate("hello {{ name }}!", { name: "world" });
-    console.dir(oActual);
+    // console.dir(oActual);
     assert.isNotNull(oActual);
     assert.isArray(oActual);
     assert.deepEqual(["hello world!"], oActual);
@@ -228,7 +228,7 @@ describe("engine", function() {
       today: "20200101",
       files: ["file1", "file2"]
     });
-    console.dir(oActual);
+    // console.dir(oActual);
     assert.isNotNull(oActual);
     assert.isArray(oActual);
     assert.deepEqual(

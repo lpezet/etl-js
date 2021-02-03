@@ -1,16 +1,29 @@
-import Parser from "./parser";
-import Writer from "./writer";
+import Parser, { IParser } from "./parser";
+import { IWriter, JSONPathWriter } from "./writer";
 
 const DEBUG = false;
 
 export type Callback = (err: Error | null, result: string[]) => void;
 
-export default class Engine {
-  mParser: Parser;
-  mWriter: Writer;
-  constructor() {
-    this.mParser = new Parser();
-    this.mWriter = new Writer();
+export interface IEngine {
+  evaluate(
+    pTemplate: string,
+    pContext: any,
+    pCallback?: Callback
+  ): string[] | null;
+  evaluateObject(
+    pObj: any,
+    pContext: any,
+    pCallbackOrResult?: Callback | any
+  ): void;
+}
+
+export default class Engine implements IEngine {
+  mParser: IParser;
+  mWriter: IWriter;
+  constructor(pParser?: IParser, pWriter?: IWriter) {
+    this.mParser = pParser || new Parser();
+    this.mWriter = pWriter || new JSONPathWriter();
   }
   evaluate(
     pTemplate: string,

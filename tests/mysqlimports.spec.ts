@@ -53,7 +53,7 @@ describe("mysqlimports", function() {
       root: {
         "/downloads/{{ years }}.csv": {
           // eslint-disable-next-line @typescript-eslint/camelcase
-          db_name: "testdb",
+          db_name: "testdb{{ years }}",
           // eslint-disable-next-line @typescript-eslint/camelcase
           fields_enclosed_by: '"'
         }

@@ -77,13 +77,13 @@ const ssh2Exec = (
           // pCallback( err, "", "", null, conn );
           return;
         }
+        /* istanbul ignore if */
         if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: stream....");
         stream
           .on("close", function(pCode: any) {
             code = pCode;
-            // signal = pSignal;
+            /* istanbul ignore if */
             if (LOGGER.isDebugEnabled()) {
-              // console.log("Stream :: close :: code: " + code + ", signal: " + signal);
               LOGGER.debug("### ssh-client: close() (1) code = " + pCode);
               LOGGER.debug("### ssh-client: stdout?" + (stdout ? true : false));
               LOGGER.debug(stdout);
@@ -105,11 +105,13 @@ const ssh2Exec = (
           .on("end", function(_pData: any) {
             // TODO?
             // stdout = data;
+            /* istanbul ignore if */
             if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: end()");
           })
           .on("exit", function(_pData: any) {
             // TODO?
             // stdout = data;
+            /* istanbul ignore if */
             if (LOGGER.isDebugEnabled()) LOGGER.debug("### ssh-client: exit()");
           })
           .stderr.on("data", function(pData: Buffer) {
@@ -122,7 +124,7 @@ const ssh2Exec = (
             // pCallback( err, stdout, stderr, null, conn );
           })
           .on("close", function(_code: any, _signal: any) {
-            // TODO?
+            /* istanbul ignore if */
             if (LOGGER.isDebugEnabled()) {
               LOGGER.debug("### ssh-client: close() (2)");
             }

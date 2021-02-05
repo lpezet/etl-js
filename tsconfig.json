@@ -3,7 +3,7 @@
     "allowJs": true,
     "checkJs": false,
     "outDir": "dist",
-    "removeComments": true,
+    "removeComments": false /* to be able to ignore some lines from coverage */,
     "sourceMap": true,
     "esModuleInterop": true, // Because of JSONPath
     "typeRoots": ["node_modules/@types", "types"],

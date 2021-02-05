@@ -287,7 +287,22 @@ describe("executors", function() {
       done();
     });
   });
-
+  it("localExecWithEcho", function(done) {
+    const executor = new Local({ echo: true });
+    executor.exec('echo "hello!"', {}, function(err, stdout, _stderr) {
+      assert.isNull(err);
+      assert.include(stdout, "hello!");
+      done();
+    });
+  });
+  it("localExecWithEchoStdErr", function(done) {
+    const executor = new Local({ echo: true });
+    executor.exec('>&2 echo "error"', {}, function(err, _stdout, stderr) {
+      assert.isNull(err);
+      assert.include(stderr, "error");
+      done();
+    });
+  });
   it("localReady", function(done) {
     const executor = new Local();
     executor

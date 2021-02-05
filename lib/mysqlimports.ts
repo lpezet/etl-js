@@ -183,9 +183,6 @@ export default class MySQLImportsMod extends AbstractMod<any> {
           pContext,
           pTemplateIndex
         );
-      } catch (e) {
-        LOGGER.error("[%s] Error executing mysqlimport.", pParent);
-        return Promise.reject(e);
       } finally {
         LOGGER.debug("[%s] Done executing mysqlimport.", pParent);
       }

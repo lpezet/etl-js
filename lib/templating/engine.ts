@@ -54,9 +54,11 @@ export default class Engine implements IEngine {
   ): void {
     Object.keys(pObj).forEach(e => {
       if (!e.includes("{{")) {
+        /* istanbul ignore if */
         if (DEBUG) console.log("# 1");
         this._traverse(pContext, pObj[e], pResult, e, pLastIndex || 0);
       } else {
+        /* istanbul ignore if */
         if (DEBUG) console.log("# 2");
         const oTagValues = this.evaluate(e, pContext) || [];
         oTagValues.forEach((f: string, j: number) => {
@@ -72,14 +74,17 @@ export default class Engine implements IEngine {
     pKey: string,
     pIndex: number
   ): void {
+    /* istanbul ignore if */
     if (DEBUG) console.log("# Traversing [" + pKey + "]: val=" + pVal);
     if (pVal == null) return;
     if (typeof pVal === "object") {
       pResult[pKey] = {};
       this._traverseObject(pContext, pVal, pResult[pKey], pIndex);
     } else {
+      /* istanbul ignore if */
       if (DEBUG) console.log("# pVal not an object: " + typeof pVal);
       if (typeof pVal === "string" && pVal.includes("{{")) {
+        /* istanbul ignore if */
         if (DEBUG) {
           console.log("## Found tag for : " + pVal + " (index=" + pIndex + ")");
         }
@@ -97,6 +102,7 @@ export default class Engine implements IEngine {
           pResult[pKey] = oTagValues[pIndex];
         }
       } else {
+        /* istanbul ignore if */
         if (DEBUG) console.log("## pVal not a string or not a tag.");
         pResult[pKey] = pVal;
       }

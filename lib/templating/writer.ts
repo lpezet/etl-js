@@ -14,6 +14,7 @@ export default abstract class Writer implements IWriter {
   abstract _evaluateValue(path: string, json: any): any;
 
   _renderAndDuplicate(results: any[], values: any[], index: number): any[] {
+    /* istanbul ignore if */
     if (DEBUG) {
       console.log("render: index=" + index + ", results=");
       console.dir(results);
@@ -21,6 +22,7 @@ export default abstract class Writer implements IWriter {
     if (index >= values.length) return results;
 
     let vals = values[index];
+    /* istanbul ignore if */
     if (DEBUG) {
       console.log("vals=");
       console.dir(vals);
@@ -35,6 +37,7 @@ export default abstract class Writer implements IWriter {
       return this._renderAndDuplicate(results, values, index + 1);
     } else {
       if (vals.length === 1 && Array.isArray(vals[0])) vals = vals[0]; // Case when element value is an array itself.
+      /* istanbul ignore if */
       if (DEBUG) console.log("It is an array!!!!");
       const newResults = [];
       if (vals.length === 0) {
@@ -46,6 +49,7 @@ export default abstract class Writer implements IWriter {
         for (let i = 0; i < results.length; i++) {
           const copy = results[i].slice();
           copy.push(vals[i]);
+          /* istanbul ignore if */
           if (DEBUG) {
             console.log("copy (1):");
             console.dir(copy);
@@ -57,6 +61,7 @@ export default abstract class Writer implements IWriter {
           for (let j = 0; j < results.length; j++) {
             const copy = results[j].slice();
             copy.push(vals[i]);
+            /* istanbul ignore if */
             if (DEBUG) {
               console.log("copy (0):");
               console.dir(copy);
@@ -92,7 +97,7 @@ export default abstract class Writer implements IWriter {
       else if (symbol === "name") {
         value = this._evaluateValue(token[1], pContext);
       }
-
+      /* istanbul ignore if */
       if (DEBUG) {
         console.log("i=" + i + ", value=");
         console.dir(value);

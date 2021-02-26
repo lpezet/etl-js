@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "tsc": "tsc",
-    "prepublish": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
+    "dist": "npm run clean && npm run tsc -- --build tsconfig.publish.json",
+    "prepublish": "npm run dist",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts lib/ tests/",
     "mocha-single": "nyc --reporter=html mocha",

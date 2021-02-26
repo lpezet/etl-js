@@ -405,10 +405,10 @@ export default class CommandsMod extends AbstractMod<any> {
               }
             );
         } else {
-          LOGGER.info("[%s] No test for [%s]...", pParent, pKey);
+          LOGGER.info("[%s] ...no test for [%s]...", pParent, pKey);
           execCommand(oCmd, oCmdOptions).then(
             function(result) {
-              LOGGER.info("[%s] ...command [%s] executed.", pParent, pKey);
+              LOGGER.debug("[%s] ...command [%s] executed.", pParent, pKey);
               // resolve();
               asPromised(resolve, result);
             },
@@ -531,7 +531,7 @@ export default class CommandsMod extends AbstractMod<any> {
       }).then(
         function(data) {
           LOGGER.info("[%s] Done processing commands.", pParent);
-          LOGGER.info("[%s] Results:\n%j", pParent, data);
+          LOGGER.debug("[%s] Results:\n%j", pParent, data);
           // console.log('commands.handle(): data = %j', data);
           // console.dir( data );
           return oResult;

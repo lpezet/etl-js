@@ -497,7 +497,7 @@ class ETL extends EventEmitter implements IETL {
         activities: []
       };
       const oETLActivities = this._resolveActivities(pConfig, pParameters);
-      LOGGER.debug("Processing activities: %j", oETLActivities);
+      LOGGER.info("...processing activities: %j", oETLActivities);
       if (!oETLActivities) {
         LOGGER.warn("Nothing to run.");
         return Promise.resolve(oResult);

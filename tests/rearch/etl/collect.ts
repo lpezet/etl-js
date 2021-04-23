@@ -49,7 +49,7 @@ export default class CollectMod extends AbstractMod<any, any> {
     parent
   }: ModParameters): Promise<ModResult<any>> {
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
       const { env, ...contextRest } = context;
       LOGGER.debug("[%s] In Collect mod. Context=[%j]", parent, contextRest);
       try {

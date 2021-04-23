@@ -101,8 +101,8 @@ export default class CommandsMod extends AbstractMod<CommandState, any> {
             skip: Boolean(pData["skip"])
           };
           // data[ pKey ] = pData;
-          if (Boolean(pData["exit"])) pPreviousData.status = ModStatus.EXIT;
-          if (Boolean(pData["skip"])) pPreviousData.status = ModStatus.STOP;
+          if (pData["exit"]) pPreviousData.status = ModStatus.EXIT;
+          if (pData["skip"]) pPreviousData.status = ModStatus.STOP;
           // pPreviousData.exit = pPreviousData.exit || Boolean(pData["exit"]);
           // pPreviousData.skip = pPreviousData.skip || Boolean(pData["skip"]);
           pPreviousData.state?.results.push(data);

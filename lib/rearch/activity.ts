@@ -7,12 +7,12 @@ import Mod, { ModParameters, ModResult, ModStatus } from "./mod";
 const LOGGER = createLogger("etljs::activity");
 
 const EXIT_OR_SKIP_CONDITION = function(
-  _pValue: any,
+  _pValue: ModResult<any>,
   _pChainName: string
 ): boolean {
   /*
   console.log(
-    "##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
+    "##########ACTIVITY: EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
     _pChainName,
     _pValue
   );
@@ -32,9 +32,10 @@ export interface ActivityParameters {
 }
 
 export enum ActivityStatus {
-  DONE,
-  IN_PROGRESS,
-  IN_ERROR
+  CONTINUE,
+  STOP,
+  REPEAT,
+  EXIT
 }
 
 export interface ActivityResult {
@@ -62,12 +63,21 @@ const wrapStep = (
   return function(pPreviousModResult: ModResult<any>): Promise<ModResult<any>> {
     try {
       if (
-        pPreviousModResult &&
-        pPreviousModResult.state &&
-        (pPreviousModResult.state["skip"] || pPreviousModResult.state["exit"])
+        pPreviousModResult.status == ModStatus.STOP ||
+        pPreviousModResult.status == ModStatus.EXIT
       ) {
+        if (pPreviousModResult.status == ModStatus.EXIT) {
+          pActivityResult.status = ActivityStatus.EXIT;
+        }
         LOGGER.debug("[%s] Skipping step [%s] (skip/exit).", pActivityId, pKey);
         return Promise.resolve(pPreviousModResult);
+        // if (
+        //  pPreviousModResult &&
+        //  pPreviousModResult.state &&
+        //  (pPreviousModResult.state["skip"] || pPreviousModResult.state["exit"])
+        // ) {
+        //  LOGGER.debug("[%s] Skipping step [%s] (skip/exit).", pActivityId, pKey);
+        //  return Promise.resolve(pPreviousModResult);
       } else if (pMod.isDisabled()) {
         LOGGER.warn("[%s] Skipping step [%s] (disabled).", pActivityId, pKey);
         return Promise.resolve(pPreviousModResult);
@@ -98,6 +108,7 @@ const wrapStep = (
             pContext.etl.activityIndex = 0;
             pContext.etl.stepName = null;
             // Setting skip/exit
+            /*
             pPreviousModResult.state = pPreviousModResult.state || {};
             pPreviousModResult.state.skip =
               pPreviousModResult.state?.skip || Boolean(pData.state?.skip);
@@ -106,7 +117,9 @@ const wrapStep = (
             // pCurrentActivityData.results.push( { step: pKey, results: pData } );
             // pPreviousModResult.steps[pKey] = pData;
             // console.log('######## handle end!!!!');
-            return pPreviousModResult;
+            */
+            return pData;
+            // return pPreviousModResult;
           })
           .catch(pError => {
             throw pError;
@@ -153,6 +166,7 @@ export class DefaultActivity implements Activity {
       // TODO: Rename pPreviousStepData into pContext
       // pPreviousStepData[ pActivityId ] = {};
       let unknownModuleFound = false;
+      const unknownMods: string[] = [];
       const oExecutor: Executor | null = this._resolveExecutor(
         oActivityId,
         oTemplate
@@ -172,21 +186,16 @@ export class DefaultActivity implements Activity {
         oActivities = oTemplate;
       }
       const oActivityResult: ActivityResult = {
-        status: ActivityStatus.DONE,
+        status: ActivityStatus.CONTINUE,
         state: {}
       };
+
       Object.keys(oActivities).forEach(i => {
         if (i === "executor") return; // legacy structure
-        if (unknownModuleFound) return; // skip the rest if already found unknown module
-
-        const oMod = this.mETL.getMod(i);
         LOGGER.debug("[%s] Encountered [%s]...", oActivityId, i);
+        let oMod = this.mETL.getMod(i);
         // console.log('## etl: Activity ' + pActivityId + ' mod=' + i);
-        if (!oMod) {
-          LOGGER.error("[%s] ...mod [%s] unknown.", oActivityId, i);
-          // return Promise.reject(new Error("Unknow module " + pActivityId));
-          unknownModuleFound = true;
-        } else {
+        if (oMod && !unknownModuleFound) {
           LOGGER.debug("[%s] ...adding mod [%s] to chain...", oActivityId, i);
           oProcesses.push(
             wrapStep(
@@ -200,12 +209,54 @@ export class DefaultActivity implements Activity {
               oActivityResult
             )
           );
+        } else if (!oMod) {
+          const oStepMods: string[] = Object.keys(oActivities[i]);
+          if (oStepMods && oStepMods.length > 0) {
+            oStepMods.forEach(j => {
+              oMod = this.mETL.getMod(j);
+              if (!oMod) {
+                LOGGER.error("[%s] ...mod [%s] unknown.", oActivityId, i);
+                unknownMods.push(i);
+                // return Promise.reject(new Error("Unknow module " + pActivityId));
+                unknownModuleFound = true;
+              } else if (!unknownModuleFound) {
+                LOGGER.debug(
+                  "[%s] ...adding mod [%s] to chain under [%s]...",
+                  oActivityId,
+                  j,
+                  i
+                );
+                oProcesses.push(
+                  wrapStep(
+                    oActivityIndex,
+                    oActivityId + "::" + i,
+                    j,
+                    oActivities[i][j],
+                    oMod,
+                    pParams.context,
+                    oExecutor,
+                    oActivityResult
+                  )
+                );
+              }
+            });
+          } else {
+            LOGGER.error("[%s] ...mod [%s] unknown.", oActivityId, i);
+            unknownMods.push(i);
+            // return Promise.reject(new Error("Unknow module " + pActivityId));
+            unknownModuleFound = true;
+          }
         }
       });
 
       if (unknownModuleFound) {
         return Promise.reject(
-          new Error("Found unknown module(s) for activity " + oActivityId)
+          new Error(
+            "Found unknown module(s) for activity [" +
+              oActivityId +
+              "]: " +
+              unknownMods
+          )
         );
       }
       // Promises.seq( oProcesses, pPreviousActivityData )
@@ -213,11 +264,8 @@ export class DefaultActivity implements Activity {
       return Promises.chain(
         oProcesses,
         {
-          status: ModStatus.DONE,
-          exit: false,
-          skip: false,
-          steps: {}
-        },
+          status: ModStatus.CONTINUE
+        } as ModResult<any>,
         // pPreviousActivityData
         EXIT_OR_SKIP_CONDITION,
         { name: "steps" }
@@ -278,7 +326,7 @@ export class DefaultActivity implements Activity {
           LOGGER.error("[%s] Errors during activity.", oActivityId, pError);
           // console.log('etl._process: (3) pDataResults = ' + pDataResults);
           // pContext[ pActivityId ] = pError; //TODO:????
-          oActivityResult.status = ActivityStatus.IN_ERROR;
+          oActivityResult.status = ActivityStatus.EXIT; // TODO: sure about this?
           oActivityResult.error = pError;
           // console.log("#### ActivityResult = ");
           // console.log(oActivityResult);

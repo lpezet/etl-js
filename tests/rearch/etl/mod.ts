@@ -1,10 +1,14 @@
 import { createLogger } from "../../../lib/rearch/logger";
-import { AbstractMod, createModResult, ModStatus } from "../../../lib/rearch/mod";
+import {
+  AbstractMod,
+  ModStatus,
+  createModResult
+} from "../../../lib/rearch/mod";
 import { ModParameters, ModResult } from "../../../lib/rearch/mod";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class ModMod extends AbstractMod<any,any> {
+export default class ModMod extends AbstractMod<any, any> {
   mCalls: number;
   constructor(pSettings?: any) {
     super("moder", pSettings || {});

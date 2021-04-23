@@ -78,13 +78,14 @@ export function resolveEtlSets(pETLs: ETLSets): any {
     }
   }
   return oResolved;
-};
+}
 
 export function resolveActivities(pConfig: any, pParameters?: any): any {
   if (pConfig["etl"]) return pConfig["etl"];
   if (pConfig["etlSets"]) {
     const oResolvedETLs = resolveEtlSets(pConfig["etlSets"] as ETLSets);
-    const etlSet = oResolvedETLs[(pParameters ? pParameters["etlSet"] : null) || "default"];
+    const etlSet =
+      oResolvedETLs[(pParameters ? pParameters["etlSet"] : null) || "default"];
     if (etlSet) return etlSet;
     LOGGER.warn(
       "Could not find etlSet [%s]. Using it as an activity name instead.",

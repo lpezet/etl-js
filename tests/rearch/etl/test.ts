@@ -1,9 +1,15 @@
 import { createLogger } from "../../../lib/rearch/logger";
-import { AbstractMod, createModResult, ModParameters, ModResult, ModStatus } from "../../../lib/rearch/mod";
+import {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../../../lib/rearch/mod";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class TestMod extends AbstractMod<any,any> {
+export default class TestMod extends AbstractMod<any, any> {
   mSettings: any;
   mCalls: number;
   constructor(pSettings?: any) {
@@ -21,7 +27,7 @@ export default class TestMod extends AbstractMod<any,any> {
         pParams.parent,
         this.mSettings["hello"]
       );
-      resolve(createModResult(ModStatus.DONE));
+      resolve(createModResult(ModStatus.CONTINUE));
     });
   }
 }

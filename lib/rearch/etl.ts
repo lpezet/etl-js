@@ -20,7 +20,7 @@ const EXIT_OR_SKIP_CONDITION = function(
 ): boolean {
   /*
   console.log(
-    "##########EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
+    "##########ETL: EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
     _pChainName,
     _pValue
   );
@@ -30,28 +30,17 @@ const EXIT_OR_SKIP_CONDITION = function(
 };
 
 export enum ETLStatus {
-  RUNNING,
   DONE,
-  IN_ERROR
+  IN_PROGRESS,
+  EXIT
 }
 
 export type ETLResult = {
-  exit: boolean; // NOT SURE ABOUT THAT
+  // exit: boolean; // NOT SURE ABOUT THAT
   status: ETLStatus;
   activities: any;
+  error?: Error;
 };
-
-/**
- * @param pSettings settings
- * @param pMod mod
- * @return mod settings
- */
-function getModSettings(pSettings: any, pMod: string): any {
-  if (!pSettings) return {};
-  if (!pSettings["mods"]) return {};
-  if (!pSettings["mods"][pMod]) return {};
-  return pSettings["mods"][pMod];
-}
 
 export type ModCallback = (settings?: any) => void;
 
@@ -91,13 +80,13 @@ const doCreateActivity = (
         pActivityId,
         pData.status
       );
-      // console.log('######## _wrap_activity_process!!!! : ');
-      // console.log( JSON.stringify( pData ) );
+      // console.log("######## _wrap_activity_process!!!! : ");
+      // console.log(JSON.stringify(pData));
       if (
-        pData.status === ActivityStatus.IN_PROGRESS ||
-        pData.status === ActivityStatus.IN_ERROR
+        pData.status === ActivityStatus.STOP ||
+        pData.status === ActivityStatus.EXIT
       ) {
-        LOGGER.debug("[%s] Exiting (skipping)...", pActivityId);
+        LOGGER.debug("[%s] Stopping/Exiting (skipping)...", pActivityId);
         // TODO: log exit behavior here. Use _exit_from to log which section triggered exit.
         return Promise.resolve(pData); // TODO: resolve?
       }
@@ -111,23 +100,22 @@ const doCreateActivity = (
         context: pContext
       };
       const oActivity = new DefaultActivity(pETL);
-      return oActivity
-        .process(oActivityParameters)
-        .then(pActivityResult => {
-          pETLResult.activities[pActivityId] = pActivityResult;
-          pETL.emit(
-            "activityDone",
-            pActivityId,
-            null,
-            pActivityResult,
-            pActivityIndex,
-            pTotalActivities
-          );
-          return pActivityResult;
-        })
+      return oActivity.process(oActivityParameters).then(pActivityResult => {
+        pETLResult.activities[pActivityId] = pActivityResult;
+        pETL.emit(
+          "activityDone",
+          pActivityId,
+          null,
+          pActivityResult,
+          pActivityIndex,
+          pTotalActivities
+        );
+        return pActivityResult;
+      });
+      /*
         .catch(pError => {
           pETLResult.activities[pActivityId] = {
-            status: ActivityStatus.IN_ERROR,
+            status: ActivityStatus.EXIT,
             error: pError
           };
           pETL.emit(
@@ -139,16 +127,18 @@ const doCreateActivity = (
             pTotalActivities
           );
           const oActivityResult: ActivityResult = {
-            status: ActivityStatus.IN_ERROR,
+            status: ActivityStatus.EXIT,
             state: {},
             error: pError
           };
           return oActivityResult;
+          
         });
+        */
     } catch (e) {
       LOGGER.error("[%s] Error executing activity.", pActivityId);
       pETLResult.activities[pActivityId] = {
-        status: ActivityStatus.IN_ERROR,
+        status: ActivityStatus.EXIT,
         error: e
       };
       return Promise.reject(e); // TODO: check e
@@ -160,7 +150,7 @@ const isExecutor = (pObject: any): boolean => {
   return pObject["writeFile"] !== undefined;
 };
 
-class ETL extends EventEmitter implements IETL {
+export abstract class AbstractETL extends EventEmitter implements IETL {
   mMods: { [key: string]: Mod<any> };
   mSettings: any;
   mExecutors: { [key: string]: Executor };
@@ -191,6 +181,12 @@ class ETL extends EventEmitter implements IETL {
   getMod(pKey: string): Mod<any> | null {
     return this.mMods[pKey];
   }
+  _getModSettings(pSettings: any, pMod: string): any {
+    if (!pSettings) return {};
+    if (!pSettings["mods"]) return {};
+    if (!pSettings["mods"][pMod]) return {};
+    return pSettings["mods"][pMod];
+  }
   mod(
     pKey: string,
     pSource: Mod<any>,
@@ -200,8 +196,21 @@ class ETL extends EventEmitter implements IETL {
       throw new Error("Mod for " + pKey + " already registered.");
     }
     this.mMods[pKey] = pSource; // pFn.bind( pSource );
-    const modSettings = getModSettings(this.mSettings, pKey);
+    const modSettings = this._getModSettings(this.mSettings, pKey);
     if (pCallback) pCallback(modSettings);
+  }
+  abstract processTemplate(
+    pTemplate: any,
+    pParameters?: any
+  ): Promise<ETLResult>;
+}
+
+class ETL extends AbstractETL {
+  constructor(
+    pExecutors: { [key: string]: Executor } | Executor,
+    pSettings?: any
+  ) {
+    super(pExecutors, pSettings);
   }
   _createContext(): Context {
     const oContext: Context = {
@@ -218,8 +227,8 @@ class ETL extends EventEmitter implements IETL {
     LOGGER.info("Starting ETL...");
     try {
       const oResult: ETLResult = {
-        exit: false,
-        status: ETLStatus.RUNNING,
+        // exit: false,
+        status: ETLStatus.DONE,
         activities: []
       };
       const oETLActivities = utils.resolveActivities(pTemplate, pParameters);
@@ -273,33 +282,36 @@ class ETL extends EventEmitter implements IETL {
       }
       return Promises.chain(
         oActivityProcesses,
-        { status: ActivityStatus.DONE },
+        { status: ActivityStatus.CONTINUE },
         EXIT_OR_SKIP_CONDITION,
         {
           name: "activities"
         }
-      ).then(
-        function(pData: ActivityResult) {
+      )
+        .then(function(pData: ActivityResult) {
           // console.log("##### Final result: ");
           // console.log(JSON.stringify(pData));
           // console.log(pData);
           switch (pData.status) {
-            case ActivityStatus.DONE:
-            case ActivityStatus.IN_PROGRESS:
+            case ActivityStatus.CONTINUE:
               oResult.status = ETLStatus.DONE;
               break;
-            case ActivityStatus.IN_ERROR:
-              oResult.status = ETLStatus.IN_ERROR;
+            case ActivityStatus.STOP:
+              oResult.status = ETLStatus.IN_PROGRESS; // not sure
+              break;
+            case ActivityStatus.EXIT:
+              // TODO: anything else?
+              oResult.status = ETLStatus.EXIT;
+              oResult.error = pData.error;
               break;
           }
           return oResult;
-        },
-        function(pError: Error) {
+        })
+        .catch((pError: Error) => {
           // console.log("### ETL: ERROR");
-          LOGGER.error("Errors during ETL process: [%j]", pError);
+          LOGGER.error("Errors during ETL process:\n", pError);
           return Promise.reject(oResult);
-        }
-      );
+        });
     } catch (e) {
       LOGGER.error("Unexpected error.", e);
       return Promise.reject(e);

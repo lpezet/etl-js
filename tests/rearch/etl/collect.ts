@@ -1,5 +1,11 @@
 import { createLogger } from "../../../lib/rearch/logger";
-import { AbstractMod, createModResult, ModParameters, ModResult, ModStatus } from "../../../lib/rearch/mod";
+import {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../../../lib/rearch/mod";
 import { Executor } from "../../../lib/rearch/executors";
 import Context from "../../../lib/rearch/context";
 import * as Promises from "../../../lib/rearch/promises";
@@ -24,7 +30,9 @@ export default class CollectMod extends AbstractMod<any, any> {
         if (pData != null) {
           const d: any = { key: pKey, result: pConfig["result"] };
           // pData.collects[ pKey ] = pConfig;
-          pData.results.push(d);
+          pData["state"] = pData["state"] || {};
+          pData.state["results"] = pData.state["results"] || [];
+          pData.state.results.push(d);
           if (pConfig["var"]) {
             d["var"] = pConfig["var"];
             pContext.vars[pConfig["var"]] = pConfig["result"];
@@ -34,11 +42,18 @@ export default class CollectMod extends AbstractMod<any, any> {
       });
     };
   }
-  handle({ config, executor, context, parent }: ModParameters): Promise<ModResult<any>> {
+  handle({
+    config,
+    executor,
+    context,
+    parent
+  }: ModParameters): Promise<ModResult<any>> {
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] In Collect mod. Context=[%j]", parent, context);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { env, ...contextRest } = context;
+      LOGGER.debug("[%s] In Collect mod. Context=[%j]", parent, contextRest);
       try {
-        const oResult = createModResult(ModStatus.DONE);
+        const oResult = createModResult(ModStatus.CONTINUE);
         const oPromises: ((data: any) => Promise<any>)[] = [];
         Object.keys(config).forEach(i => {
           oPromises.push(this._do(parent, i, config[i], executor, context));

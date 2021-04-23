@@ -1,6 +1,12 @@
 import { assert } from "chai";
-import ETL, { IETL, ETLResult, ETLStatus } from "../../lib/rearch/etl";
-import Mod, { AbstractMod, createModResult, ModParameters, ModResult, ModStatus } from "../../lib/rearch/mod";
+import ETL, { ETLResult, ETLStatus, IETL } from "../../lib/rearch/etl";
+import Mod, {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../../lib/rearch/mod";
 import TestMod from "./etl/test";
 import { Callback, Executor, NoOpExecutor } from "../../lib/rearch/executors";
 import ModMod from "./etl/mod";
@@ -16,7 +22,7 @@ configureLogger({
   }
 });
 
-describe("etl", function() {
+describe("etl2", function() {
   beforeEach(function(done: () => void) {
     done();
   });
@@ -177,12 +183,12 @@ describe("etl", function() {
         oExecCallStack.push(this.mName);
       }
     }
-    class MyModClass extends AbstractMod<any,any> {
-      handle({executor}: ModParameters): Promise<ModResult<any>> {
+    class MyModClass extends AbstractMod<any, any> {
+      handle({ executor }: ModParameters): Promise<ModResult<any>> {
         executor.exec("", {}, () => {
           // nop
         });
-        return Promise.resolve(createModResult(ModStatus.DONE));
+        return Promise.resolve(createModResult(ModStatus.CONTINUE));
       }
     }
     const oExec1: Executor = new MyExecClass("exec1");
@@ -307,8 +313,6 @@ describe("etl", function() {
       });
   });
 
-  
-
   it("disabledMod", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
@@ -347,7 +351,7 @@ describe("etl", function() {
       }
       handle(_pParams: ModParameters): Promise<ModResult<any>> {
         return new Promise(function(resolve, _reject) {
-          resolve(createModResult(ModStatus.DONE, { skip: true }));
+          resolve(createModResult(ModStatus.STOP));
         });
       }
     }
@@ -413,7 +417,7 @@ describe("etl", function() {
       }
       handle(_pParams: ModParameters): Promise<ModResult<any>> {
         return new Promise(function(resolve, _reject) {
-          resolve(createModResult(ModStatus.DONE, { exit: true }));
+          resolve(createModResult(ModStatus.EXIT));
         });
       }
     }
@@ -483,11 +487,11 @@ describe("etl", function() {
       envValue(): any {
         return this.mEnvValue;
       }
-      handle({context}: ModParameters): Promise<ModResult<any>> {
+      handle({ context }: ModParameters): Promise<ModResult<any>> {
         try {
           assert.exists(context["env"][this.mEnvKey]);
           assert.equal(context["env"][this.mEnvKey], "world");
-          return Promise.resolve(createModResult(ModStatus.DONE));
+          return Promise.resolve(createModResult(ModStatus.CONTINUE));
         } catch (e) {
           return Promise.reject(
             new Error("context should hold key " + this.mEnvKey + ".")
@@ -579,20 +583,19 @@ describe("etl", function() {
       oTested.on("activityDone", function(pId, _pError, _pData) {
         oActualActivitiesDone.push(pId);
       });
-      oTested.processTemplate(oETL).then(
-        function(_pData: any) {
+      oTested
+        .processTemplate(oETL)
+        .then(function(_pData: any) {
           try {
             assert.deepEqual(oActualActivitiesDone, EXPECTED_ACTIVITIES);
             done();
           } catch (e) {
             done(e);
           }
-        },
-        function(pError: Error) {
-          // console.log( pError );
+        })
+        .catch((pError: Error) => {
           done(pError);
-        }
-      );
+        });
     });
   });
 
@@ -627,7 +630,7 @@ describe("etl", function() {
         console.log("## ETLResult: ");
         console.log(pData);
         try {
-          assert.equal(pData.status, ETLStatus.IN_ERROR);
+          assert.equal(pData.status, ETLStatus.EXIT);
           done();
         } catch (e) {
           done(e);
@@ -653,15 +656,15 @@ describe("etl", function() {
         }
       }
     };
-    oTested.processTemplate(oETL).then(
-      function(_pData: any) {
-        done("Expected error.");
-      },
-      function() {
+    oTested
+      .processTemplate(oETL)
+      .then(function(_pData: any) {
+        done(new Error("Expected error."));
+      })
+      .catch(() => {
         // console.log( pError );
         done();
-      }
-    );
+      });
   });
 
   it("registeringModDynamically", function(done) {

@@ -7,7 +7,6 @@ export type ModSettings = {
   [key: string]: any;
 };
 
-
 export interface ModParameters {
   parent: string;
   config: any;
@@ -16,9 +15,10 @@ export interface ModParameters {
 }
 
 export enum ModStatus {
-  DONE,
-  IN_PROGRESS,
-  IN_ERROR
+  CONTINUE,
+  STOP,
+  REPEAT,
+  EXIT
 }
 
 export class ModError extends Error {}

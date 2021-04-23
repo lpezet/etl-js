@@ -25,7 +25,7 @@ export default class ModMod extends AbstractMod<any, any> {
         pParams.parent,
         this.mSettings["hello"]
       );
-      resolve(createModResult(ModStatus.DONE));
+      resolve(createModResult(ModStatus.STOP));
     });
   }
 }

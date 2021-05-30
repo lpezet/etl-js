@@ -7,28 +7,34 @@ Each Mod provide some functionality useful to an ETL process. For examples, the 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Basic Mods](#basic-mods)
   - [Interactives Mod](#interactives-mod)
+    - [Installation/Dependencies](#installationdependencies)
     - [Specs](#specs)
     - [Examples](#examples)
   - [Files Mod](#files-mod)
+    - [Installation/Dependencies](#installationdependencies-1)
     - [Specs](#specs-1)
     - [Examples](#examples-1)
   - [Commands Mod](#commands-mod)
+    - [Installation/Dependencies](#installationdependencies-2)
     - [Specs](#specs-2)
     - [Examples](#examples-2)
 - [HPCC Systems mods](#hpcc-systems-mods)
   - [ECLs Mod](#ecls-mod)
+    - [Installation/Dependencies](#installationdependencies-3)
     - [Specs](#specs-3)
     - [Examples](#examples-3)
   - [Sprays Mod](#sprays-mod)
+    - [Installation/Dependencies](#installationdependencies-4)
     - [Specs](#specs-4)
     - [Examples](#examples-4)
 - [MySQL Mods](#mysql-mods)
   - [MySQLs Mod](#mysqls-mod)
+    - [Installation/Dependencies](#installationdependencies-5)
     - [Specs](#specs-5)
   - [MySQLImports Mod](#mysqlimports-mod)
+    - [Installation/Dependencies](#installationdependencies-6)
     - [Specs](#specs-6)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

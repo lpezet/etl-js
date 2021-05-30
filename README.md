@@ -56,9 +56,11 @@ myETL.process(template);
 - [Security](#security)
 - [Usage](#usage)
   - [Mods](#mods)
+  - [Control Flow](#control-flow)
   - [Tags](#tags)
   - [Events](#events)
   - [Results](#results)
+        - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

@@ -22,7 +22,7 @@ export type InteractivesState = {
   interactives: any[];
 };
 
-const asPromised = function (
+const asPromised = function(
   pResults: ModResult<InteractivesState>,
   pFunc: (results: any) => void,
   pParent: string,
@@ -126,7 +126,11 @@ export default class InteractivesMod extends AbstractMod<any, any> {
             resolve(pData);
           },
           function(pError) {
-            LOGGER.error("[%s] Error during interactives.", pParams.parent, pError);
+            LOGGER.error(
+              "[%s] Error during interactives.",
+              pParams.parent,
+              pError
+            );
             reject(pError);
           }
         );

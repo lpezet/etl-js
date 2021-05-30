@@ -19,10 +19,10 @@ export type Data = {
 };
 
 export type InteractivesState = {
-  interactives: any;
-}
+  interactives: any[];
+};
 
-const asPromised = function(
+const asPromised = function (
   pResults: ModResult<InteractivesState>,
   pFunc: (results: any) => void,
   pParent: string,
@@ -39,12 +39,11 @@ const asPromised = function(
     skip: Boolean(pData["skip"])
   };
   // data[ pKey ] = pData;
-  //pResults.exit = pResults.exit || Boolean(pData["exit"]);
-  //pResults.skip = pResults.skip || Boolean(pData["skip"]);
+  // pResults.exit = pResults.exit || Boolean(pData["exit"]);
+  // pResults.skip = pResults.skip || Boolean(pData["skip"]);
   if (pData.exit) pResults.status = ModStatus.EXIT;
   if (pData.skip) pResults.status = ModStatus.STOP;
-  
-  pResults.results.push(data);
+  pResults.state?.interactives.push(data);
   pFunc(pResults);
 };
 
@@ -60,7 +59,9 @@ export default class InteractivesMod extends AbstractMod<any, any> {
     _pExecutor: Executor,
     pContext: Context
   ): (data: any) => Promise<ModResult<InteractivesState>> {
-    return (pResults: ModResult<InteractivesState>): Promise<ModResult<InteractivesState>> => {
+    return (
+      pResults: ModResult<InteractivesState>
+    ): Promise<ModResult<InteractivesState>> => {
       // if ( pResults['_exit'] ) {
       //	return Promise.resolve( pResults );
       // }
@@ -110,7 +111,13 @@ export default class InteractivesMod extends AbstractMod<any, any> {
           const oTarget = i;
           LOGGER.debug("[%s] Interactive...", pParams.parent, oTarget);
           oPromises.push(
-            this._exec(pParams.parent, i, pParams.config[i], pParams.executor, pParams.context)
+            this._exec(
+              pParams.parent,
+              i,
+              pParams.config[i],
+              pParams.executor,
+              pParams.context
+            )
           );
         });
         Promises.seq(oPromises, oResult).then(

@@ -81,14 +81,21 @@ describe("interactives", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: NOOP_EXEC,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("execError", function(done) {
@@ -104,14 +111,21 @@ describe("interactives", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: NOOP_EXEC,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {

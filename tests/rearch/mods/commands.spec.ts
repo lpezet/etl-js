@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import Mod, { ModResult, ModStatus } from "../../../lib/rearch/mod";
 import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import CommandsMod, { CommandState } from "../../../lib/rearch/mods/commands";
+import CommandsMod, { CommandsState } from "../../../lib/rearch/mods/commands";
 import { loadFile } from "../../utils";
 import {
   Callback,
@@ -194,7 +194,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: oContext
       })
-      .then(function(pData: ModResult<CommandState>) {
+      .then(function(pData: ModResult<CommandsState>) {
         try {
           // console.log("Data=");
           // console.log(JSON.stringify(pData));
@@ -260,7 +260,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: oContext
       })
-      .then((pData: ModResult<CommandState>) => {
+      .then((pData: ModResult<CommandsState>) => {
         try {
           // console.log('Data=');
           // console.log(JSON.stringify( pData ));
@@ -911,7 +911,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.EXIT);
           // assert.isTrue(data["exit"]);
@@ -953,7 +953,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.EXIT);
           // assert.isTrue(data["exit"]);
@@ -993,7 +993,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.CONTINUE);
           // assert.isFalse(data["exit"]);
@@ -1035,7 +1035,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.CONTINUE);
           // assert.isFalse(data["exit"]);
@@ -1075,7 +1075,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.STOP);
           done();
@@ -1115,7 +1115,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.STOP);
           done();
@@ -1153,7 +1153,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.CONTINUE);
           done();
@@ -1193,7 +1193,7 @@ describe("commands", function() {
         executor: oExecutor,
         context: emptyContext()
       })
-      .then((data: ModResult<CommandState>) => {
+      .then((data: ModResult<CommandsState>) => {
         try {
           assert.equal(data.status, ModStatus.CONTINUE);
           // assert.isFalse(data["exit"]);

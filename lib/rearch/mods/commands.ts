@@ -19,11 +19,11 @@ export type Data = {
   _stderr?: string | null;
 };
 
-export type CommandState = {
+export type CommandsState = {
   results: any[];
 };
 
-const CHAIN_EVAL = function(pValue: ModResult<CommandState>): boolean {
+const CHAIN_EVAL = function(pValue: ModResult<CommandsState>): boolean {
   /*
   const oResults = pValue["results"];
   for (let i = oResults.length - 1; i >= 0; i--) {
@@ -35,7 +35,7 @@ const CHAIN_EVAL = function(pValue: ModResult<CommandState>): boolean {
 };
 
 // export default class CommandsMod implements Mod {
-export default class CommandsMod extends AbstractMod<CommandState, any> {
+export default class CommandsMod extends AbstractMod<CommandsState, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("commands", pSettings || {});
@@ -84,8 +84,8 @@ export default class CommandsMod extends AbstractMod<CommandState, any> {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ): (data: ModResult<CommandState>) => Promise<ModResult<CommandState>> {
-    return (pPreviousData: ModResult<CommandState>): Promise<any> => {
+  ): (data: ModResult<CommandsState>) => Promise<ModResult<CommandsState>> {
+    return (pPreviousData: ModResult<CommandsState>): Promise<any> => {
       return new Promise((resolve, reject) => {
         const asPromised = function(
           pFunc: (any?: any) => void,
@@ -453,10 +453,10 @@ export default class CommandsMod extends AbstractMod<CommandState, any> {
     pSpecs: any,
     pExecutor: Executor,
     pContext: Context
-  ): (data: any) => Promise<ModResult<CommandState>> {
+  ): (data: any) => Promise<ModResult<CommandsState>> {
     return (
-      pPreviousData: ModResult<CommandState>
-    ): Promise<ModResult<CommandState>> => {
+      pPreviousData: ModResult<CommandsState>
+    ): Promise<ModResult<CommandsState>> => {
       // console.log('# commands: pPreviousData=');
       // console.log( JSON.stringify( pPreviousData ) );
       // (pPreviousData && pPreviousData.length > 0 && (pPreviousData[ pPreviousData.length - 1 ]['exit'] || pPreviousData[ pPreviousData.length - 1 ]['skip'] ) )
@@ -511,7 +511,7 @@ export default class CommandsMod extends AbstractMod<CommandState, any> {
       // }
     };
   }
-  handle(pParams: ModParameters): Promise<ModResult<CommandState>> {
+  handle(pParams: ModParameters): Promise<ModResult<CommandsState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     // var oPromise = new Promise();
@@ -546,7 +546,7 @@ export default class CommandsMod extends AbstractMod<CommandState, any> {
         name: "commands",
         logger: LOGGER
       })
-        .then((data: ModResult<CommandState>) => {
+        .then((data: ModResult<CommandsState>) => {
           LOGGER.info("[%s] Done processing commands.", pParams.parent);
           LOGGER.debug("[%s] Results:\n%j", pParams.parent, data);
           // console.log('commands.handle(): data = %j', data);

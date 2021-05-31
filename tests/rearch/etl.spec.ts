@@ -11,6 +11,7 @@ import TestMod from "./etl/test";
 import { Callback, Executor, NoOpExecutor } from "../../lib/rearch/executors";
 import ModMod from "./etl/mod";
 
+/*
 import { configureLogger } from "../../lib/rearch/logger";
 
 configureLogger({
@@ -21,6 +22,7 @@ configureLogger({
     default: { appenders: ["console"], level: "all" }
   }
 });
+*/
 
 describe("etl2", function() {
   beforeEach(function(done: () => void) {

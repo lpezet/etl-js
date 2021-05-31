@@ -1,5 +1,5 @@
 import * as Promises from "../promises";
-import { AbstractMod, ModParameters, ModResult } from "../mod";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import TemplateEngine from "../../templating/engine";
 import { createLogger } from "../logger";
 import { Executor } from "../executors";
@@ -7,26 +7,29 @@ import Context from "../context";
 
 const LOGGER = createLogger("etljs::files");
 
-/**
- * @param pPreviousData previous data
- * @param pKey key
- * @param func function
- * @param data data
- */
-function asPromised(
-  pPreviousData: any,
+export type FilesState = {
+  results: any[];
+};
+
+const asPromised = function(
+  pResults: ModResult<FilesState>,
+  pFunc: (results: any) => void,
+  pParent: string,
   pKey: string,
-  func: (any?: any) => void,
-  data: any
+  pData: Data
 ): void {
-  try {
-    if (!pPreviousData.files[pKey]) pPreviousData.files[pKey] = {};
-    pPreviousData.files[pKey] = data;
-    func(pPreviousData);
-  } catch (e) {
-    LOGGER.error("Unexpected error asPromised.", e);
-  }
-}
+  LOGGER.debug("[%s] Files [%s] results:\n%j", pParent, pKey, pData);
+  const data = {
+    key: pKey,
+    results: pData,
+    exit: pData.exit,
+    skip: pData.skip || false
+  };
+  // if (pData.exit) pResults.status = ModStatus.EXIT;
+  // if (pData.skip) pResults.status = ModStatus.STOP;
+  pResults.state?.results.push(data);
+  pFunc(pResults);
+};
 
 export type Permissions = {
   mode?: string;
@@ -40,6 +43,7 @@ export type Data = {
   message?: string;
   exit: boolean;
   pass: boolean;
+  skip?: boolean;
   _stdout?: string | null;
   _stderr?: string | null;
 };
@@ -93,7 +97,9 @@ export default class FilesMod extends AbstractMod<any, any> {
     pPerms: Permissions,
     _pContext: Context
   ) {
-    return (pPreviousData: any): Promise<any> => {
+    return (
+      pResults: ModResult<FilesState>
+    ): Promise<ModResult<FilesState>> => {
       return new Promise((resolve, reject) => {
         // TODO: Handle templates here for pSource and pTarget.
         // Example:
@@ -143,18 +149,20 @@ export default class FilesMod extends AbstractMod<any, any> {
                 // reject( error );
                 // func = reject;
                 data.result = stderr;
-
-                asPromised(pPreviousData, pTarget, reject, data);
+                asPromised(pResults, reject, pParent, pTarget, data);
+                // asPromised(pPreviousData, pTarget, reject, data);
               } else {
                 data.result = stdout;
 
                 this._handlePerms(pParent, pExecutor, pTarget, pPerms).then(
                   function() {
-                    asPromised(pPreviousData, pTarget, resolve, data);
+                    asPromised(pResults, resolve, pParent, pTarget, data);
+                    // asPromised(pPreviousData, pTarget, resolve, data);
                   },
                   function(error: Error) {
                     data.result = error;
-                    asPromised(pPreviousData, pTarget, reject, data);
+                    asPromised(pResults, reject, pParent, pTarget, data);
+                    // asPromised(pPreviousData, pTarget, reject, data);
                   }
                 );
                 // resolve();
@@ -166,25 +174,13 @@ export default class FilesMod extends AbstractMod<any, any> {
           );
         } catch (e) {
           data.error = e;
-          asPromised(pPreviousData, pTarget, reject, data);
+          asPromised(pResults, reject, pParent, pTarget, data);
+          // asPromised(pPreviousData, pTarget, reject, data);
         }
       });
     };
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-    var oContext = JSON.parse(JSON.stringify(pContext.global));
-    oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-    console.log('Merged context=');
-    console.dir( oContext );
-    var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-    console.log('Result=');
-    console.dir( oResult );
-    */
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
   _download(
@@ -194,7 +190,7 @@ export default class FilesMod extends AbstractMod<any, any> {
     pSource: string,
     pPerms: Permissions,
     pContext: Context
-  ): (data?: any) => Promise<any> {
+  ): (data: ModResult<FilesState>) => Promise<ModResult<FilesState>> {
     let oSources = [pSource];
     if (pSource.includes("{{")) {
       oSources = this._evaluate(pSource, pContext) || [];
@@ -243,10 +239,9 @@ export default class FilesMod extends AbstractMod<any, any> {
         pContext
       );
     } else {
-      return (_pPreviousData: any) => {
+      return (pResults: ModResult<FilesState>) => {
         return new Promise((resolve, reject) => {
           try {
-            const oData = { files: {} };
             const oPromises = [];
             for (let i = 0; i < oSources.length; i++) {
               const oSource = oSources[i];
@@ -262,15 +257,15 @@ export default class FilesMod extends AbstractMod<any, any> {
                 )
               );
             }
-            Promises.seq(oPromises, oData).then(
-              function(_pData) {
+            Promises.seq(oPromises, pResults).then(
+              function(pData) {
                 LOGGER.debug("[%s] Done processing multiple files.", pParent);
                 // console.log('files_download.then(): pData=');
                 // console.dir( pData );
                 // console.log('oData=');
                 // console.dir( oData );
                 // resolve( pData );
-                resolve(oData);
+                resolve(pData);
               },
               function(pError) {
                 LOGGER.error(
@@ -300,8 +295,8 @@ export default class FilesMod extends AbstractMod<any, any> {
     pContent: string,
     pPerms: Permissions,
     _pContext: Context
-  ): (data: any) => Promise<any> {
-    return (pPreviousData: any) => {
+  ): (data: ModResult<FilesState>) => Promise<ModResult<FilesState>> {
+    return (pResults: ModResult<FilesState>) => {
       return new Promise((resolve, reject) => {
         pExecutor.writeFile(pTarget, pContent, (error, stdout, stderr) => {
           const data: Data = {
@@ -321,17 +316,20 @@ export default class FilesMod extends AbstractMod<any, any> {
             // reject( error );
             // func = reject;
             data.result = stderr || "";
-            asPromised(pPreviousData, pTarget, reject, data);
+            asPromised(pResults, reject, pParent, pTarget, data);
+            // asPromised(pPreviousData, pTarget, reject, data);
           } else {
             LOGGER.debug("[%s] Done creating file with content.", pParent);
             data.result = stdout;
             this._handlePerms(pParent, pExecutor, pTarget, pPerms).then(
               function() {
-                asPromised(pPreviousData, pTarget, resolve, data);
+                asPromised(pResults, resolve, pParent, pTarget, data);
+                // asPromised(pPreviousData, pTarget, resolve, data);
               },
               function(error: Error) {
                 data.result = error;
-                asPromised(pPreviousData, pTarget, reject, data);
+                asPromised(pResults, reject, pParent, pTarget, data);
+                // asPromised(pPreviousData, pTarget, reject, data);
               }
             );
             // resolve( stdout );
@@ -341,7 +339,7 @@ export default class FilesMod extends AbstractMod<any, any> {
       });
     };
   }
-  handle(pParams: ModParameters): Promise<ModResult<any>> {
+  handle(pParams: ModParameters): Promise<ModResult<FilesState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     return new Promise((resolve, reject) => {
@@ -350,7 +348,12 @@ export default class FilesMod extends AbstractMod<any, any> {
       // console.dir( pActivityContext );
       // console.log('files: Global Context=');
       // console.dir( pGlobalContext );
-      const oData = { files: {} };
+      const oResult: ModResult<FilesState> = {
+        exit: false,
+        skip: false,
+        status: ModStatus.CONTINUE,
+        state: { results: [] }
+      };
       const oPromises: ((data: any) => Promise<any>)[] = [];
       Object.keys(pParams.config).forEach(i => {
         const oTarget = i;
@@ -388,12 +391,12 @@ export default class FilesMod extends AbstractMod<any, any> {
         }
       });
 
-      Promises.seq(oPromises, oData)
+      Promises.seq(oPromises, oResult)
         .then(function(pData) {
           LOGGER.debug("[%s] Done processing files.", pParams.parent);
           // resolve( pData );
-          // console.log('files.handle(): pData=');
-          // console.dir( pData );
+          // console.log("files.handle(): pData=");
+          // console.dir(pData);
           // console.log('oData=');
           // console.dir(oData);
 

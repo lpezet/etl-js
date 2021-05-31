@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import FilesMod from "../../../lib/rearch/mods/files";
+import FilesMod, { FilesState } from "../../../lib/rearch/mods/files";
 import { loadFile } from "../../utils";
 import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
 import {
@@ -8,8 +8,19 @@ import {
   NoOpExecutor
 } from "../../../lib/rearch/executors";
 import Context, { emptyContext } from "../../../lib/rearch/context";
-import Mod from "../../../lib/rearch/mod";
+import Mod, { ModResult } from "../../../lib/rearch/mod";
+/*
+import { configureLogger } from "../../../lib/rearch/logger";
 
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 describe("files", function() {
   beforeEach(function(done: () => void) {
     done();
@@ -272,11 +283,13 @@ describe("files", function() {
         context: emptyContext()
       })
       .then(
-        function(pData: any) {
+        function(pData: ModResult<FilesState>) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {
@@ -320,11 +333,13 @@ describe("files", function() {
         context: emptyContext()
       })
       .then(
-        function(pData: any) {
+        function(pData: ModResult<FilesState>) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {
@@ -381,9 +396,11 @@ describe("files", function() {
       .then(
         function(pData: any) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {
@@ -430,9 +447,11 @@ describe("files", function() {
       .then(
         function(pData: any) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {
@@ -480,9 +499,11 @@ describe("files", function() {
       .then(
         function(pData: any) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {
@@ -585,9 +606,11 @@ describe("files", function() {
         function(pData: any) {
           try {
             assert.exists(pData);
-            assert.exists(pData["files"]);
-            assert.exists(pData["files"]["/tmp/file.txt"]);
-            assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
+            assert.exists(pData.state);
+            assert.equal(pData.state?.results.length, 1);
+            const actual = pData.state?.results[0];
+            assert.equal(actual.key, "/tmp/file.txt");
+            assert.notExists(actual.results.result.error);
             done();
           } catch (e) {
             done(e);
@@ -653,15 +676,19 @@ describe("files", function() {
         context: oContext
       })
       .then(
-        function(pData: any) {
+        function(pData: ModResult<FilesState>) {
           assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/toto.txt"]);
-          assert.notExists(pData["files"]["/tmp/toto.txt"]["error"]);
-          assert.exists(pData["files"]["/tmp/titi.txt"]);
-          assert.notExists(pData["files"]["/tmp/titi.txt"]["error"]);
-          assert.exists(pData["files"]["/tmp/static.txt"]);
-          assert.notExists(pData["files"]["/tmp/static.txt"]["error"]);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 3);
+          let actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/toto.txt");
+          assert.notExists(actual.results.result.error);
+          actual = pData.state?.results[1];
+          assert.equal(actual.key, "/tmp/titi.txt");
+          assert.notExists(actual.results.result.error);
+          actual = pData.state?.results[2];
+          assert.equal(actual.key, "/tmp/static.txt");
+          assert.notExists(actual.results.result.error);
           done();
         },
         function(pError: Error) {

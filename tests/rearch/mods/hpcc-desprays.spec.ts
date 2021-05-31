@@ -12,6 +12,7 @@ import {
   NoOpExecutor
 } from "../../../lib/rearch/executors";
 
+/*
 import { configureLogger } from "../../../lib/rearch/logger";
 
 configureLogger({
@@ -22,6 +23,7 @@ configureLogger({
     default: { appenders: ["console"], level: "all" }
   }
 });
+*/
 
 describe("hpcc-desprays", function() {
   beforeEach(function(done: () => void) {

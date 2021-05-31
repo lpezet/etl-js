@@ -24,7 +24,7 @@ const asPromised = function(
 ): void {
   LOGGER.debug("[%s] Despray [%s] results:\n%j", pParent, pKey, pData);
   const data = {
-    desprays: pKey,
+    key: pKey,
     results: pData,
     exit: Boolean(pData["exit"]),
     skip: Boolean(pData["skip"])

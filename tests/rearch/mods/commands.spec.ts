@@ -10,6 +10,7 @@ import {
 } from "../../../lib/rearch/executors";
 import Context, { emptyContext } from "../../../lib/rearch/context";
 
+/*
 import { configureLogger } from "../../../lib/rearch/logger";
 
 configureLogger({
@@ -20,6 +21,7 @@ configureLogger({
     default: { appenders: ["console"], level: "all" }
   }
 });
+*/
 
 describe("commands", function() {
   beforeEach(function(done: () => void) {

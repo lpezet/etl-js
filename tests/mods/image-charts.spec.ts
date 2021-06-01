@@ -1,15 +1,9 @@
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
-import ImageChartsMod, {
-  ImageChartsState
-} from "../../../lib/rearch/mods/image-charts";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import ImageChartsMod, { ImageChartsState } from "../../lib/mods/image-charts";
 import { assert } from "chai";
-import Context, { emptyContext } from "../../../lib/rearch/context";
+import Context, { emptyContext } from "../../lib/context";
 
 describe("image-charts", function() {
   beforeEach(function(done: () => void) {

@@ -1,7 +1,7 @@
-import { Callback, NoOpExecutor } from "../../lib/rearch/executors";
+import { Callback, NoOpExecutor } from "../lib/executors";
 import { assert } from "chai";
-import CommandsMod from "../../lib/rearch/mods/commands";
-import ETL from "../../lib/rearch/etl";
+import CommandsMod from "../lib/mods/commands";
+import ETL from "../lib/etl";
 
 describe("etl-commands", function() {
   class ExecutorClass extends NoOpExecutor {

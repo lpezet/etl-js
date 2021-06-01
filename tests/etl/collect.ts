@@ -1,14 +1,14 @@
-import { createLogger } from "../../../lib/rearch/logger";
+import { createLogger } from "../../lib/logger";
 import {
   AbstractMod,
   ModParameters,
   ModResult,
   ModStatus,
   createModResult
-} from "../../../lib/rearch/mod";
-import { Executor } from "../../../lib/rearch/executors";
-import Context from "../../../lib/rearch/context";
-import * as Promises from "../../../lib/rearch/promises";
+} from "../../lib/mod";
+import { Executor } from "../../lib/executors";
+import Context from "../../lib/context";
+import * as Promises from "../../lib/promises";
 
 const LOGGER = createLogger("etljs::etl::test");
 

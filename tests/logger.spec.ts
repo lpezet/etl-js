@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Logger, configureLogger, createLogger } from "../../lib/rearch/logger";
+import { Logger, configureLogger, createLogger } from "../lib/logger";
 
 describe("logger", () => {
   let logger: Logger;

@@ -3,7 +3,7 @@ import { Executor } from "../executors";
 import Context from "../context";
 import { createLogger } from "../logger";
 import * as Promises from "../promises";
-import TemplateEngine from "../../templating/engine";
+import TemplateEngine from "../templating/engine";
 
 const LOGGER = createLogger("etljs::mysqlimports");
 

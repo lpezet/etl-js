@@ -1,11 +1,11 @@
-import { createLogger } from "../../../lib/rearch/logger";
+import { createLogger } from "../../lib/logger";
 import {
   AbstractMod,
   ModParameters,
   ModResult,
   ModStatus,
   createModResult
-} from "../../../lib/rearch/mod";
+} from "../../lib/mod";
 
 const LOGGER = createLogger("etljs::etl::test");
 

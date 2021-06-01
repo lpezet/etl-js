@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import { Local, NoOpExecutor, Remote } from "../../lib/rearch/executors";
-import { Callback, ISSHClient } from "../../lib/rearch/ssh-client";
+import { Local, NoOpExecutor, Remote } from "../lib/executors";
+import { Callback, ISSHClient } from "../lib/ssh-client";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";

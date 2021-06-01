@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import * as utils from "../../lib/rearch/utils";
+import * as utils from "../lib/utils";
 
 describe("utils", function() {
   beforeEach(function(done: () => void) {

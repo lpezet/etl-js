@@ -1,10 +1,6 @@
-import { createLogger } from "../../../lib/rearch/logger";
-import {
-  AbstractMod,
-  ModStatus,
-  createModResult
-} from "../../../lib/rearch/mod";
-import { ModParameters, ModResult } from "../../../lib/rearch/mod";
+import { createLogger } from "../../lib/logger";
+import { AbstractMod, ModStatus, createModResult } from "../../lib/mod";
+import { ModParameters, ModResult } from "../../lib/mod";
 
 const LOGGER = createLogger("etljs::etl::test");
 

@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import InteractivesMod from "../../../lib/rearch/mods/interactives";
+import InteractivesMod from "../../lib/mods/interactives";
 import { EventEmitter } from "events";
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Mod from "../../../lib/rearch/mod";
-import Context, { emptyContext } from "../../../lib/rearch/context";
-import { Executor, NoOpExecutor } from "../../../lib/rearch/executors";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod from "../../lib/mod";
+import Context, { emptyContext } from "../../lib/context";
+import { Executor, NoOpExecutor } from "../../lib/executors";
 
 // const chai = require("chai");
 // const spies = require("chai-spies");

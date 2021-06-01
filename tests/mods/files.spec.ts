@@ -1,16 +1,12 @@
 import { assert } from "chai";
-import FilesMod, { FilesState } from "../../../lib/rearch/mods/files";
-import { loadFile } from "../../utils";
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
-import Context, { emptyContext } from "../../../lib/rearch/context";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
+import FilesMod, { FilesState } from "../../lib/mods/files";
+import { loadFile } from "../utils";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
 /*
-import { configureLogger } from "../../../lib/rearch/logger";
+import { configureLogger } from "../../../lib/logger";
 
 configureLogger({
   appenders: {

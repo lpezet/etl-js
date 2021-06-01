@@ -1,5 +1,5 @@
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
-import TemplateEngine from "../../templating/engine";
+import TemplateEngine from "../templating/engine";
 import * as util from "util";
 import * as Promises from "../promises";
 import Context from "../context";

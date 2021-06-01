@@ -1,14 +1,10 @@
 import { assert } from "chai";
-import { loadFile } from "../../utils";
-import HPCCECLsMod, { HPCCECLsState } from "../../../lib/rearch/mods/hpcc-ecls";
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Context, { emptyContext } from "../../../lib/rearch/context";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
+import { loadFile } from "../utils";
+import HPCCECLsMod, { HPCCECLsState } from "../../lib/mods/hpcc-ecls";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import * as fs from "fs";
 import * as os from "os";
 

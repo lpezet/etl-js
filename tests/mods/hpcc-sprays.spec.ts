@@ -1,16 +1,10 @@
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
-import Context, { emptyContext } from "../../../lib/rearch/context";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import Context, { emptyContext } from "../../lib/context";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import { assert } from "chai";
-import { loadFile } from "../../utils";
-import HPCCSpraysMod, {
-  HPCCSpraysState
-} from "../../../lib/rearch/mods/hpcc-sprays";
+import { loadFile } from "../utils";
+import HPCCSpraysMod, { HPCCSpraysState } from "../../lib/mods/hpcc-sprays";
 
 describe("hpcc-sprays", function() {
   beforeEach(function(done: Function) {

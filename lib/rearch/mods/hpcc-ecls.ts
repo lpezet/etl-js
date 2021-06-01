@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as Promises from "../promises";
-import TemplateEngine from "../templating/engine";
+import TemplateEngine from "../../templating/engine";
 import { createLogger } from "../logger";
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import Context from "../context";
@@ -50,22 +50,7 @@ const asPromised = function(
   pResults.state?.ecls.push(data);
   pFunc(pResults);
 };
-/*
-const asPromised = (
-  pPreviousData: any,
-  pKey: string,
-  func: Function,
-  pData: any
-): void => {
-  if (!pPreviousData["hpcc-ecls"][pKey]) pPreviousData["hpcc-ecls"][pKey] = {};
-  pPreviousData["hpcc-ecls"][pKey] = pData;
-  if (pData["exit"]) {
-    pPreviousData["_exit"] = pData["exit"];
-    pPreviousData["_exit_from"] = pKey;
-  }
-  func(pPreviousData);
-};
-*/
+
 const promiseExecutor = (
   pExecutor: Executor,
   pFunc: Function,

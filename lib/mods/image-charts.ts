@@ -1,5 +1,5 @@
 import * as Promises from "../promises";
-import TemplateEngine from "../../templating/engine";
+import TemplateEngine from "../templating/engine";
 import { createLogger } from "../logger";
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import Context from "../context";

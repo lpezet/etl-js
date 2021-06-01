@@ -1,6 +1,6 @@
-import ETL from "../../lib/rearch/etl";
-import { Callback, NoOpExecutor } from "../../lib/rearch/executors";
-import FilesMod from "../../lib/rearch/mods/files";
+import ETL from "../lib/etl";
+import { Callback, NoOpExecutor } from "../lib/executors";
+import FilesMod from "../lib/mods/files";
 import CollectMod from "./etl/collect";
 import { assert } from "chai";
 

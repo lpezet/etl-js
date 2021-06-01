@@ -1,7 +1,7 @@
 import { assert } from "chai";
-import Mod, { AbstractMod, ModParameters } from "../../lib/rearch/mod";
-import { NoOpExecutor } from "../../lib/rearch/executors";
-import { AbstractETL, ETLResult, ETLStatus, IETL } from "../../lib/rearch/etl";
+import Mod, { AbstractMod, ModParameters } from "../lib/mod";
+import { NoOpExecutor } from "../lib/executors";
+import { AbstractETL, ETLResult, ETLStatus, IETL } from "../lib/etl";
 
 describe("mod", function() {
   beforeEach(function(done: () => void) {

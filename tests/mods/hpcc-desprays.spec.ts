@@ -1,19 +1,15 @@
 import { assert } from "chai";
-import { loadFile } from "../../utils";
+import { loadFile } from "../utils";
 import HPCCDespraysMod, {
   HPCCDespraysState
-} from "../../../lib/rearch/mods/hpcc-desprays";
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Context, { emptyContext } from "../../../lib/rearch/context";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
+} from "../../lib/mods/hpcc-desprays";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 
 /*
-import { configureLogger } from "../../../lib/rearch/logger";
+import { configureLogger } from "../../../lib/logger";
 
 configureLogger({
   appenders: {

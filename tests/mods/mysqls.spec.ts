@@ -1,14 +1,10 @@
 import { assert } from "chai";
-import { AbstractETL, ETLResult, ETLStatus } from "../../../lib/rearch/etl";
-import Mod, { ModResult } from "../../../lib/rearch/mod";
-import MySQLsMod, { MySQLState } from "../../../lib/rearch/mods/mysqls";
-import {
-  Callback,
-  Executor,
-  NoOpExecutor
-} from "../../../lib/rearch/executors";
-import { loadFile } from "../../utils";
-import Context, { emptyContext } from "../../../lib/rearch/context";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import MySQLsMod, { MySQLState } from "../../lib/mods/mysqls";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import { loadFile } from "../utils";
+import Context, { emptyContext } from "../../lib/context";
 
 describe("mysqls", function() {
   beforeEach(function(done: Function) {

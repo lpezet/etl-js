@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import * as Promises from "../../lib/rearch/promises";
+import * as Promises from "../lib/promises";
 
 describe("promises", function() {
   beforeEach(function(done: () => void) {

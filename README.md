@@ -7,6 +7,7 @@ Extract, Transform, and Load sharable and repeatable.
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 [![Known Vulnerabilities][vulnerabilities-image]][vulnerabilities-url]
+[![CodeFactor][codefactor-image]][codefactor-url]
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flpezet%2Fetl-js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flpezet%2Fetl-js?ref=badge_shield)
 
 ```js
@@ -59,8 +60,7 @@ myETL.process(template);
   - [Control Flow](#control-flow)
   - [Tags](#tags)
   - [Events](#events)
-  - [Results](#results)
-        - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
+  - [Results](#results) - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
 - [Developing Mods](#developing-mods)
 - [License](#license)
 
@@ -359,5 +359,7 @@ A separate documention is provided to develop new mods. It can be found [here](M
 [appveyor-url]: https://ci.appveyor.com/project/lpezet/etl-js
 [vulnerabilities-image]: https://snyk.io/test/github/lpezet/etl-js/badge.svg
 [vulnerabilities-url]: https://snyk.io/test/github/lpezet/etl-js
+[codefactor-image]: https://www.codefactor.io/repository/github/lpezet/etl-js/badge
+[codefactor-url]: https://www.codefactor.io/repository/github/lpezet/etl-js
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flpezet%2Fetl-js.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flpezet%2Fetl-js?ref=badge_large)

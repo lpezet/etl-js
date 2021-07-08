@@ -1,12 +1,18 @@
 import { assert } from "chai";
-import ETL, { ETLResult, IETL } from "../lib/etl";
-import Mod, { AbstractMod } from "../lib/mod";
+import ETL, { ETLResult, ETLStatus, IETL } from "../lib/etl";
+import Mod, {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../lib/mod";
 import TestMod from "./etl/test";
 import { Callback, Executor, NoOpExecutor } from "../lib/executors";
-import Context from "../lib/context";
 import ModMod from "./etl/mod";
+
 /*
-import { configureLogger } from "../lib";
+import { configureLogger } from "../../lib/logger";
 
 configureLogger({
   appenders: {
@@ -17,7 +23,8 @@ configureLogger({
   }
 });
 */
-describe("etl", function() {
+
+describe("etl2", function() {
   beforeEach(function(done: () => void) {
     done();
   });
@@ -36,11 +43,11 @@ describe("etl", function() {
     pETL: IETL,
     pMod: string,
     pSettings?: any
-  ): Promise<Mod> {
+  ): Promise<Mod<any>> {
     return import(pMod).then(m => {
       if (m["default"]) m = m.default;
       const Factory = m.bind.apply(m, [null, pSettings || {}]);
-      const oMod = new Factory() as Mod;
+      const oMod = new Factory() as Mod<any>;
       oMod.register(pETL);
       return oMod;
     });
@@ -62,7 +69,7 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL, {}).then(
+    oTested.processTemplate(oETL, {}).then(
       function() {
         try {
           assert.equal(oTester.calls(), 1);
@@ -89,7 +96,7 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL, { etlSet: "mySet" }).then(
+    oTested.processTemplate(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
           assert.equal(oTester.calls(), 1);
@@ -120,7 +127,7 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL, { etlSet: "mySet" }).then(
+    oTested.processTemplate(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
           assert.equal(oTester.calls(), 1);
@@ -151,7 +158,7 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL, { etlSet: "abc" }).then(
+    oTested.processTemplate(oETL, { etlSet: "abc" }).then(
       function() {
         try {
           assert.equal(oTester.calls(), 1);
@@ -178,17 +185,12 @@ describe("etl", function() {
         oExecCallStack.push(this.mName);
       }
     }
-    class MyModClass extends AbstractMod<any> {
-      handle(
-        _pParent: string,
-        _pConfig: any,
-        pExecutor: Executor,
-        _pContext: Context
-      ): Promise<any> {
-        pExecutor.exec("", {}, () => {
+    class MyModClass extends AbstractMod<any, any> {
+      handle({ executor }: ModParameters): Promise<ModResult<any>> {
+        executor.exec("", {}, () => {
           // nop
         });
-        return Promise.resolve();
+        return Promise.resolve(createModResult(ModStatus.CONTINUE));
       }
     }
     const oExec1: Executor = new MyExecClass("exec1");
@@ -204,7 +206,7 @@ describe("etl", function() {
       executor: "exec3"
     };
     const oTested = new ETL(oExecutors, oSettings);
-    const oMod: Mod = new MyModClass("execTest");
+    const oMod: Mod<any> = new MyModClass("execTest");
     oMod.register(oTested);
     const oETL = {
       etlSets: {
@@ -220,19 +222,19 @@ describe("etl", function() {
       }
     };
     oTested
-      .process(oETL, { etlSet: "testDefault" })
+      .processTemplate(oETL, { etlSet: "testDefault" })
       .then(() => {
         assert.isTrue(oExecCallStack.length == 1);
         assert.equal(oExecCallStack[0], "exec3"); // since it's specified in Settings
         oExecCallStack = [];
         delete oSettings.executor;
-        return oTested.process(oETL, { etlSet: "testDefault" });
+        return oTested.processTemplate(oETL, { etlSet: "testDefault" });
       })
       .then(() => {
         assert.isTrue(oExecCallStack.length == 1);
         assert.equal(oExecCallStack[0], "exec2"); // since it's specified in Executors under "default"
         oExecCallStack = [];
-        return oTested.process(oETL, { etlSet: "testActivityExec" });
+        return oTested.processTemplate(oETL, { etlSet: "testActivityExec" });
       })
       .then(() => {
         assert.isTrue(oExecCallStack.length == 1);
@@ -262,7 +264,7 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL, { etlSet: "mySet" }).then(
+    oTested.processTemplate(oETL, { etlSet: "mySet" }).then(
       function() {
         try {
           assert.equal(oTester.calls(), 1);
@@ -297,7 +299,7 @@ describe("etl", function() {
             }
           }
         };
-        oTested.process(oETL, { etlSet: "unknown" }).then(
+        oTested.processTemplate(oETL, { etlSet: "unknown" }).then(
           function() {
             try {
               assert.equal(oTester.calls(), 0);
@@ -313,77 +315,6 @@ describe("etl", function() {
       });
   });
 
-  it("resolveETLSets", function() {
-    const oExecutor: Executor = new NoOpExecutor();
-    const oTested = new ETL(oExecutor);
-
-    const oSimpleNoRefETLSets = {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      default: ["activity4"]
-    };
-
-    const oSimpleRefETLSets = {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      default: [{ etlSet: "prepare" }, { etlSet: "process" }, "activity4"]
-    };
-
-    const oDeepRefETLSets = {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      report: [{ etlSet: "prepare" }, "activity5"],
-      default: [
-        { etlSet: "prepare" },
-        { etlSet: "process" },
-        "activity4",
-        { etlSet: "report" }
-      ]
-    };
-
-    const oInfiniteLoopRefETLSets = {
-      sanity: ["activity1"],
-      loop: [{ etlSet: "default" }],
-      default: [{ etlSet: "loop" }]
-    };
-
-    let oActual = null;
-
-    oActual = oTested._resolveEtlSets(oSimpleNoRefETLSets);
-    assert.deepEqual(oActual, {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      default: ["activity4"]
-    });
-
-    oActual = oTested._resolveEtlSets(oSimpleRefETLSets);
-    assert.deepEqual(oActual, {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      default: ["activity1", "activity2", "activity3", "activity4"]
-    });
-
-    oActual = oTested._resolveEtlSets(oDeepRefETLSets);
-    assert.deepEqual(oActual, {
-      prepare: ["activity1", "activity2"],
-      process: ["activity3"],
-      report: ["activity1", "activity2", "activity5"],
-      default: [
-        "activity1",
-        "activity2",
-        "activity3",
-        "activity4",
-        "activity1",
-        "activity2",
-        "activity5"
-      ]
-    });
-
-    assert.throws(function() {
-      oTested._resolveEtlSets(oInfiniteLoopRefETLSets);
-    });
-  });
-
   it("disabledMod", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
@@ -396,7 +327,7 @@ describe("etl", function() {
         tester: {}
       }
     };
-    oTested.process(oETL).then(
+    oTested.processTemplate(oETL).then(
       function() {
         try {
           assert.equal(oTester.calls(), 0);
@@ -413,21 +344,16 @@ describe("etl", function() {
   });
 
   it("skip", function(done) {
-    class SkipModClass implements Mod {
+    class SkipModClass implements Mod<any> {
       isDisabled(): boolean {
         return false;
       }
       register(pETL: IETL): void {
         pETL.mod("skipMod", this);
       }
-      handle(
-        _pParent: string,
-        _pConfig: any,
-        _pExecutor: Executor,
-        _pContext: Context
-      ): Promise<any> {
+      handle(_pParams: ModParameters): Promise<ModResult<any>> {
         return new Promise(function(resolve, _reject) {
-          resolve({ skip: true });
+          resolve(createModResult(ModStatus.STOP));
         });
       }
     }
@@ -465,7 +391,7 @@ describe("etl", function() {
           }
         };
 
-        oTested.process(oETL).then(
+        oTested.processTemplate(oETL).then(
           function() {
             try {
               assert.equal(oTester.calls(), 2);
@@ -484,21 +410,16 @@ describe("etl", function() {
   });
 
   it("exit", function(done) {
-    class ModClass implements Mod {
+    class ModClass implements Mod<any> {
       isDisabled(): boolean {
         return false;
       }
       register(pETL: IETL): void {
         pETL.mod("exitMod", this);
       }
-      handle(
-        _pParent: string,
-        _pConfig: any,
-        _pExecutor: Executor,
-        _pContext: Context
-      ): Promise<any> {
+      handle(_pParams: ModParameters): Promise<ModResult<any>> {
         return new Promise(function(resolve, _reject) {
-          resolve({ exit: true });
+          resolve(createModResult(ModStatus.EXIT));
         });
       }
     }
@@ -534,7 +455,7 @@ describe("etl", function() {
             }
           }
         };
-        oTested.process(oETL).then(
+        oTested.processTemplate(oETL).then(
           function(_pData: any) {
             try {
               assert.equal(oTester.calls(), 1);
@@ -552,7 +473,7 @@ describe("etl", function() {
   });
 
   it("envVariables", function(done) {
-    class ModClass implements Mod {
+    class ModClass implements Mod<any> {
       mEnvKey: string;
       mEnvValue: any;
       constructor(pEnvKey: string) {
@@ -568,16 +489,11 @@ describe("etl", function() {
       envValue(): any {
         return this.mEnvValue;
       }
-      handle(
-        _pParent: string,
-        _pConfig: any,
-        _pExecutor: Executor,
-        pContext: Context
-      ): Promise<any> {
+      handle({ context }: ModParameters): Promise<ModResult<any>> {
         try {
-          assert.exists(pContext["env"][this.mEnvKey]);
-          assert.equal(pContext["env"][this.mEnvKey], "world");
-          return Promise.resolve({});
+          assert.exists(context["env"][this.mEnvKey]);
+          assert.equal(context["env"][this.mEnvKey], "world");
+          return Promise.resolve(createModResult(ModStatus.CONTINUE));
         } catch (e) {
           return Promise.reject(
             new Error("context should hold key " + this.mEnvKey + ".")
@@ -599,7 +515,7 @@ describe("etl", function() {
       }
     };
     process.env["hello"] = "world";
-    oTested.process(oETL).then(
+    oTested.processTemplate(oETL).then(
       function(_pData: any) {
         done();
       },
@@ -669,20 +585,19 @@ describe("etl", function() {
       oTested.on("activityDone", function(pId, _pError, _pData) {
         oActualActivitiesDone.push(pId);
       });
-      oTested.process(oETL).then(
-        function(_pData: any) {
+      oTested
+        .processTemplate(oETL)
+        .then(function(_pData: any) {
           try {
             assert.deepEqual(oActualActivitiesDone, EXPECTED_ACTIVITIES);
             done();
           } catch (e) {
             done(e);
           }
-        },
-        function(pError: Error) {
-          // console.log( pError );
+        })
+        .catch((pError: Error) => {
           done(pError);
-        }
-      );
+        });
     });
   });
 
@@ -690,19 +605,14 @@ describe("etl", function() {
     const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
-    class AwesomeMod implements Mod {
+    class AwesomeMod implements Mod<any> {
       register(pETL: IETL): void {
         pETL.mod("awesome", this);
       }
       isDisabled(): boolean {
         return false;
       }
-      handle(
-        _pParent: string,
-        _pConfig: any,
-        _pExecutor: Executor,
-        _pContext: Context
-      ): Promise<any> {
+      handle(_pParams: ModParameters): Promise<ModResult<any>> {
         throw new Error("Error generated for testing purposes.");
       }
     }
@@ -717,12 +627,19 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL).then(
-      function(_pData: any) {
-        done("Expecting error");
+    oTested.processTemplate(oETL).then(
+      function(pData: ETLResult) {
+        console.log("## ETLResult: ");
+        console.log(pData);
+        try {
+          assert.equal(pData.status, ETLStatus.EXIT);
+          done();
+        } catch (e) {
+          done(e);
+        }
       },
-      function(_pError: Error) {
-        done();
+      function(pError: Error) {
+        done(pError);
       }
     );
   });
@@ -741,15 +658,15 @@ describe("etl", function() {
         }
       }
     };
-    oTested.process(oETL).then(
-      function(_pData: any) {
-        done("Expected error.");
-      },
-      function() {
+    oTested
+      .processTemplate(oETL)
+      .then(function(_pData: any) {
+        done(new Error("Expected error."));
+      })
+      .catch(() => {
         // console.log( pError );
         done();
-      }
-    );
+      });
   });
 
   it("registeringModDynamically", function(done) {
@@ -786,7 +703,7 @@ describe("etl", function() {
         tester: {}
       }
     };
-    oTested.process(oETL, {}).then(
+    oTested.processTemplate(oETL, {}).then(
       function() {
         try {
           assert.equal(oTester.calls(), 2);
@@ -802,6 +719,43 @@ describe("etl", function() {
     );
   });
 
+  it("newActivitySchemaAdvanced", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oSettings = {};
+    const oTested = new ETL(oExecutor, oSettings);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+    const oETL = {
+      etlSets: {
+        default: ["abc", "def"]
+      },
+      abc: {
+        steps: {
+          step0: {
+            tester: {}
+          }
+        }
+      },
+      def: {
+        tester: {}
+      }
+    };
+    oTested.processTemplate(oETL, {}).then(
+      function() {
+        try {
+          assert.equal(oTester.calls(), 2);
+          done();
+        } catch (pError) {
+          done(pError);
+        }
+      },
+      function(pError: Error) {
+        console.log(pError);
+        done(pError);
+      }
+    );
+  });
+  /*
   it("subActivities", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
@@ -877,7 +831,7 @@ describe("etl", function() {
       }
     );
   });
-
+  */
   /*
 	it('collect_results_across_step', function(done) {
 		var oExecutor = new function() {};
@@ -1038,7 +992,7 @@ describe("etl", function() {
             moder: {}
           }
         };
-        oTested.process(oETL).then(
+        oTested.processTemplate(oETL).then(
           function() {
             assert.equal(1, oTester.calls());
             assert.equal(1, oModder.calls());

@@ -1,6 +1,6 @@
 import ETL from "../lib/etl";
 import { Callback, NoOpExecutor } from "../lib/executors";
-import FilesMod from "../lib/files";
+import FilesMod from "../lib/mods/files";
 import CollectMod from "./etl/collect";
 import { assert } from "chai";
 
@@ -60,7 +60,7 @@ describe("etl-files", function() {
     new FilesMod().register(oETL);
     new CollectMod().register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function(_pData) {
         // console.log('pData=');
         // console.dir(pData);
@@ -91,7 +91,7 @@ describe("etl-files", function() {
     new FilesMod().register(oETL);
     new CollectMod().register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function(_pData) {
         // console.dir( pData );
         done();
@@ -121,7 +121,7 @@ describe("etl-files", function() {
     new FilesMod().register(oETL);
     new CollectMod().register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function(_pData) {
         // console.dir( 'Data=' + pData );
         done();
@@ -152,7 +152,7 @@ describe("etl-files", function() {
     new FilesMod().register(oETL);
     new CollectMod().register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function(_pData) {
         // console.dir( pData );
         done();
@@ -188,7 +188,7 @@ describe("etl-files", function() {
     new FilesMod().register(oETL);
     new CollectMod().register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function(_pData) {
         // console.dir( pData );
         done();

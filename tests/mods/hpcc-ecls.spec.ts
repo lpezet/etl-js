@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import { loadFile } from "./utils";
-import HPCCECLsMod from "../lib/hpcc-ecls";
-import { IETL, ModCallback } from "../lib/etl";
-import Context, { emptyContext } from "../lib/context";
-import Mod from "../lib/mod";
-import { Callback, NoOpExecutor } from "../lib/executors";
+import { loadFile } from "../utils";
+import HPCCECLsMod, { HPCCECLsState } from "../../lib/mods/hpcc-ecls";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import * as fs from "fs";
 import * as os from "os";
 
@@ -17,20 +17,22 @@ describe("hpcc-ecls", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -82,15 +84,22 @@ describe("hpcc-ecls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("applySettingsFromParent", function(done) {
@@ -131,15 +140,22 @@ describe("hpcc-ecls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("applySettingsAndConfig", function(done) {
@@ -181,15 +197,22 @@ describe("hpcc-ecls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("applySettings", function(done) {
@@ -230,15 +253,22 @@ describe("hpcc-ecls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("errorThrownFromWritingContent", function(done) {
@@ -267,14 +297,21 @@ describe("hpcc-ecls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("errorThrownFromPrepareFileExecutor", function(done) {
@@ -296,14 +333,21 @@ describe("hpcc-ecls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("errorThrownFromExecExecutor", function(done) {
@@ -325,14 +369,21 @@ describe("hpcc-ecls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("tagsMultipleValue", function(done) {
@@ -369,26 +420,30 @@ describe("hpcc-ecls", function() {
       years: [2018, 2019, 2020],
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        try {
-          assert.equal(
-            Object.keys(pData["hpcc-ecls"]).length,
-            oContext.years.length
-          );
-          assert.equal(oCmdsExecuted.length, 3);
-          assert.exists(pData["hpcc-ecls"]["summary_2018"]);
-          assert.exists(pData["hpcc-ecls"]["summary_2019"]);
-          assert.exists(pData["hpcc-ecls"]["summary_2020"]);
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<HPCCECLsState>) {
+          try {
+            assert.equal(pData.state?.ecls.length, oContext.years.length);
+            assert.equal(oCmdsExecuted.length, 3);
+            assert.equal(pData.state?.ecls[0].key, "summary_2018");
+            assert.equal(pData.state?.ecls[1].key, "summary_2019");
+            assert.equal(pData.state?.ecls[2].key, "summary_2020");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError) {
+          done(pError);
         }
-      },
-      function(pError) {
-        done(pError);
-      }
-    );
+      );
   });
 
   it("tags", function(done) {
@@ -423,19 +478,27 @@ describe("hpcc-ecls", function() {
       year: "2018",
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        try {
-          assert.property(pData["hpcc-ecls"], "summary_2018");
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<HPCCECLsState>) {
+          try {
+            assert.equal(pData.state?.ecls.length, 1);
+            assert.equal(pData.state?.ecls[0].key, "summary_2018");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError) {
+          done(pError);
         }
-      },
-      function(pError) {
-        done(pError);
-      }
-    );
+      );
   });
 
   it("mustSpecifyFileOrContent", function(done) {
@@ -464,16 +527,23 @@ describe("hpcc-ecls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done(
-          "Expecting error message saying file or content must be provided."
-        );
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done(
+            "Expecting error message saying file or content must be provided."
+          );
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   // TODO: Fix test for Windows...
@@ -504,7 +574,12 @@ describe("hpcc-ecls", function() {
 
     const oConfig = loadFile("./hpcc-ecls/file.yml");
     oTested
-      .handle("root", oConfig["root"], oExecutor, emptyContext())
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
       .then(
         function() {
           done();
@@ -540,14 +615,21 @@ describe("hpcc-ecls", function() {
 
     const oConfig = loadFile("./hpcc-ecls/file.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Should have raised and caught error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Should have raised and caught error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   // TODO: Fix it for Windows...
@@ -583,7 +665,12 @@ describe("hpcc-ecls", function() {
       const oConfig = loadFile("./hpcc-ecls/file.yml");
 
       oTested
-        .handle("root", oConfig["root"], oExecutor, emptyContext())
+        .handle({
+          parent: "root",
+          config: oConfig["root"],
+          executor: oExecutor,
+          context: emptyContext()
+        })
         .then(
           function() {
             done("Should have raised and caught error.");
@@ -630,7 +717,12 @@ describe("hpcc-ecls", function() {
     };
 
     oTested
-      .handle("root", oTemplate["root"], oExecutor, emptyContext())
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
       .then(
         function() {
           // console.log('#### ecls content: ');
@@ -669,14 +761,21 @@ describe("hpcc-ecls", function() {
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          done(pError);
+        }
+      );
   });
 
   it("contentWithErrorCreatingFile", function(done) {
@@ -702,14 +801,21 @@ describe("hpcc-ecls", function() {
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Should have raised and caught error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Should have raised and caught error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("contentWithErrorRunningECL", function(done) {
@@ -736,15 +842,22 @@ describe("hpcc-ecls", function() {
 
     const oConfig = loadFile("./hpcc-ecls/content.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Should have raised and caught error.");
-      },
-      function() {
-        // console.log( pError );
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Should have raised and caught error.");
+        },
+        function() {
+          // console.log( pError );
+          done();
+        }
+      );
   });
 
   it("formatAndOutput", function(done) {
@@ -777,13 +890,20 @@ describe("hpcc-ecls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          done(pError);
+        }
+      );
   });
 });

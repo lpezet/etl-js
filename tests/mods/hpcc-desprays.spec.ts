@@ -1,10 +1,25 @@
 import { assert } from "chai";
-import { loadFile } from "./utils";
-import HPCCDespraysMod from "../lib/hpcc-desprays";
-import { IETL, ModCallback } from "../lib/etl";
-import Context, { emptyContext } from "../lib/context";
-import Mod from "../lib/mod";
-import { Callback, NoOpExecutor } from "../lib/executors";
+import { loadFile } from "../utils";
+import HPCCDespraysMod, {
+  HPCCDespraysState
+} from "../../lib/mods/hpcc-desprays";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+
+/*
+import { configureLogger } from "../../../lib/logger";
+
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 
 describe("hpcc-desprays", function() {
   beforeEach(function(done: () => void) {
@@ -15,20 +30,22 @@ describe("hpcc-desprays", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -62,27 +79,32 @@ describe("hpcc-desprays", function() {
     const oTested = new HPCCDespraysMod();
     oTested.register(new ETLMock());
 
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        // console.dir( pData );
-        try {
-          assert.property(
-            pData["hpcc-desprays"],
-            "noaa::ghcn::daily::2018::raw"
-          );
-          assert.include(
-            pData["hpcc-desprays"]["noaa::ghcn::daily::2018::raw"]["result"],
-            "dstfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv"
-          );
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<HPCCDespraysState>) {
+          try {
+            assert.isArray(pData.state?.desprays);
+            assert.equal(pData.state?.desprays.length, 1);
+            const results = pData.state?.desprays[0].results;
+            assert.include(
+              results.result,
+              "dstfile=/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv"
+            );
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError) {
+          done(pError);
         }
-      },
-      function(pError) {
-        done(pError);
-      }
-    );
+      );
   });
 
   it("executorThrowingError", function(done) {
@@ -102,14 +124,21 @@ describe("hpcc-desprays", function() {
     const oTested = new HPCCDespraysMod();
     oTested.register(new ETLMock());
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("error", function(done) {
@@ -133,14 +162,21 @@ describe("hpcc-desprays", function() {
     const oTested = new HPCCDespraysMod();
     oTested.register(new ETLMock());
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("safe_parse_int", function(done) {
@@ -162,15 +198,22 @@ describe("hpcc-desprays", function() {
     const oTested = new HPCCDespraysMod();
     oTested.register(new ETLMock());
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings", function(done) {
@@ -201,15 +244,22 @@ describe("hpcc-desprays", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("missingRequired", function(done) {
@@ -227,14 +277,21 @@ describe("hpcc-desprays", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected error due to missing format information in template.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error due to missing format information in template.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -269,14 +326,21 @@ describe("hpcc-desprays", function() {
 
     const oTemplate = loadFile("./hpcc-desprays/basic.yml");
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 });

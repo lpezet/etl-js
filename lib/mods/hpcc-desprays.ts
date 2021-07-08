@@ -1,32 +1,38 @@
-import * as Promises from "./promises";
-import { AbstractMod } from "./mod";
-import TemplateEngine from "./templating/engine";
-import { createLogger } from "./logger";
-import { Executor } from "./executors";
-import Context from "./context";
+import * as Promises from "../promises";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import TemplateEngine from "../templating/engine";
+import { createLogger } from "../logger";
+import { Executor } from "../executors";
+import Context from "../context";
 
 const LOGGER = createLogger("etljs::hpcc-desprays");
+
+export type HPCCDespraysState = {
+  desprays: any[];
+};
 
 // var re_escape = function( pValue ) {
 //	if ( pValue.indexOf("\\") < 0 ) return pValue;
 //	return pValue.replace('/\\/g', '\\\\');
 // }
-
 const asPromised = function(
-  pPreviousData: any,
+  pResults: ModResult<HPCCDespraysState>,
+  pFunc: (results: any) => void,
+  pParent: string,
   pKey: string,
-  func: (result: any) => void,
-  data: any
+  pData: Data
 ): void {
-  if (!pPreviousData["hpcc-desprays"][pKey]) {
-    pPreviousData["hpcc-desprays"][pKey] = {};
-  }
-  pPreviousData["hpcc-desprays"][pKey] = data;
-  // if ( data['exit'] ) {
-  //	pPreviousData['_exit'] = data['exit'];
-  //	pPreviousData['_exit_from'] = pKey;
-  // }
-  func(pPreviousData);
+  LOGGER.debug("[%s] Despray [%s] results:\n%j", pParent, pKey, pData);
+  const data = {
+    key: pKey,
+    results: pData,
+    exit: Boolean(pData["exit"]),
+    skip: Boolean(pData["skip"])
+  };
+  if (pData.exit) pResults.status = ModStatus.EXIT;
+  if (pData.skip) pResults.status = ModStatus.STOP;
+  pResults.state?.desprays.push(data);
+  pFunc(pResults);
 };
 
 export type Data = {
@@ -35,30 +41,18 @@ export type Data = {
   message?: string | null;
   exit: boolean;
   pass: boolean;
+  skip?: boolean;
   _stdout?: string | null;
   _stderr?: string | null;
 };
 
-export default class HPCCDespraysMod extends AbstractMod<any> {
+export default class HPCCDespraysMod extends AbstractMod<any, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("hpcc-desprays", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-      var oContext = JSON.parse(JSON.stringify(pContext.global));
-      oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-      console.log('Merged context=');
-      console.dir( oContext );
-      var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-      console.log('Result=');
-      console.dir( oResult );
-      */
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
   _desprayError(pParent: string, pKey: string): () => Promise<any> {
@@ -89,13 +83,15 @@ export default class HPCCDespraysMod extends AbstractMod<any> {
     pConfig: any,
     pExecutor: Executor,
     pContext: Context
-  ): (data: any) => Promise<any> {
+  ): (
+    data: ModResult<HPCCDespraysState>
+  ) => Promise<ModResult<HPCCDespraysState>> {
     LOGGER.debug(
       "[%s] Despraying to [%s]...",
       pParent,
       pConfig ? pConfig.destinationpath : "NA"
     );
-    return (pPreviousData: any) => {
+    return (pResults: ModResult<HPCCDespraysState>) => {
       return new Promise((resolve, reject) => {
         try {
           const safeParseInt = function(
@@ -233,8 +229,7 @@ export default class HPCCDespraysMod extends AbstractMod<any> {
               func = resolve;
               data.result = data._stdout;
             }
-
-            asPromised(pPreviousData, pKey, func, data);
+            asPromised(pResults, func, pParent, pKey, data);
           });
         } catch (e) {
           const data = {
@@ -247,7 +242,7 @@ export default class HPCCDespraysMod extends AbstractMod<any> {
             _stderr: null
           };
           LOGGER.error("[%s] Unexpected error despraying", e);
-          asPromised(pPreviousData, pKey, reject, data);
+          asPromised(pResults, reject, pParent, pKey, data);
         }
       });
     };
@@ -293,27 +288,32 @@ export default class HPCCDespraysMod extends AbstractMod<any> {
 
     return oConfig;
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<HPCCDespraysState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Processing hpcc-despray...", pParent);
+      LOGGER.debug("[%s] Processing hpcc-despray...", pParams.parent);
       try {
-        const oData = { "hpcc-desprays": {} };
+        // const oData = { "hpcc-desprays": {} };
+        const oResult: ModResult<HPCCDespraysState> = {
+          exit: false,
+          skip: false,
+          status: ModStatus.CONTINUE,
+          state: { desprays: [] }
+        };
         const oPromises: ((data: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
+        Object.keys(pParams.config).forEach(i => {
           let oLogicalFileName = i;
           if (oLogicalFileName.includes("{{")) {
-            const v = this._evaluate(oLogicalFileName, pContext);
+            const v = this._evaluate(oLogicalFileName, pParams.context);
             if (v && v.length >= 1) oLogicalFileName = v[0];
             // TODO: log in case length not right or v null
           }
-          const oDesprayConfig = this._readConfig(pParent, i, pConfig[i]);
+          const oDesprayConfig = this._readConfig(
+            pParams.parent,
+            i,
+            pParams.config[i]
+          );
           if (!oDesprayConfig.logicalname) {
             oDesprayConfig.logicalname = oLogicalFileName;
           }
@@ -323,35 +323,41 @@ export default class HPCCDespraysMod extends AbstractMod<any> {
               !oDesprayConfig.destinationip) &&
             !oDesprayConfig.destinationxml
           ) {
-            oPromises.push(this._desprayError(pParent, oLogicalFileName));
+            oPromises.push(
+              this._desprayError(pParams.parent, oLogicalFileName)
+            );
           } else {
             oPromises.push(
               this._despray(
-                pParent,
+                pParams.parent,
                 oLogicalFileName,
                 oDesprayConfig,
-                pExecutor,
-                pContext
+                pParams.executor,
+                pParams.context
               )
             );
           }
         });
-        Promises.seq(oPromises, oData).then(
-          function() {
-            LOGGER.debug("[%s] Done processing hpcc-despray.", pParent);
-            resolve(oData);
+        Promises.seq(oPromises, oResult).then(
+          function(pData: ModResult<HPCCDespraysState>) {
+            LOGGER.debug("[%s] Done processing hpcc-despray.", pParams.parent);
+            resolve(pData);
           },
           function(pError) {
             LOGGER.error(
               "[%s] Unexpected error in hpcc-despray.",
-              pParent,
+              pParams.parent,
               pError
             );
             reject(pError);
           }
         );
       } catch (e) {
-        LOGGER.error("[%s] Unexpected error processing step.", pParent, e);
+        LOGGER.error(
+          "[%s] Unexpected error processing step.",
+          pParams.parent,
+          e
+        );
         reject(e);
       }
     });

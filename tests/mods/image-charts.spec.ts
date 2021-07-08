@@ -1,9 +1,9 @@
-import { IETL, ModCallback } from "../lib/etl";
-import Mod from "../lib/mod";
-import { Callback, NoOpExecutor } from "../lib/executors";
-import ImageChartsMod from "../lib/image-charts";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import ImageChartsMod, { ImageChartsState } from "../../lib/mods/image-charts";
 import { assert } from "chai";
-import Context, { emptyContext } from "../lib/context";
+import Context, { emptyContext } from "../../lib/context";
 
 describe("image-charts", function() {
   beforeEach(function(done: () => void) {
@@ -14,20 +14,22 @@ describe("image-charts", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -64,19 +66,27 @@ describe("image-charts", function() {
       year: "2018",
       ...emptyContext()
     };
-    oTested.handle("root", oConfig["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        try {
-          assert.property(pData["image_charts"], "chart_2018");
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<ImageChartsState>) {
+          try {
+            assert.equal(pData.state?.charts.length, 1);
+            assert.equal(pData.state?.charts[0].key, "chart_2018");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          done(pError);
         }
-      },
-      function(pError: Error) {
-        done(pError);
-      }
-    );
+      );
   });
 
   it("invalidData", function(done) {
@@ -100,14 +110,21 @@ describe("image-charts", function() {
         }
       }
     };
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Excepting error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Excepting error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("error", function(done) {
@@ -134,14 +151,21 @@ describe("image-charts", function() {
         }
       }
     };
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Excepting error.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Excepting error.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -164,19 +188,20 @@ describe("image-charts", function() {
         }
       }
     };
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        // console.log("##### Result: ");
-        // console.dir( pData );
-        if (pData) {
-          // assert.isArray( pData );
-          // assert.equal( 1, pData.length );
-          assert.exists(pData);
-          assert.exists(pData["image_charts"]);
-          assert.exists(pData["image_charts"]["001_chart"]);
-
-          const oUrl = pData["image_charts"]["001_chart"]["result"];
-          // https://image-charts.com/chart?chs=700x200&cht=bvg&chxt=x,y&chxs=1N*s* inches,000000&chxl=0:|PRCP|SNOW&chdl=US1|US2&chd=a:1,1|2,2
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: ModResult<ImageChartsState>) {
+          // console.log("##### Result: ");
+          // console.dir( pData );
+          assert.equal(pData.state?.charts.length, 1);
+          assert.equal(pData.state?.charts[0].key, "001_chart");
+          const oUrl = pData.state?.charts[0].results.result;
           assert.include(oUrl, "https://image-charts.com/chart");
           assert.include(oUrl, "chs=700x200");
           assert.include(oUrl, "cht=bvg");
@@ -185,14 +210,11 @@ describe("image-charts", function() {
           assert.include(oUrl, "chxl=0:|PRCP|SNOW");
           assert.include(oUrl, "chdl=US1|US2&chd=a:1,1|2,2");
           done();
-        } else {
-          done("Bad data. Something went wrong.");
+        },
+        function(pError: Error) {
+          console.log(pError);
+          done(pError);
         }
-      },
-      function(pError: Error) {
-        console.log(pError);
-        done(pError);
-      }
-    );
+      );
   });
 });

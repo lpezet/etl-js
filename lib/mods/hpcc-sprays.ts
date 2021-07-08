@@ -1,11 +1,15 @@
-import * as Promises from "./promises";
-import { AbstractMod } from "./mod";
-import TemplateEngine from "./templating/engine";
-import { createLogger } from "./logger";
-import { Executor } from "./executors";
-import Context from "./context";
+import * as Promises from "../promises";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import TemplateEngine from "../templating/engine";
+import { createLogger } from "../logger";
+import { Executor } from "../executors";
+import Context from "../context";
 
 const LOGGER = createLogger("etljs::hpcc-desprays");
+
+export type HPCCSpraysState = {
+  sprays: any[];
+};
 
 const reEscape = function(pValue: string): string {
   if (!pValue.includes("\\")) return pValue;
@@ -18,10 +22,31 @@ export type Data = {
   message?: string | null;
   exit: boolean;
   pass: boolean;
+  skip?: boolean;
   _stdout?: string | null;
   _stderr?: string | null;
 };
 
+const asPromised = function(
+  pResults: ModResult<HPCCSpraysState>,
+  pFunc: (results: any) => void,
+  pParent: string,
+  pKey: string,
+  pData: Data
+): void {
+  LOGGER.debug("[%s] Sprays [%s] results:\n%j", pParent, pKey, pData);
+  const data = {
+    key: pKey,
+    results: pData,
+    exit: pData.exit,
+    skip: pData.skip || false
+  };
+  if (pData.exit) pResults.status = ModStatus.EXIT;
+  if (pData.skip) pResults.status = ModStatus.STOP;
+  pResults.state?.sprays.push(data);
+  pFunc(pResults);
+};
+/*
 const asPromised = function(
   pPreviousData: any,
   pKey: string,
@@ -38,8 +63,9 @@ const asPromised = function(
   }
   func(pPreviousData);
 };
+*/
 
-export default class HPCCSpraysMod extends AbstractMod<any> {
+export default class HPCCSpraysMod extends AbstractMod<any, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("hpcc-sprays", pSettings || {});
@@ -138,13 +164,13 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ): (data: any) => Promise<any> {
+  ): (data: ModResult<HPCCSpraysState>) => Promise<ModResult<HPCCSpraysState>> {
     LOGGER.debug(
       "[%s] Spraying delimited to [%s]...",
       pParent,
       pSprayConfig ? pSprayConfig.destinationlogicalname : "NA"
     );
-    return (pPreviousData: any) => {
+    return (pResults: ModResult<HPCCSpraysState>) => {
       return new Promise((resolve, reject) => {
         try {
           const safeParseInt = function(
@@ -323,7 +349,7 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
               data.result = data._stdout;
             }
 
-            asPromised(pPreviousData, pKey, func, data);
+            asPromised(pResults, func, pParent, pKey, data);
           });
         } catch (e) {
           const data: Data = {
@@ -332,7 +358,7 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
             pass: true
           };
           LOGGER.error("[%s] Unexpected error spraying delimited", e);
-          asPromised(pPreviousData, pKey, reject, data);
+          asPromised(pResults, reject, pParent, pKey, data);
         }
       });
     };
@@ -388,45 +414,49 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
 
     return oConfig;
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<HPCCSpraysState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Processing spray...", pParent);
+      LOGGER.debug("[%s] Processing spray...", pParams.parent);
       try {
-        const oData = { "hpcc-sprays": {} };
+        const oResult: ModResult<HPCCSpraysState> = {
+          exit: false,
+          skip: false,
+          status: ModStatus.CONTINUE,
+          state: { sprays: [] }
+        };
         const oPromises: ((res: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
+        Object.keys(pParams.config).forEach(i => {
           const oLogicalFileName = i;
           let oLogicalFileNames = [oLogicalFileName];
           if (oLogicalFileName.includes("{{")) {
-            const v = this._evaluate(oLogicalFileName, pContext);
+            const v = this._evaluate(oLogicalFileName, pParams.context);
             if (v && v.length >= 1) oLogicalFileNames = v;
           }
           oLogicalFileNames.forEach((e: string, j: number) => {
-            const oSprayConfig = this._readConfig(pParent, i, pConfig[i]);
+            const oSprayConfig = this._readConfig(
+              pParams.parent,
+              i,
+              pParams.config[i]
+            );
             if (!oSprayConfig.destinationlogicalname) {
               oSprayConfig.destinationlogicalname = e;
             }
 
             if (!oSprayConfig.format) {
-              oPromises.push(this._sprayError(pParent, e));
+              oPromises.push(this._sprayError(pParams.parent, e));
             } else {
               switch (oSprayConfig.format) {
                 case "delimited":
                 case "csv":
                   oPromises.push(
                     this._sprayDelimited(
-                      pParent,
+                      pParams.parent,
                       e,
                       oSprayConfig,
-                      pExecutor,
-                      pContext,
+                      pParams.executor,
+                      pParams.context,
                       j
                     )
                   );
@@ -434,11 +464,11 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
                 case "fixed":
                   oPromises.push(
                     this._sprayFixed(
-                      pParent,
+                      pParams.parent,
                       e,
                       oSprayConfig,
-                      pExecutor,
-                      pContext,
+                      pParams.executor,
+                      pParams.context,
                       j
                     )
                   );
@@ -446,11 +476,11 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
                 case "xml":
                   oPromises.push(
                     this._sprayXml(
-                      pParent,
+                      pParams.parent,
                       e,
                       oSprayConfig,
-                      pExecutor,
-                      pContext,
+                      pParams.executor,
+                      pParams.context,
                       j
                     )
                   );
@@ -458,7 +488,7 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
                 default:
                   LOGGER.error(
                     "[%s] Spray format [%s] not supported.",
-                    pParent,
+                    pParams.parent,
                     oSprayConfig.format
                   );
                   break;
@@ -466,18 +496,26 @@ export default class HPCCSpraysMod extends AbstractMod<any> {
             }
           });
         });
-        Promises.seq(oPromises, oData).then(
-          function(_pData) {
-            LOGGER.debug("[%s] Done processing spray.", pParent);
-            resolve(oData);
+        Promises.seq(oPromises, oResult).then(
+          function(pData) {
+            LOGGER.debug("[%s] Done processing spray.", pParams.parent);
+            resolve(pData);
           },
           function(pError) {
-            LOGGER.error("[%s] Unexpected error spraying.", pParent, pError);
+            LOGGER.error(
+              "[%s] Unexpected error spraying.",
+              pParams.parent,
+              pError
+            );
             reject(pError);
           }
         );
       } catch (e) {
-        LOGGER.error("[%s] Unexpected error processing step.", pParent, e);
+        LOGGER.error(
+          "[%s] Unexpected error processing step.",
+          pParams.parent,
+          e
+        );
         reject(e);
       }
     });

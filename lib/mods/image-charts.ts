@@ -1,11 +1,15 @@
-import * as Promises from "./promises";
-import TemplateEngine from "./templating/engine";
-import { createLogger } from "./logger";
-import { AbstractMod } from "./mod";
-import Context from "./context";
-import { Executor } from "./executors";
+import * as Promises from "../promises";
+import TemplateEngine from "../templating/engine";
+import { createLogger } from "../logger";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import Context from "../context";
+import { Executor } from "../executors";
 
 const LOGGER = createLogger("etljs::image-charts");
+
+export type ImageChartsState = {
+  charts: any[];
+};
 
 export type Data = {
   error?: Error | null;
@@ -13,20 +17,27 @@ export type Data = {
   message?: string | null;
   exit: boolean;
   pass: boolean;
-  skip: boolean;
+  skip?: boolean;
   _stdout?: string | null;
   _stderr?: string | null;
 };
 
 const asPromised = function(
-  pPreviousData: any,
+  pResults: ModResult<ImageChartsState>,
+  pFunc: (results: any) => void,
+  pParent: string,
   pKey: string,
-  func: (result: any) => void,
-  data: any
+  pData: Data
 ): void {
-  if (!pPreviousData.image_charts[pKey]) pPreviousData.image_charts[pKey] = {};
-  pPreviousData.image_charts[pKey] = data;
-  func(pPreviousData);
+  LOGGER.debug("[%s] Image Charts [%s] results:\n%j", pParent, pKey, pData);
+  const data = {
+    key: pKey,
+    results: pData,
+    exit: pData.exit,
+    skip: pData.skip || false
+  };
+  pResults.state?.charts.push(data);
+  pFunc(pResults);
 };
 
 const createImageChartsUrl = function(pArgs: string[]): string {
@@ -70,7 +81,7 @@ const getDataFileContent = function(
   });
 };
 
-export default class ImageChartsMod extends AbstractMod<any> {
+export default class ImageChartsMod extends AbstractMod<any, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("image-charts", pSettings || {});
@@ -98,8 +109,10 @@ export default class ImageChartsMod extends AbstractMod<any> {
     pSpecs: any,
     pExecutor: Executor,
     pContext: Context
-  ): (data: any) => Promise<any> {
-    return (pPreviousData: any) => {
+  ): (
+    data: ModResult<ImageChartsState>
+  ) => Promise<ModResult<ImageChartsState>> {
+    return (pResults: ModResult<ImageChartsState>) => {
       return new Promise((resolve, reject) => {
         try {
           LOGGER.debug("[%s] Creating image-charts [%s]...", pParent, pKey);
@@ -180,15 +193,17 @@ export default class ImageChartsMod extends AbstractMod<any> {
                   );
                 }
               }
-              asPromised(pPreviousData, pKey, func, data);
+              asPromised(pResults, func, pParent, pKey, data);
               // resolve( oResult );
             },
             function(error) {
               // console.log( error );
               // reject( error );
-              asPromised(pPreviousData, pKey, reject, {
+              asPromised(pResults, reject, pParent, pKey, {
                 error: error,
-                result: null
+                result: null,
+                exit: false,
+                pass: false
               });
             }
           );
@@ -203,39 +218,45 @@ export default class ImageChartsMod extends AbstractMod<any> {
       });
     };
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<ImageChartsState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Processing image-charts...", pParent);
+      LOGGER.debug("[%s] Processing image-charts...", pParams.parent);
       try {
         // eslint-disable-next-line @typescript-eslint/camelcase
-        const oData = { image_charts: {} };
+        const oResult: ModResult<ImageChartsState> = {
+          exit: false,
+          skip: false,
+          status: ModStatus.CONTINUE,
+          state: { charts: [] }
+        };
         const oPromises: ((data: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
+        Object.keys(pParams.config).forEach(i => {
           let oKey = i;
           if (oKey.includes("{{")) {
-            const v = this._evaluate(oKey, pContext);
+            const v = this._evaluate(oKey, pParams.context);
             if (v) oKey = v[0];
           }
           oPromises.push(
-            this._exec(pParent, oKey, pConfig[i], pExecutor, pContext)
+            this._exec(
+              pParams.parent,
+              oKey,
+              pParams.config[i],
+              pParams.executor,
+              pParams.context
+            )
           );
         });
-        Promises.seq(oPromises, oData).then(
-          function() {
-            LOGGER.debug("[%s] Done processing image-charts.", pParent);
-            resolve(oData);
+        Promises.seq(oPromises, oResult).then(
+          function(pData) {
+            LOGGER.debug("[%s] Done processing image-charts.", pParams.parent);
+            resolve(pData);
           },
           function(pError) {
             LOGGER.error(
               "[%s] Unexpected error running image-charts.",
-              pParent,
+              pParams.parent,
               pError
             );
             reject(pError);
@@ -244,7 +265,7 @@ export default class ImageChartsMod extends AbstractMod<any> {
       } catch (e) {
         LOGGER.error(
           "[%s] Unexpected error processing image-charts.",
-          pParent,
+          pParams.parent,
           e
         );
         reject(e);

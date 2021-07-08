@@ -7,12 +7,52 @@ export type ModSettings = {
   [key: string]: any;
 };
 
-export abstract class AbstractMod<T extends ModSettings> implements Mod {
-  mSettings?: T;
+export interface ModParameters {
+  parent: string;
+  config: any;
+  executor: Executor;
+  context: Context;
+}
+
+export enum ModStatus {
+  CONTINUE,
+  STOP,
+  REPEAT,
+  EXIT
+}
+
+export class ModError extends Error {}
+
+export interface ModResult<T> {
+  status: ModStatus;
+  state?: T;
+  error?: ModError;
+  [key: string]: any;
+}
+
+export default interface Mod<T> {
+  isDisabled(): boolean;
+  register(pETL: IETL): void;
+  handle(pParams: ModParameters): Promise<ModResult<T>>;
+}
+
+export function createModResult<T>(
+  pStatus: ModStatus,
+  pState?: T,
+  pError?: ModError
+): ModResult<T> {
+  return {
+    status: pStatus,
+    state: pState,
+    error: pError
+  };
+}
+export abstract class AbstractMod<T, S extends ModSettings> implements Mod<T> {
+  mSettings?: S;
   mModName: string;
   mDisabled: boolean;
   mETL: IETL | null;
-  constructor(pModName: string, pSettings?: T) {
+  constructor(pModName: string, pSettings?: S) {
     this.mSettings = pSettings;
     this.mModName = pModName;
     this.mDisabled = pSettings?.disabled || false;
@@ -21,7 +61,7 @@ export abstract class AbstractMod<T extends ModSettings> implements Mod {
   register(pETL: IETL): void {
     if (pETL == null) throw new Error("ETL must not be null to register.");
     this.mETL = pETL;
-    pETL.mod(this.mModName, this, (pSettings: T) => {
+    pETL.mod(this.mModName, this, (pSettings: S) => {
       this.mSettings = {
         ...this.mSettings,
         ...pSettings
@@ -37,21 +77,5 @@ export abstract class AbstractMod<T extends ModSettings> implements Mod {
   isDisabled(): boolean {
     return this.mDisabled;
   }
-  abstract handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any>;
-}
-
-export default interface Mod {
-  isDisabled(): boolean;
-  register(pETL: IETL): void;
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any>;
+  abstract handle(pParams: ModParameters): Promise<ModResult<T>>;
 }

@@ -1,10 +1,12 @@
 import { assert } from "chai";
-import { IETL, ModCallback } from "../lib/etl";
-import Mod from "../lib/mod";
-import MySQLImportsMod from "../lib/mysqlimports";
-import { Callback, NoOpExecutor } from "../lib/executors";
-import { loadFile } from "./utils";
-import Context, { emptyContext } from "../lib/context";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import MySQLImportsMod, {
+  MySQLImportsState
+} from "../../lib/mods/mysqlimports";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import { loadFile } from "../utils";
+import Context, { emptyContext } from "../../lib/context";
 
 describe("mysqlimports", function() {
   beforeEach(function(done: Function) {
@@ -15,20 +17,22 @@ describe("mysqlimports", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -63,24 +67,31 @@ describe("mysqlimports", function() {
       years: [2018, 2019, 2020],
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        // console.log('#### Data');
-        // console.dir( pData );
-        try {
-          assert.property(pData["mysqlimports"], "/downloads/2018.csv");
-          assert.property(pData["mysqlimports"], "/downloads/2019.csv");
-          assert.property(pData["mysqlimports"], "/downloads/2020.csv");
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<MySQLImportsState>) {
+          // console.log('#### Data');
+          // console.dir( pData );
+          try {
+            assert.property(pData.state?.mysqlimports, "/downloads/2018.csv");
+            assert.property(pData.state?.mysqlimports, "/downloads/2019.csv");
+            assert.property(pData.state?.mysqlimports, "/downloads/2020.csv");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
         }
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+      );
   });
 
   it("enclose", function(done) {
@@ -103,15 +114,22 @@ describe("mysqlimports", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings_parent", function(done) {
@@ -142,15 +160,22 @@ describe("mysqlimports", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings_key", function(done) {
@@ -181,15 +206,22 @@ describe("mysqlimports", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings_all", function(done) {
@@ -220,15 +252,22 @@ describe("mysqlimports", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("erorExecutingCmd", function(done) {
@@ -246,15 +285,22 @@ describe("mysqlimports", function() {
 
     const oTemplate = loadFile("./mysqlimports/basic.yml");
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        // console.log( pError );
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          // console.log( pError );
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -291,14 +337,21 @@ describe("mysqlimports", function() {
 
     const oTemplate = loadFile("./mysqlimports/basic.yml");
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 });

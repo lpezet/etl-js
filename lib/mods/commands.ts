@@ -1,10 +1,10 @@
-import { AbstractMod } from "./mod";
-import TemplateEngine from "./templating/engine";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import TemplateEngine from "../templating/engine";
 import * as util from "util";
-import * as Promises from "./promises";
-import Context from "./context";
-import { Executor } from "./executors";
-import { createLogger } from "./logger";
+import * as Promises from "../promises";
+import Context from "../context";
+import { Executor } from "../executors";
+import { createLogger } from "../logger";
 
 const LOGGER = createLogger("etljs::commands");
 
@@ -19,16 +19,23 @@ export type Data = {
   _stderr?: string | null;
 };
 
-const CHAIN_EVAL = function(pValue: any): boolean {
+export type CommandsState = {
+  results: any[];
+};
+
+const CHAIN_EVAL = function(pValue: ModResult<CommandsState>): boolean {
+  /*
   const oResults = pValue["results"];
   for (let i = oResults.length - 1; i >= 0; i--) {
     if (oResults[i]["exit"] || oResults[i]["skip"]) return true;
   }
-  return false;
+  */
+  return pValue.status == ModStatus.EXIT || pValue.status == ModStatus.STOP;
+  // return false;
 };
 
 // export default class CommandsMod implements Mod {
-export default class CommandsMod extends AbstractMod<any> {
+export default class CommandsMod extends AbstractMod<CommandsState, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("commands", pSettings || {});
@@ -77,8 +84,8 @@ export default class CommandsMod extends AbstractMod<any> {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ): (data: any) => Promise<any> {
-    return (pPreviousData: any): Promise<any> => {
+  ): (data: ModResult<CommandsState>) => Promise<ModResult<CommandsState>> {
+    return (pPreviousData: ModResult<CommandsState>): Promise<any> => {
       return new Promise((resolve, reject) => {
         const asPromised = function(
           pFunc: (any?: any) => void,
@@ -94,9 +101,11 @@ export default class CommandsMod extends AbstractMod<any> {
             skip: Boolean(pData["skip"])
           };
           // data[ pKey ] = pData;
-          pPreviousData.exit = pPreviousData.exit || Boolean(pData["exit"]);
-          pPreviousData.skip = pPreviousData.skip || Boolean(pData["skip"]);
-          pPreviousData.results.push(data);
+          if (pData["exit"]) pPreviousData.status = ModStatus.EXIT;
+          if (pData["skip"]) pPreviousData.status = ModStatus.STOP;
+          // pPreviousData.exit = pPreviousData.exit || Boolean(pData["exit"]);
+          // pPreviousData.skip = pPreviousData.skip || Boolean(pData["skip"]);
+          pPreviousData.state?.results.push(data);
           pFunc(pPreviousData);
         };
 
@@ -405,10 +414,10 @@ export default class CommandsMod extends AbstractMod<any> {
               }
             );
         } else {
-          LOGGER.info("[%s] No test for [%s]...", pParent, pKey);
+          LOGGER.info("[%s] ...no test for [%s]...", pParent, pKey);
           execCommand(oCmd, oCmdOptions).then(
             function(result) {
-              LOGGER.info("[%s] ...command [%s] executed.", pParent, pKey);
+              LOGGER.debug("[%s] ...command [%s] executed.", pParent, pKey);
               // resolve();
               asPromised(resolve, result);
             },
@@ -444,8 +453,10 @@ export default class CommandsMod extends AbstractMod<any> {
     pSpecs: any,
     pExecutor: Executor,
     pContext: Context
-  ): (data: any) => Promise<any> {
-    return (pPreviousData: any): Promise<any> => {
+  ): (data: any) => Promise<ModResult<CommandsState>> {
+    return (
+      pPreviousData: ModResult<CommandsState>
+    ): Promise<ModResult<CommandsState>> => {
       // console.log('# commands: pPreviousData=');
       // console.log( JSON.stringify( pPreviousData ) );
       // (pPreviousData && pPreviousData.length > 0 && (pPreviousData[ pPreviousData.length - 1 ]['exit'] || pPreviousData[ pPreviousData.length - 1 ]['skip'] ) )
@@ -500,12 +511,7 @@ export default class CommandsMod extends AbstractMod<any> {
       // }
     };
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<CommandsState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     // var oPromise = new Promise();
@@ -513,13 +519,24 @@ export default class CommandsMod extends AbstractMod<any> {
     // console.dir( pData );
     // console.log('## Commands.handle()....');
     // return new Promise(function(resolve, reject) {
-    LOGGER.debug("[%s] Processing commands...", pParent);
+    LOGGER.debug("[%s] Processing commands...", pParams.parent);
     try {
       // var oResults = []; // Should be maybe: { exit: false, skip: false, results: [] } //{ 'commands' : [] };
-      const oResult = { exit: false, skip: false, results: [] };
+      const oResult = {
+        status: ModStatus.CONTINUE,
+        state: { results: [] }
+      } as ModResult<any>;
       const oPromises: ((data: any) => Promise<any>)[] = [];
-      Object.keys(pConfig).forEach(i => {
-        oPromises.push(this._exec(pParent, i, pConfig[i], pExecutor, pContext));
+      Object.keys(pParams.config).forEach(i => {
+        oPromises.push(
+          this._exec(
+            pParams.parent,
+            i,
+            pParams.config[i],
+            pParams.executor,
+            pParams.context
+          )
+        );
       });
 
       // PromiseSeqConcatResults
@@ -528,25 +545,28 @@ export default class CommandsMod extends AbstractMod<any> {
       return Promises.chain(oPromises, oResult, CHAIN_EVAL, {
         name: "commands",
         logger: LOGGER
-      }).then(
-        function(data) {
-          LOGGER.info("[%s] Done processing commands.", pParent);
-          LOGGER.info("[%s] Results:\n%j", pParent, data);
+      })
+        .then((data: ModResult<CommandsState>) => {
+          LOGGER.info("[%s] Done processing commands.", pParams.parent);
+          LOGGER.debug("[%s] Results:\n%j", pParams.parent, data);
           // console.log('commands.handle(): data = %j', data);
           // console.dir( data );
-          return oResult;
-        },
-        function(error) {
+          return data;
+        })
+        .catch(error => {
           LOGGER.error(
             "[%s] Unexpected error running commands.",
-            pParent,
+            pParams.parent,
             error
           );
           return Promise.reject(error);
-        }
-      );
+        });
     } catch (e) {
-      LOGGER.error("[%s] Unexpected error processing commands.", pParent, e);
+      LOGGER.error(
+        "[%s] Unexpected error processing commands.",
+        pParams.parent,
+        e
+      );
       return Promise.reject(e);
     }
   }

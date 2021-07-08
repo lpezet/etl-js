@@ -1,12 +1,18 @@
 import { createLogger } from "../../lib/logger";
-import { AbstractMod } from "../../lib/mod";
+import {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../../lib/mod";
 import { Executor } from "../../lib/executors";
 import Context from "../../lib/context";
 import * as Promises from "../../lib/promises";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class CollectMod extends AbstractMod<any> {
+export default class CollectMod extends AbstractMod<any, any> {
   constructor() {
     super("collects", {});
   }
@@ -24,7 +30,9 @@ export default class CollectMod extends AbstractMod<any> {
         if (pData != null) {
           const d: any = { key: pKey, result: pConfig["result"] };
           // pData.collects[ pKey ] = pConfig;
-          pData.results.push(d);
+          pData["state"] = pData["state"] || {};
+          pData.state["results"] = pData.state["results"] || [];
+          pData.state.results.push(d);
           if (pConfig["var"]) {
             d["var"] = pConfig["var"];
             pContext.vars[pConfig["var"]] = pConfig["result"];
@@ -34,25 +42,27 @@ export default class CollectMod extends AbstractMod<any> {
       });
     };
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle({
+    config,
+    executor,
+    context,
+    parent
+  }: ModParameters): Promise<ModResult<any>> {
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] In Collect mod. Context=[%j]", pParent, pContext);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+      const { env, ...contextRest } = context;
+      LOGGER.debug("[%s] In Collect mod. Context=[%j]", parent, contextRest);
       try {
-        const oResult = { exit: false, skip: false, results: [] };
+        const oResult = createModResult(ModStatus.CONTINUE);
         const oPromises: ((data: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
-          oPromises.push(this._do(pParent, i, pConfig[i], pExecutor, pContext));
+        Object.keys(config).forEach(i => {
+          oPromises.push(this._do(parent, i, config[i], executor, context));
         });
         Promises.seq(oPromises, oResult).then(
           function(_pData) {
             LOGGER.debug(
               "[%s] Done processing commands. Data=[%j]",
-              pParent,
+              parent,
               oResult
             );
             resolve(oResult);
@@ -60,14 +70,14 @@ export default class CollectMod extends AbstractMod<any> {
           function(pError) {
             LOGGER.error(
               "[%s] Unexpected error running commands.",
-              pParent,
+              parent,
               pError
             );
             reject(pError);
           }
         );
       } catch (e) {
-        LOGGER.error("[%s] Unexpected error processing commands.", pParent, e);
+        LOGGER.error("[%s] Unexpected error processing commands.", parent, e);
         reject(e);
       }
     });

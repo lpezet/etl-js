@@ -1,9 +1,9 @@
-import { AbstractMod } from "./mod";
-import { Executor } from "./executors";
-import Context from "./context";
-import { createLogger } from "./logger";
-import * as Promises from "./promises";
-import TemplateEngine from "./templating/engine";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import { Executor } from "../executors";
+import Context from "../context";
+import { createLogger } from "../logger";
+import * as Promises from "../promises";
+import TemplateEngine from "../templating/engine";
 
 const LOGGER = createLogger("etljs::mysqlimports");
 
@@ -17,36 +17,30 @@ export type Data = {
   _stderr?: string | null;
 };
 
+export type MySQLImportsState = {
+  mysqlimports: any;
+};
+
 const asPromised = function(
   pPreviousData: any,
   pKey: string,
   func: Function,
   data: any
 ): void {
-  if (!pPreviousData.mysqls[pKey]) pPreviousData.mysqls[pKey] = {};
-  pPreviousData.mysqls[pKey] = data;
+  if (!pPreviousData.mysqlimports[pKey]) pPreviousData.mysqlimports[pKey] = {};
+  pPreviousData.mysqlimports[pKey] = data;
   // if ( data['exit'] ) {
   //	pPreviousData['_exit'] = data['exit'];
   //	pPreviousData['_exit_from'] = pKey;
   // }
-  /*
-      if ( result ) {
-          pPreviousData[pKey]['result'] = result;
-      }
-      if ( error ) {
-          pPreviousData[pKey]['error'] = error;
-      }
-      */
-  // console.log('asPromised:');
-  // console.dir( pPreviousData );
   func(pPreviousData);
 };
 
-export default class MySQLsMod extends AbstractMod<any> {
+export default class MySQLImportsMod extends AbstractMod<any, any> {
   mSettings: any;
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
-    super("mysqls", pSettings || {});
+    super("mysqlimports", pSettings || {});
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
@@ -169,7 +163,6 @@ export default class MySQLsMod extends AbstractMod<any> {
     Object.keys(pConfig).forEach(i => {
       oConfig[i.toLowerCase()] = pConfig[i];
     });
-
     this._applySettings(pParent, pKey, oConfig);
 
     return oConfig;
@@ -181,9 +174,9 @@ export default class MySQLsMod extends AbstractMod<any> {
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
-  ): (data: any) => Promise<any> {
+  ): (res: any) => Promise<any> {
     return (pPreviousData: any) => {
-      LOGGER.debug("[%s] Executing mysql...", pParent);
+      LOGGER.debug("[%s] Executing mysqlimport...", pParent);
       try {
         return this._run(
           pPreviousData,
@@ -194,11 +187,8 @@ export default class MySQLsMod extends AbstractMod<any> {
           pContext,
           pTemplateIndex
         );
-      } catch (e) {
-        LOGGER.error("[%s] Error executing mysql.", pParent);
-        return Promise.reject(e); // TODO
       } finally {
-        LOGGER.debug("[%s] Done executing mysql.", pParent);
+        LOGGER.debug("[%s] Done executing mysqlimport.", pParent);
       }
     };
   }
@@ -212,54 +202,28 @@ export default class MySQLsMod extends AbstractMod<any> {
     pTemplateIndex: number
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const escapeSingleQuotes = function(pValue: string): string {
-        return pValue.replace(/'/g, "\\'");
+      const enclose = function(pValue: string): string {
+        if (pValue.includes('"')) {
+          return "'" + pValue + "'";
+        } else if (pValue.includes("'")) {
+          return '"' + pValue + '"';
+        }
+        return '"' + pValue + '"';
       };
       try {
         const oCmdArgs = [];
         for (const i in pConfig) {
           if (pConfig[i] == null) continue;
           switch (i) {
-            case "auto_rehash":
-              if (pConfig[i]) oCmdArgs.push("--auto-rehash");
-              break;
-            case "auto_vertical_output":
-              if (pConfig[i]) oCmdArgs.push("--auto-vertical-output");
-              break;
-            case "batch":
-              if (pConfig[i]) oCmdArgs.push("--batch");
-              break;
-            case "binary_as_hex":
-              if (pConfig[i]) oCmdArgs.push("--binary-as-hex");
-              break;
-            case "binary_mode":
-              if (pConfig[i]) oCmdArgs.push("--binary-mode");
-              break;
             case "bind_address":
               oCmdArgs.push("--bind-address=" + pConfig[i]);
               break;
-            case "character_sets_dir":
-              oCmdArgs.push("--character-sets-dir=" + pConfig[i]);
-              break;
-            case "column_names":
+            case "columns":
               oCmdArgs.push("--columns=" + pConfig[i]);
-              break;
-            case "column_type_info":
-              if (pConfig[i]) oCmdArgs.push("--column-type-info");
-              break;
-            case "comments":
-              if (pConfig[i]) oCmdArgs.push("--comments");
               break;
             case "compress":
               if (pConfig[i]) oCmdArgs.push("--compress");
               break;
-            case "connect_expired_password":
-              if (pConfig[i]) oCmdArgs.push("--connect-expired-password");
-              break;
-            case "connect_timeout":
-              oCmdArgs.push("--connect_timeout=" + pConfig[i]);
-              break;
-            // case "database":
             case "debug":
               oCmdArgs.push("--debug=" + pConfig[i]);
               break;
@@ -284,28 +248,26 @@ export default class MySQLsMod extends AbstractMod<any> {
             case "defaults_group_suffix":
               oCmdArgs.push("--defaults-group-suffix=" + pConfig[i]);
               break;
-            case "delimiter":
-              oCmdArgs.push("--delimiter=" + pConfig[i]);
+            case "delete":
+              if (pConfig[i]) oCmdArgs.push("--delete");
               break;
             case "enable_cleartext_plugin":
               if (pConfig[i]) oCmdArgs.push("--enable-cleartext-plugin");
               break;
-            case "execute": {
-              // TODO: need to escape?
-              let oExecuteRaw = pConfig[i];
-              if (oExecuteRaw.indexOf("{{") >= 0) {
-                const oExecuteRaws = this._evaluate(oExecuteRaw, pContext);
-                // TODO: check index vs length
-                if (oExecuteRaws && oExecuteRaws.length > pTemplateIndex) {
-                  oExecuteRaw = oExecuteRaws[pTemplateIndex];
-                }
-                // TODO: else, log???
-              }
+            case "fields_enclosed_by":
+              oCmdArgs.push("--fields-enclosed-by=" + enclose(pConfig[i]));
+              break;
+            case "fields_escaped_by":
+              oCmdArgs.push("--fields-escaped-by=" + enclose(pConfig[i]));
+              break;
+            case "fields_optionally_enclosed_by":
               oCmdArgs.push(
-                "--execute='" + escapeSingleQuotes(oExecuteRaw) + "'"
+                "--fields-optionally-enclosed-by=" + enclose(pConfig[i])
               );
               break;
-            }
+            case "fields_terminated_by":
+              oCmdArgs.push("--fields-terminated-by=" + enclose(pConfig[i]));
+              break;
             case "force":
               if (pConfig[i]) oCmdArgs.push("--force");
               break;
@@ -315,48 +277,29 @@ export default class MySQLsMod extends AbstractMod<any> {
             case "host":
               oCmdArgs.push("--host=" + pConfig[i]);
               break;
-            case "html":
-              if (pConfig[i]) oCmdArgs.push("--html");
+            case "ignore":
+              if (pConfig[i]) oCmdArgs.push("--ignore");
               break;
-            case "ignore_spaces":
-              if (pConfig[i]) oCmdArgs.push("--ignore-spaces");
+            case "ignore_lines":
+              oCmdArgs.push("--ignore-lines=" + pConfig[i]);
               break;
-            // case "init_command":
-            case "line_numbers":
-              if (pConfig[i]) oCmdArgs.push("--line-numbers");
+            case "lines_terminated_by":
+              oCmdArgs.push("--lines-terminated-by=" + enclose(pConfig[i]));
               break;
-            case "local_infile":
-              oCmdArgs.push("--local-infile=" + pConfig[i]);
+            case "local":
+              if (pConfig[i]) oCmdArgs.push("--local");
+              break;
+            case "lock_tables":
+              if (pConfig[i]) oCmdArgs.push("--lock-tables");
               break;
             case "login_path":
               oCmdArgs.push("--login-path=" + pConfig[i]);
               break;
-            case "max_allowed_packet":
-              oCmdArgs.push("--max_allowed_packet=" + pConfig[i]);
-              break;
-            case "max_join_size":
-              oCmdArgs.push("--max_join_size=" + pConfig[i]);
-              break;
-            case "named_commands":
-              if (pConfig[i]) oCmdArgs.push("--named-commands");
-              break;
-            case "net_buffer_length":
-              oCmdArgs.push("--net_buffer_length=" + pConfig[i]);
-              break;
-            case "no_auto_rehash":
-              if (pConfig[i]) oCmdArgs.push("--no-auto-rehash");
-              break;
-            case "no_beep":
-              if (pConfig[i]) oCmdArgs.push("--no-beep");
+            case "low_priority":
+              if (pConfig[i]) oCmdArgs.push("--low-priority");
               break;
             case "no_defaults":
               if (pConfig[i]) oCmdArgs.push("--no-defaults");
-              break;
-            case "one_database":
-              if (pConfig[i]) oCmdArgs.push("--one-database");
-              break;
-            case "pager":
-              oCmdArgs.push("--pager=" + pConfig[i]);
               break;
             case "password":
               oCmdArgs.push("--password=" + pConfig[i]);
@@ -370,31 +313,14 @@ export default class MySQLsMod extends AbstractMod<any> {
             case "port":
               oCmdArgs.push("--port=" + pConfig[i]);
               break;
-            // case "print-defaults":
-            // case "prompt": // ???
             case "protocol":
               oCmdArgs.push("--protocol=" + pConfig[i]);
               break;
-            case "quick":
-              if (pConfig[i]) oCmdArgs.push("--quick");
-              break;
-            case "raw":
-              if (pConfig[i]) oCmdArgs.push("--raw");
-              break;
-            case "reconnect":
-              if (pConfig[i]) oCmdArgs.push("--reconnect");
-              break;
-            case "i_am_a_dummy":
-              if (pConfig[i]) oCmdArgs.push("--i-am-a-dummy");
-              break;
-            case "safe_updates":
-              if (pConfig[i]) oCmdArgs.push("--safe-updates");
+            case "replace":
+              if (pConfig[i]) oCmdArgs.push("--replace");
               break;
             case "secure_auth":
               if (pConfig[i]) oCmdArgs.push("--secure-auth");
-              break;
-            case "select_limit":
-              oCmdArgs.push("--select_limit=" + pConfig[i]);
               break;
             case "server_public_key_path":
               oCmdArgs.push("--server-public-key-path=" + pConfig[i]);
@@ -402,32 +328,8 @@ export default class MySQLsMod extends AbstractMod<any> {
             case "shared_memory_base_name":
               oCmdArgs.push("--shared-memory-base-name=" + pConfig[i]);
               break;
-            case "show_warnings":
-              if (pConfig[i]) oCmdArgs.push("--show-warnings");
-              break;
-            case "sigint_ignore":
-              if (pConfig[i]) oCmdArgs.push("--sigint-ignore");
-              break;
             case "silent":
               if (pConfig[i]) oCmdArgs.push("--silent");
-              break;
-            case "skip_auto_rehash":
-              if (pConfig[i]) oCmdArgs.push("--skip-auto-rehash");
-              break;
-            case "skip_column_names":
-              if (pConfig[i]) oCmdArgs.push("--skip-column-names");
-              break;
-            case "skip_line_numbers":
-              if (pConfig[i]) oCmdArgs.push("--skip-line-numbers");
-              break;
-            case "skip_named_commands":
-              if (pConfig[i]) oCmdArgs.push("--skip-named-commands");
-              break;
-            case "skip_pager":
-              if (pConfig[i]) oCmdArgs.push("--skip-pager");
-              break;
-            case "skip_reconnect":
-              if (pConfig[i]) oCmdArgs.push("--skip-reconnect");
               break;
             case "socket":
               oCmdArgs.push("--socket=" + pConfig[i]);
@@ -459,35 +361,17 @@ export default class MySQLsMod extends AbstractMod<any> {
             case "ssl_mode":
               oCmdArgs.push("--ssl-mode=" + pConfig[i]);
               break;
-            case "syslog":
-              if (pConfig[i]) oCmdArgs.push("--syslog");
-              break;
-            case "table":
-              if (pConfig[i]) oCmdArgs.push("--table");
-              break;
-            case "tee":
-              oCmdArgs.push("--tee=" + pConfig[i]);
-              break;
             case "tls_ciphersuites":
               oCmdArgs.push("--tls-ciphersuites=" + pConfig[i]);
               break;
             case "tls_version":
               oCmdArgs.push("--tls-version=" + pConfig[i]);
               break;
-            case "unbuffered":
-              if (pConfig[i]) oCmdArgs.push("--unbuffered");
+            case "use_threads":
+              oCmdArgs.push("--use-threads=" + pConfig[i]);
               break;
             case "user":
               oCmdArgs.push("--user=" + pConfig[i]);
-              break;
-            case "vertical":
-              if (pConfig[i]) oCmdArgs.push("--vertical");
-              break;
-            case "wait":
-              if (pConfig[i]) oCmdArgs.push("--wait");
-              break;
-            case "xml":
-              if (pConfig[i]) oCmdArgs.push("--xml");
               break;
             default:
               // TODO
@@ -495,25 +379,28 @@ export default class MySQLsMod extends AbstractMod<any> {
           }
           // console.log('i=' + i + ', config=' + pConfig[i]);
         }
-        let oDBName = pConfig["db_name"];
-        if (oDBName.indexOf("{{") >= 0) {
-          const oDBNames = this._evaluate(oDBName, pContext);
-          if (oDBNames && oDBNames.length > pTemplateIndex) {
-            oDBName = oDBNames[pTemplateIndex];
+        let oDBName: string = pConfig["db_name"];
+        if (oDBName.includes("{{")) {
+          const oDBNames = this._evaluate(oDBName, pContext) || [];
+          if (oDBNames.length < pTemplateIndex + 1) {
+            return reject(
+              new Error(
+                "Unbalanced template. Template index at " +
+                  pTemplateIndex +
+                  ", total db names = " +
+                  oDBNames.length
+              )
+            );
           }
-          // TODO: else, log????
+          oDBName = oDBNames[pTemplateIndex];
         }
         oCmdArgs.push(oDBName);
-        // oCmdArgs.push( pKey );
+        oCmdArgs.push(pKey);
+
         // TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
-        const oEnsureFolderExists =
-          '[ ! -d $(dirname "' +
-          pKey +
-          '") ] && mkdir -p $(dirname "' +
-          pKey +
-          '");';
-        const oCmd =
-          oEnsureFolderExists + "/usr/bin/mysql " + oCmdArgs.join(" ");
+        // See: https://stackoverflow.com/questions/2508559/using-mysqlimport-where-the-filename-is-different-from-the-table-name
+
+        const oCmd = "/usr/bin/mysqlimport " + oCmdArgs.join(" ");
         pExecutor.exec(oCmd, { context: pKey }, function(
           error,
           stdout,
@@ -528,9 +415,9 @@ export default class MySQLsMod extends AbstractMod<any> {
           };
           let func = null;
 
-          LOGGER.debug("[%s] Done executing mysql.", pParent);
+          LOGGER.debug("[%s] Done executing mysqlimport.", pParent);
           if (error) {
-            LOGGER.error("[%s] Error executing mysql.", pParent, error);
+            LOGGER.error("[%s] Error executing mysqlimport.", pParent, error);
             // reject( error );
             // if ( pConfig['exit_on_failure'] ) data.exit = true;
             func = reject;
@@ -555,54 +442,61 @@ export default class MySQLsMod extends AbstractMod<any> {
       }
     });
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<MySQLImportsState>> {
     return new Promise((resolve, reject) => {
-      LOGGER.info("[%s] Processing mysqls...", pParent);
+      LOGGER.info("[%s] Processing mysqlimport...", pParams.parent);
       try {
-        const oData = { mysqls: {} };
+        const oData = { mysqlimports: {} };
         const oPromises: ((res: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
-          const oConfig = pConfig[i];
-          let oKeys: string[] = [i];
-          if (i.includes("{{")) {
-            const v = this._evaluate(i, pContext);
-            if (v) oKeys = v;
-          }
+        Object.keys(pParams.config).forEach(i => {
+          const oConfig = pParams.config[i];
+          const oKeys: string[] = !i.includes("{{")
+            ? [i]
+            : this._evaluate(i, pParams.context) || [];
           oKeys.forEach((e, j) => {
             const oOptions = this._readOptions(
-              pParent,
+              pParams.parent,
               e,
               oConfig,
-              pExecutor,
-              pContext,
+              pParams.executor,
+              pParams.context,
               j
             );
             oPromises.push(
-              this._wrapRun(pParent, e, oOptions, pExecutor, pContext, j)
+              this._wrapRun(
+                pParams.parent,
+                e,
+                oOptions,
+                pParams.executor,
+                pParams.context,
+                j
+              )
             );
-
-            // var oOptions = that._read_options( pParent, i, pConfig[i] );
-            // oPromises.push( that._wrap_run( pParent, i, oOptions, pExecutor, pContext ) );
           });
         });
-
         Promises.seq(oPromises, oData).then(
           function(_pData) {
-            LOGGER.info("[%s] Done running mysqls.", pParent);
-            resolve(oData);
+            LOGGER.info("[%s] Done running mysqlimports.", pParams.parent);
+            resolve({
+              status: ModStatus.CONTINUE,
+              state: oData
+            });
           },
           function(pError) {
-            LOGGER.error("[%s] Error running mysqls.", pParent, pError);
+            LOGGER.info(
+              "[%s] Error running mysqlimport.",
+              pParams.parent,
+              pError
+            );
             reject(pError);
           }
         );
       } catch (e) {
-        LOGGER.error("[%s] Unexpected error running mysqls.", pParent, e);
+        LOGGER.error(
+          "[%s] Unexpected error running mysqlimport.",
+          pParams.parent,
+          e
+        );
         reject(e);
       }
     });

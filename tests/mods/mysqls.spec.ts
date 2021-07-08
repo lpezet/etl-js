@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import { IETL, ModCallback } from "../lib/etl";
-import Mod from "../lib/mod";
-import MySQLsMod from "../lib/mysqls";
-import { Callback, NoOpExecutor } from "../lib/executors";
-import { loadFile } from "./utils";
-import Context, { emptyContext } from "../lib/context";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod, { ModResult } from "../../lib/mod";
+import MySQLsMod, { MySQLState } from "../../lib/mods/mysqls";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import { loadFile } from "../utils";
+import Context, { emptyContext } from "../../lib/context";
 
 describe("mysqls", function() {
   beforeEach(function(done: Function) {
@@ -15,20 +15,22 @@ describe("mysqls", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -71,22 +73,29 @@ describe("mysqls", function() {
       ...emptyContext()
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        try {
-          assert.property(pData["mysqls"], "do_something_2018");
-          assert.property(pData["mysqls"], "do_something_2019");
-          assert.property(pData["mysqls"], "do_something_2020");
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<MySQLState>) {
+          try {
+            assert.property(pData.state?.mysqls, "do_something_2018");
+            assert.property(pData.state?.mysqls, "do_something_2019");
+            assert.property(pData.state?.mysqls, "do_something_2020");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
         }
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+      );
   });
 
   it("apply_settings_parent", function(done) {
@@ -118,15 +127,22 @@ describe("mysqls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings_key", function(done) {
@@ -158,15 +174,22 @@ describe("mysqls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("apply_settings_all", function(done) {
@@ -198,15 +221,22 @@ describe("mysqls", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
   /*
   it("nullExecutor", function (done) {
@@ -258,14 +288,21 @@ describe("mysqls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("internalWrapRunError", function(done) {
@@ -294,14 +331,21 @@ describe("mysqls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("errorExecutingCmd", function(done) {
@@ -327,14 +371,21 @@ describe("mysqls", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -380,15 +431,22 @@ describe("mysqls", function() {
 
     const oConfig = loadFile("./mysqls/basic.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("basicFalse", function(done) {
@@ -431,14 +489,21 @@ describe("mysqls", function() {
     const oExecutor = new ExecutorClass();
     const oTested = new MySQLsMod(new ETLMock());
     const oConfig = loadFile("./mysqls/basic_false.yml");
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 });

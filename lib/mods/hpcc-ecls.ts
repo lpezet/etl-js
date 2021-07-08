@@ -1,15 +1,19 @@
 import * as path from "path";
 import * as fs from "fs";
-import * as Promises from "./promises";
-import TemplateEngine from "./templating/engine";
-import { createLogger } from "./logger";
-import { AbstractMod } from "./mod";
-import Context from "./context";
-import { Executor } from "./executors";
+import * as Promises from "../promises";
+import TemplateEngine from "../templating/engine";
+import { createLogger } from "../logger";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import Context from "../context";
+import { Executor } from "../executors";
 
 const LOGGER = createLogger("etljs::hpcc-ecls");
 
 const TEMP_ECL_FILE = "/tmp/etl-js.ecl";
+
+export type HPCCECLsState = {
+  ecls: any[];
+};
 
 export type Data = {
   error?: Error | null;
@@ -17,6 +21,7 @@ export type Data = {
   message?: string | null;
   exit: boolean;
   pass: boolean;
+  skip?: boolean;
   _stdout?: string | null;
   _stderr?: string | null;
 };
@@ -26,6 +31,26 @@ export type SettingsType = {
   [key: string]: any;
 };
 
+const asPromised = function(
+  pResults: ModResult<HPCCECLsState>,
+  pFunc: (results: any) => void,
+  pParent: string,
+  pKey: string,
+  pData: Data
+): void {
+  LOGGER.debug("[%s] Ecls [%s] results:\n%j", pParent, pKey, pData);
+  const data = {
+    key: pKey,
+    results: pData,
+    exit: pData.exit,
+    skip: pData.skip || false
+  };
+  if (pData.exit) pResults.status = ModStatus.EXIT;
+  if (pData.skip) pResults.status = ModStatus.STOP;
+  pResults.state?.ecls.push(data);
+  pFunc(pResults);
+};
+/*
 const asPromised = (
   pPreviousData: any,
   pKey: string,
@@ -38,19 +63,9 @@ const asPromised = (
     pPreviousData["_exit"] = pData["exit"];
     pPreviousData["_exit_from"] = pKey;
   }
-  /*
-	if ( result ) {
-		pPreviousData[pKey]['result'] = result;
-	}
-	if ( error ) {
-		pPreviousData[pKey]['error'] = error;
-	}
-	*/
-  // console.log('asPromised:');
-  // console.dir( pPreviousData );
   func(pPreviousData);
 };
-
+*/
 const promiseExecutor = (
   pExecutor: Executor,
   pFunc: Function,
@@ -112,7 +127,7 @@ const createCommandArgsFromConfig = (pConfig: any): string[] => {
   return oCmdArgs;
 };
 
-export default class HPCCECLsMod extends AbstractMod<any> {
+export default class HPCCECLsMod extends AbstractMod<any, any> {
   mTemplateEngine: TemplateEngine;
   constructor(pSettings?: SettingsType) {
     super("hpcc-ecls", pSettings || {});
@@ -186,7 +201,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
     };
   }
   _run(
-    pPreviousData: any,
+    pResults: ModResult<HPCCECLsState>,
     pParent: string,
     pKey: string,
     pConfig: any,
@@ -202,7 +217,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
         const oCmd = this.mSettings.eclplus + " " + oCmdArgs.join(" ");
 
         this._prepareFile(
-          pPreviousData,
+          pResults,
           pParent,
           pKey,
           pConfig,
@@ -237,7 +252,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
                   data.result = data._stdout;
                 }
 
-                asPromised(pPreviousData, pKey, func, data);
+                asPromised(pResults, func, pParent, pKey, data);
               });
             } catch (e) {
               const data: Data = {
@@ -246,7 +261,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
                 pass: true
               };
               LOGGER.error("[%s] Error executing ECL.", pParent, e);
-              asPromised(pPreviousData, pKey, reject, data);
+              asPromised(pResults, reject, pParent, pKey, data);
             }
           },
           function(pError: Error) {
@@ -257,7 +272,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
               pass: true
             };
             LOGGER.error("[%s] Error preparing ECL.", pParent, pError);
-            asPromised(pPreviousData, pKey, reject, data);
+            asPromised(pResults, reject, pParent, pKey, data);
           }
         );
       } catch (e) {
@@ -267,7 +282,7 @@ export default class HPCCECLsMod extends AbstractMod<any> {
     });
   }
   _prepareFile(
-    _pPreviousData: any,
+    _pResults: ModResult<HPCCECLsState>,
     pParent: string,
     _pKey: string,
     pConfig: any,
@@ -323,43 +338,58 @@ export default class HPCCECLsMod extends AbstractMod<any> {
       }
     );
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<HPCCECLsState>> {
     // pCurrentActivityResult, pGlobalResult, pContext ) {
     // var oTemplateContext = this.mTemplateEngine.create_context( pCurrentActivityResult, pGlobalResult, pContext );
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Running ECL mod...", pParent);
+      LOGGER.debug("[%s] Running ECL mod...", pParams.parent);
       try {
-        const oData = { "hpcc-ecls": {} };
+        const oResult: ModResult<HPCCECLsState> = {
+          exit: false,
+          skip: false,
+          status: ModStatus.CONTINUE,
+          state: { ecls: [] }
+        };
         const oPromises: ((res: any) => Promise<any>)[] = [];
 
         const oResolvedConfig: any = {};
-        this.mTemplateEngine.evaluateObject(pConfig, pContext, oResolvedConfig);
+        this.mTemplateEngine.evaluateObject(
+          pParams.config,
+          pParams.context,
+          oResolvedConfig
+        );
         // console.log('###############################################');
         // console.log( JSON.stringify( oResolvedConfig, null, 2 ) );
         // console.log('###############################################');
         Object.keys(oResolvedConfig).forEach(k => {
-          const oECLConfig = this._readConfig(pParent, k, oResolvedConfig[k]);
+          const oECLConfig = this._readConfig(
+            pParams.parent,
+            k,
+            oResolvedConfig[k]
+          );
           oPromises.push(
-            this._wrapRun(pParent, k, oECLConfig, pExecutor, pContext, 0)
+            this._wrapRun(
+              pParams.parent,
+              k,
+              oECLConfig,
+              pParams.executor,
+              pParams.context,
+              0
+            )
           );
         });
-        Promises.seq(oPromises, oData).then(
-          function() {
-            resolve(oData);
+        Promises.seq(oPromises, oResult).then(
+          function(pData) {
+            resolve(pData);
           },
           function(pError) {
-            LOGGER.error("[%s] Error in ECL mod.", pParent, pError);
+            LOGGER.error("[%s] Error in ECL mod.", pParams.parent, pError);
             reject(pError);
           }
         );
       } catch (e) {
         reject(e);
-        LOGGER.error("[%s] Unexpected error in ECL mod.", pParent, e);
+        LOGGER.error("[%s] Unexpected error in ECL mod.", pParams.parent, e);
       }
     });
   }

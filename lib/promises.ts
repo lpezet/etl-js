@@ -78,7 +78,7 @@ const controlFlowWrapper = function(
       );
       // console.log( pError );
       // throw pError;
-      return Promise.reject(pValue);
+      return Promise.reject(pError);
     }
   };
 };

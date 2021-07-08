@@ -1,8 +1,8 @@
-import { AbstractMod } from "./mod";
-import { Executor } from "./executors";
-import Context from "./context";
-import { createLogger } from "./logger";
-import * as Promises from "./promises";
+import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import { Executor } from "../executors";
+import Context from "../context";
+import { createLogger } from "../logger";
+import * as Promises from "../promises";
 import * as readline from "readline";
 
 const LOGGER = createLogger("etljs::interactives");
@@ -18,12 +18,16 @@ export type Data = {
   _stderr?: string | null;
 };
 
+export type InteractivesState = {
+  interactives: any[];
+};
+
 const asPromised = function(
-  pResults: any,
+  pResults: ModResult<InteractivesState>,
   pFunc: (results: any) => void,
   pParent: string,
   pKey: string,
-  pData: any
+  pData: Data
 ): void {
   LOGGER.debug("[%s] Interactive [%s] results:\n%j", pParent, pKey, pData);
   // if ( ! pPreviousData.commands[pKey] ) pPreviousData.commands[pKey] = {};
@@ -35,13 +39,15 @@ const asPromised = function(
     skip: Boolean(pData["skip"])
   };
   // data[ pKey ] = pData;
-  pResults.exit = pResults.exit || Boolean(pData["exit"]);
-  pResults.skip = pResults.skip || Boolean(pData["skip"]);
-  pResults.results.push(data);
+  // pResults.exit = pResults.exit || Boolean(pData["exit"]);
+  // pResults.skip = pResults.skip || Boolean(pData["skip"]);
+  if (pData.exit) pResults.status = ModStatus.EXIT;
+  if (pData.skip) pResults.status = ModStatus.STOP;
+  pResults.state?.interactives.push(data);
   pFunc(pResults);
 };
 
-export default class InteractivesMod extends AbstractMod<any> {
+export default class InteractivesMod extends AbstractMod<any, any> {
   mSettings: any;
   constructor(pSettings?: any) {
     super("interactives", pSettings || {});
@@ -52,8 +58,10 @@ export default class InteractivesMod extends AbstractMod<any> {
     pSpecs: any,
     _pExecutor: Executor,
     pContext: Context
-  ): (data: any) => Promise<any> {
-    return (pResults: any) => {
+  ): (data: any) => Promise<ModResult<InteractivesState>> {
+    return (
+      pResults: ModResult<InteractivesState>
+    ): Promise<ModResult<InteractivesState>> => {
       // if ( pResults['_exit'] ) {
       //	return Promise.resolve( pResults );
       // }
@@ -93,31 +101,36 @@ export default class InteractivesMod extends AbstractMod<any> {
       });
     };
   }
-  handle(
-    pParent: string,
-    pConfig: any,
-    pExecutor: Executor,
-    pContext: Context
-  ): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<InteractivesState>> {
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Processing Interactive...", pParent);
+      LOGGER.debug("[%s] Processing Interactive...", pParams.parent);
       try {
         const oResult = { exit: false, skip: false, results: [] };
         const oPromises: ((data: any) => Promise<any>)[] = [];
-        Object.keys(pConfig).forEach(i => {
+        Object.keys(pParams.config).forEach(i => {
           const oTarget = i;
-          LOGGER.debug("[%s] Interactive...", pParent, oTarget);
+          LOGGER.debug("[%s] Interactive...", pParams.parent, oTarget);
           oPromises.push(
-            this._exec(pParent, i, pConfig[i], pExecutor, pContext)
+            this._exec(
+              pParams.parent,
+              i,
+              pParams.config[i],
+              pParams.executor,
+              pParams.context
+            )
           );
         });
         Promises.seq(oPromises, oResult).then(
           function(pData) {
-            LOGGER.debug("[%s] Done processing interactives.", pParent);
+            LOGGER.debug("[%s] Done processing interactives.", pParams.parent);
             resolve(pData);
           },
           function(pError) {
-            LOGGER.error("[%s] Error during interactives.", pParent, pError);
+            LOGGER.error(
+              "[%s] Error during interactives.",
+              pParams.parent,
+              pError
+            );
             reject(pError);
           }
         );
@@ -125,7 +138,7 @@ export default class InteractivesMod extends AbstractMod<any> {
         reject(e);
         LOGGER.error(
           "[%s] Unexpected error processing interactives.",
-          pParent,
+          pParams.parent,
           e
         );
       }

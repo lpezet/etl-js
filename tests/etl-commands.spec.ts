@@ -1,6 +1,6 @@
 import { Callback, NoOpExecutor } from "../lib/executors";
 import { assert } from "chai";
-import CommandsMod from "../lib/commands";
+import CommandsMod from "../lib/mods/commands";
 import ETL from "../lib/etl";
 
 describe("etl-commands", function() {
@@ -93,7 +93,7 @@ describe("etl-commands", function() {
     const oCommandsMod = new CommandsMod();
     oCommandsMod.register(oETL);
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function() {
         try {
           assert.deepEqual(oExecutor.getCmdsExecuted(), [
@@ -135,7 +135,7 @@ describe("etl-commands", function() {
     const oCommandsMod = new CommandsMod();
     oCommandsMod.register(oETL);
 
-    oETL.process(oETLConfigLite).then(
+    oETL.processTemplate(oETLConfigLite, {}).then(
       function() {
         try {
           assert.deepEqual(oExecutor.getCmdsExecuted(), [
@@ -161,7 +161,7 @@ describe("etl-commands", function() {
 
     // eslint-disable-next-line @typescript-eslint/camelcase
     mETLTemplate.activity2.commands.gonnafail1.exit_on_test_failed = false;
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function() {
         try {
           assert.deepEqual(oExecutor.getCmdsExecuted(), [
@@ -192,7 +192,7 @@ describe("etl-commands", function() {
     mETLTemplate.etl.push("step3");
     // console.log(util.inspect(mETLTemplate, false, null, true /* enable colors */))
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function() {
         try {
           assert.deepEqual(oExecutor.getCmdsExecuted(), [
@@ -226,7 +226,7 @@ describe("etl-commands", function() {
     // console.log( JSON.stringify( mETLTemplate ) );
     // console.log('#####################################');
 
-    oETL.process(mETLTemplate).then(
+    oETL.processTemplate(mETLTemplate, {}).then(
       function() {
         try {
           assert.deepEqual(oExecutor.getCmdsExecuted(), [

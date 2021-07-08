@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import InteractivesMod from "../lib/interactives";
+import InteractivesMod from "../../lib/mods/interactives";
 import { EventEmitter } from "events";
-import { IETL, ModCallback } from "../lib/etl";
-import Mod from "../lib/mod";
-import Context, { emptyContext } from "../lib/context";
-import { NoOpExecutor } from "../lib/executors";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import Mod from "../../lib/mod";
+import Context, { emptyContext } from "../../lib/context";
+import { Executor, NoOpExecutor } from "../../lib/executors";
 
 // const chai = require("chai");
 // const spies = require("chai-spies");
@@ -13,20 +13,22 @@ import { NoOpExecutor } from "../lib/executors";
 describe("interactives", function() {
   const NOOP_EXEC = new NoOpExecutor();
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
   class FakeStream extends EventEmitter {
@@ -79,14 +81,21 @@ describe("interactives", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: NOOP_EXEC,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("execError", function(done) {
@@ -102,14 +111,21 @@ describe("interactives", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], NOOP_EXEC, emptyContext()).then(
-      function() {
-        done("Expected error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: NOOP_EXEC,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected error");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -127,8 +143,14 @@ describe("interactives", function() {
       }
     };
     const oContext: Context = emptyContext();
-    oTested.handle("root", oTemplate["root"], NOOP_EXEC, oContext).then(
-      function() {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: NOOP_EXEC,
+        context: oContext
+      })
+      .then(function() {
         try {
           assert.exists(oContext.vars["name"]);
           assert.equal(oContext.vars["name"], "Schwarzenegger");
@@ -136,12 +158,11 @@ describe("interactives", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
     setTimeout(function() {
       fs.emit("data", "Schwarzenegger\n");
     }, 10);

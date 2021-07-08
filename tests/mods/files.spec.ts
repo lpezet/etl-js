@@ -1,11 +1,22 @@
 import { assert } from "chai";
-import FilesMod from "../lib/files";
-import { loadFile } from "./utils";
-import { IETL, ModCallback } from "../lib/etl";
-import Mod from "../lib/mod";
-import { Callback, NoOpExecutor } from "../lib/executors";
-import Context, { emptyContext } from "../lib/context";
+import FilesMod, { FilesState } from "../../lib/mods/files";
+import { loadFile } from "../utils";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import Context, { emptyContext } from "../../lib/context";
+import Mod, { ModResult } from "../../lib/mod";
+/*
+import { configureLogger } from "../../../lib/logger";
 
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 describe("files", function() {
   beforeEach(function(done: () => void) {
     done();
@@ -15,20 +26,22 @@ describe("files", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -63,15 +76,22 @@ describe("files", function() {
       tags: ["a", "b"],
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(_pData: any) {
-        done("Expecting error.");
-      },
-      function(_pError: Error) {
-        // console.log( pError );
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(_pData: any) {
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          // console.log( pError );
+          done();
+        }
+      );
   });
 
   it("downloadError", function(done) {
@@ -92,10 +112,15 @@ describe("files", function() {
     const oConfig = loadFile("./files/basic.yml");
 
     oTested
-      .handle("root", oConfig["root"], oExecutor, {
-        env: {},
-        vars: {},
-        etl: { activityId: null, activityIndex: 0, stepName: null }
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: {
+          env: {},
+          vars: {},
+          etl: { activityId: null, activityIndex: 0, stepName: null }
+        }
       })
       .then(
         function(_pData: any) {
@@ -120,14 +145,21 @@ describe("files", function() {
 
     const oConfig = loadFile("./files/basic.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(_pData: any) {
-        done("Expecting error.");
-      },
-      function(_pError: Error) {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(_pData: any) {
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          done();
+        }
+      );
   });
 
   it("downloadPermsError", function(done) {
@@ -156,16 +188,23 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        console.log("#### Error ???");
-        console.log(pData);
-        done("Expecting error.");
-      },
-      function(_pError: Error) {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: any) {
+          console.log("#### Error ???");
+          console.log(pData);
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          done();
+        }
+      );
   });
 
   it("contentError", function(done) {
@@ -198,14 +237,21 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(_pData: any) {
-        done("Expecting error.");
-      },
-      function(_pError: Error) {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(_pData: any) {
+          done("Expecting error.");
+        },
+        function(_pError: Error) {
+          done();
+        }
+      );
   });
 
   it("basic", function(done) {
@@ -225,19 +271,28 @@ describe("files", function() {
 
     const oConfig = loadFile("./files/basic.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/file.txt"]);
-        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: ModResult<FilesState>) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("source", function(done) {
@@ -266,19 +321,28 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/file.txt"]);
-        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: ModResult<FilesState>) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("sourceWithPerms", function(done) {
@@ -318,19 +382,28 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/file.txt"]);
-        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: any) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("content", function(done) {
@@ -360,19 +433,28 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/file.txt"]);
-        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: any) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("contentWithPerms", function(done) {
@@ -403,19 +485,28 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/file.txt"]);
-        assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: any) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 1);
+          const actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/file.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 
   it("permsError", function(done) {
@@ -447,14 +538,21 @@ describe("files", function() {
       }
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      () => {
-        done(new Error("Expected error."));
-      },
-      () => {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        () => {
+          done(new Error("Expected error."));
+        },
+        () => {
+          done();
+        }
+      );
   });
 
   it("templateSingleValue", function(done) {
@@ -493,23 +591,32 @@ describe("files", function() {
       ...emptyContext()
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        try {
-          assert.exists(pData);
-          assert.exists(pData["files"]);
-          assert.exists(pData["files"]["/tmp/file.txt"]);
-          assert.notExists(pData["files"]["/tmp/file.txt"]["error"]);
-          done();
-        } catch (e) {
-          done(e);
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: any) {
+          try {
+            assert.exists(pData);
+            assert.exists(pData.state);
+            assert.equal(pData.state?.results.length, 1);
+            const actual = pData.state?.results[0];
+            assert.equal(actual.key, "/tmp/file.txt");
+            assert.notExists(actual.results.result.error);
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
         }
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+      );
   });
 
   it("templateMultipleValues", function(done) {
@@ -557,22 +664,33 @@ describe("files", function() {
       ...emptyContext()
     };
 
-    oTested.handle("root", oConfig["root"], oExecutor, oContext).then(
-      function(pData: any) {
-        assert.exists(pData);
-        assert.exists(pData["files"]);
-        assert.exists(pData["files"]["/tmp/toto.txt"]);
-        assert.notExists(pData["files"]["/tmp/toto.txt"]["error"]);
-        assert.exists(pData["files"]["/tmp/titi.txt"]);
-        assert.notExists(pData["files"]["/tmp/titi.txt"]["error"]);
-        assert.exists(pData["files"]["/tmp/static.txt"]);
-        assert.notExists(pData["files"]["/tmp/static.txt"]["error"]);
-        done();
-      },
-      function(pError: Error) {
-        // console.log( pError );
-        done(pError);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<FilesState>) {
+          assert.exists(pData);
+          assert.exists(pData.state);
+          assert.equal(pData.state?.results.length, 3);
+          let actual = pData.state?.results[0];
+          assert.equal(actual.key, "/tmp/toto.txt");
+          assert.notExists(actual.results.result.error);
+          actual = pData.state?.results[1];
+          assert.equal(actual.key, "/tmp/titi.txt");
+          assert.notExists(actual.results.result.error);
+          actual = pData.state?.results[2];
+          assert.equal(actual.key, "/tmp/static.txt");
+          assert.notExists(actual.results.result.error);
+          done();
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
   });
 });

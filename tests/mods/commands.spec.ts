@@ -1,10 +1,23 @@
 import { assert } from "chai";
-import Mod from "../lib/mod";
-import { IETL, ModCallback } from "../lib/etl";
-import CommandsMod from "../lib/commands";
-import { loadFile } from "./utils";
-import { Callback, NoOpExecutor } from "../lib/executors";
-import Context, { emptyContext } from "../lib/context";
+import Mod, { ModResult, ModStatus } from "../../lib/mod";
+import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
+import CommandsMod, { CommandsState } from "../../lib/mods/commands";
+import { loadFile } from "../utils";
+import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
+import Context, { emptyContext } from "../../lib/context";
+
+/*
+import { configureLogger } from "../../../lib/logger";
+
+configureLogger({
+  appenders: {
+    console: { type: "console", layout: { type: "colored" } }
+  },
+  categories: {
+    default: { appenders: ["console"], level: "all" }
+  }
+});
+*/
 
 describe("commands", function() {
   beforeEach(function(done: () => void) {
@@ -15,20 +28,22 @@ describe("commands", function() {
     done();
   });
 
-  class ETLMock implements IETL {
-    mod(_pKey: string, _pSource: Mod, pCallback: ModCallback): void {
-      pCallback({ test: true });
+  class ETLMock extends AbstractETL {
+    constructor(
+      pExecutors?: { [key: string]: Executor } | Executor,
+      pSettings?: any
+    ) {
+      super(pExecutors || new NoOpExecutor(), pSettings);
     }
-    processActivity(
-      _pActivityIndex: number,
-      _pTotalActivities: number,
-      _pActivityId: string,
-      _pActivity: any,
-      _pPreviousActivityData: any,
-      _pResults: any,
-      _pContext: any
-    ): Promise<any> {
-      return Promise.resolve();
+    mod(
+      _pKey: string,
+      _pSource: Mod<any>,
+      pCallback?: (settings?: any) => void
+    ): void {
+      if (pCallback) pCallback({ test: true });
+    }
+    processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
+      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
     }
   }
 
@@ -61,7 +76,12 @@ describe("commands", function() {
       ...emptyContext()
     };
     oTested
-      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
       .then(() => {
         done("Expected error saying templateis unbalanced.");
       })
@@ -84,7 +104,12 @@ describe("commands", function() {
       ...emptyContext()
     };
     oTested
-      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
       .then(() => {
         done();
       })
@@ -108,7 +133,12 @@ describe("commands", function() {
       ...emptyContext()
     };
     oTested
-      .handle("root", oTemplate["root"], oExecutor, oContext)
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
       .then(() => {
         done();
       })
@@ -153,15 +183,22 @@ describe("commands", function() {
       years: ["2018", "2019", "2020"],
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(function(pData: ModResult<CommandsState>) {
         try {
-          // console.log('Data=');
-          // console.log(JSON.stringify( pData ));
-          assert.exists(pData.results);
-          assert.isTrue(pData.skip);
-          assert.isFalse(pData.exit);
-          pData.results.forEach(function(e: any) {
+          // console.log("Data=");
+          // console.log(JSON.stringify(pData));
+          assert.exists(pData.state?.results);
+          // assert.isTrue(pData.skip);
+          // assert.isFalse(pData.exit);
+          assert.equal(pData.status, ModStatus.STOP);
+          pData.state?.results.forEach(function(e: any) {
             const oCmd = e["command"];
             if (oCmd !== "hello_2018_suffix" && oCmd !== "hello_2019_suffix") {
               fail(
@@ -173,12 +210,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("tags", function(done) {
@@ -213,17 +249,24 @@ describe("commands", function() {
       tag1: "hello",
       ...emptyContext()
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(pData: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then((pData: ModResult<CommandsState>) => {
         try {
           // console.log('Data=');
           // console.log(JSON.stringify( pData ));
           assert.exists(pData);
-          assert.isFalse(pData["exit"]);
-          assert.isFalse(pData["skip"]);
-          assert.exists(pData["results"]);
-          assert.equal(pData["results"].length, 1);
-          const result = pData["results"][0];
+          assert.equal(pData.status, ModStatus.CONTINUE);
+          // assert.isFalse(pData["exit"]);
+          // assert.isFalse(pData["skip"]);
+          assert.exists(pData.state?.results);
+          assert.equal(pData.state?.results.length, 1);
+          const result = pData.state?.results[0];
           assert.equal(result["command"], "hello");
           assert.exists(result["results"]);
           assert.deepEqual(result["results"], {
@@ -238,12 +281,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("result_as_normal", function(done) {
@@ -266,8 +308,14 @@ describe("commands", function() {
       }
     };
     const oContext = emptyContext();
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(_pData) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(function() {
         try {
           // assert.exists( pData['commands'] );
           // assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -281,12 +329,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("result_as_json", function(done) {
@@ -310,8 +357,14 @@ describe("commands", function() {
     };
 
     const oContext = emptyContext();
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(_pData) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(function() {
         try {
           // assert.exists( pData['commands'] );
           // assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -325,12 +378,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("result_as_json_no_stdout_default", function(done) {
@@ -354,8 +406,14 @@ describe("commands", function() {
     };
 
     const oContext = emptyContext();
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(_pData) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(function() {
         try {
           // assert.exists( pData['commands'] );
           // assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -369,12 +427,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("invalid_json_result_as_json", function(done) {
@@ -399,8 +456,14 @@ describe("commands", function() {
     };
 
     const oContext = emptyContext();
-    oTested.handle("root", oTemplate["root"], oExecutor, oContext).then(
-      function(_pData) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(function() {
         try {
           // assert.exists( pData['commands'] );
           // assert.exists( pData[ 'commands' ][ '001_json' ] );
@@ -415,12 +478,11 @@ describe("commands", function() {
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("invalid_test_output", function(done) {
@@ -441,14 +503,19 @@ describe("commands", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(function() {
         done();
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
   /*
   it("null_executor", function(done) {
@@ -492,18 +559,23 @@ describe("commands", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(_pData) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(function() {
         // console.log('data=');
         // console.dir(data);
         done("Expecting error");
-      },
-      function() {
+      })
+      .catch((_pError: Error) => {
         // console.log('Error:');
         // console.dir( pError );
         done();
-      }
-    );
+      });
   });
 
   // TODO: Somehow, right now, when a command fails, it will keep going...
@@ -528,14 +600,21 @@ describe("commands", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expecting error");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expecting error");
+        },
+        function() {
+          done();
+        }
+      );
   });
   it("error_executing_cmd_ignore_errors", function(done) {
     class ExecutorClass extends NoOpExecutor {
@@ -560,14 +639,21 @@ describe("commands", function() {
       }
     };
 
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function() {
-        done("Not expecting an error! Should be ignoring the error.");
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function() {
+          done("Not expecting an error! Should be ignoring the error.");
+        }
+      );
   });
 
   it("tags_real", function(done) {
@@ -589,19 +675,22 @@ describe("commands", function() {
     };
 
     oTested
-      .handle("root", oTemplate["root"], oExecutor, {
-        env: {},
-        vars: { myvar: "2019" },
-        etl: { activityId: null, activityIndex: 0, stepName: null }
-      })
-      .then(
-        function() {
-          done();
-        },
-        function(pError) {
-          done(pError);
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: {
+          env: {},
+          vars: { myvar: "2019" },
+          etl: { activityId: null, activityIndex: 0, stepName: null }
         }
-      );
+      })
+      .then(function() {
+        done();
+      })
+      .catch((pError: Error) => {
+        done(pError);
+      });
   });
 
   it("basic", function(done) {
@@ -644,15 +733,20 @@ describe("commands", function() {
 
     const oConfig = loadFile("./commands/basic.yml");
 
-    oTested.handle("root", oConfig["root"], oExecutor, emptyContext()).then(
-      function() {
+    oTested
+      .handle({
+        parent: "root",
+        config: oConfig["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(function() {
         done();
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         // console.log( pError );
         done(pError);
-      }
-    );
+      });
   });
 
   it("executor_throwing_exception_in_cmd", function(done) {
@@ -670,15 +764,22 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected rejection.");
-      },
-      function() {
-        // console.log( pError );
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected rejection.");
+        },
+        function() {
+          // console.log( pError );
+          done();
+        }
+      );
   });
 
   it("executor_throwing_exception_in_cmd_ignore", function(done) {
@@ -698,15 +799,22 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done();
-      },
-      function(e: Error) {
-        // console.log( pError );
-        done(e);
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done();
+        },
+        function(e: Error) {
+          // console.log( pError );
+          done(e);
+        }
+      );
   });
 
   it("executor_throwing_exception_in_test", function(done) {
@@ -725,14 +833,19 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(function() {
         done();
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("error_in_cmd_after_test_passed", function(done) {
@@ -752,14 +865,21 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function() {
-        done("Expected rejection.");
-      },
-      function() {
-        done();
-      }
-    );
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function() {
+          done("Expected rejection.");
+        },
+        function() {
+          done();
+        }
+      );
   });
 
   it("exit_on_test_failed", function(done) {
@@ -780,20 +900,26 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isTrue(data["exit"]);
-          assert.isFalse(data["skip"]);
+          assert.equal(data.status, ModStatus.EXIT);
+          // assert.isTrue(data["exit"]);
+          // assert.isFalse(data["skip"]);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("exit_on_test_error", function(done) {
@@ -816,20 +942,26 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isTrue(data["exit"]);
-          assert.isFalse(data["skip"]);
+          assert.equal(data.status, ModStatus.EXIT);
+          // assert.isTrue(data["exit"]);
+          // assert.isFalse(data["skip"]);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("no_exit_on_test_failed", function(done) {
@@ -850,20 +982,26 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isFalse(data["skip"]);
+          assert.equal(data.status, ModStatus.CONTINUE);
+          // assert.isFalse(data["exit"]);
+          // assert.isFalse(data["skip"]);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("no_exit_on_test_error", function(done) {
@@ -886,20 +1024,26 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isFalse(data["skip"]);
+          assert.equal(data.status, ModStatus.CONTINUE);
+          // assert.isFalse(data["exit"]);
+          // assert.isFalse(data["skip"]);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("skip_on_test_failed", function(done) {
@@ -920,20 +1064,24 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isTrue(data["skip"]);
+          assert.equal(data.status, ModStatus.STOP);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("skip_on_test_error", function(done) {
@@ -956,20 +1104,24 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isTrue(data["skip"]);
+          assert.equal(data.status, ModStatus.STOP);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("no_skip_on_test_failed", function(done) {
@@ -986,24 +1138,28 @@ describe("commands", function() {
           command: "gunzip my.zip",
           test: "something",
           // eslint-disable-next-line @typescript-eslint/camelcase
-          skip_on_test_failed: true
+          skip_on_test_failed: false
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isTrue(data["skip"]);
+          assert.equal(data.status, ModStatus.CONTINUE);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("no_skip_on_test_error", function(done) {
@@ -1026,19 +1182,25 @@ describe("commands", function() {
         }
       }
     };
-    oTested.handle("root", oTemplate["root"], oExecutor, emptyContext()).then(
-      function(data: any) {
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then((data: ModResult<CommandsState>) => {
         try {
-          assert.isFalse(data["exit"]);
-          assert.isFalse(data["skip"]);
+          assert.equal(data.status, ModStatus.CONTINUE);
+          // assert.isFalse(data["exit"]);
+          // assert.isFalse(data["skip"]);
           done();
         } catch (e) {
           done(e);
         }
-      },
-      function(pError) {
+      })
+      .catch((pError: Error) => {
         done(pError);
-      }
-    );
+      });
   });
 });

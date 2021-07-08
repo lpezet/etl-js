@@ -1,10 +1,10 @@
 import { createLogger } from "../../lib/logger";
-import { AbstractMod } from "../../lib/mod";
-import { Executor } from "../../lib/executors";
+import { AbstractMod, ModStatus, createModResult } from "../../lib/mod";
+import { ModParameters, ModResult } from "../../lib/mod";
 
 const LOGGER = createLogger("etljs::etl::test");
 
-export default class ModMod extends AbstractMod<any> {
+export default class ModMod extends AbstractMod<any, any> {
   mCalls: number;
   constructor(pSettings?: any) {
     super("moder", pSettings || {});
@@ -13,15 +13,15 @@ export default class ModMod extends AbstractMod<any> {
   calls(): number {
     return this.mCalls;
   }
-  handle(pParent: string, _pConfig: any, _pExecutor: Executor): Promise<any> {
+  handle(pParams: ModParameters): Promise<ModResult<any>> {
     return new Promise((resolve, _reject) => {
       this.mCalls++;
       LOGGER.debug(
         "[%s] In mod mod. Settings: hello=%s",
-        pParent,
+        pParams.parent,
         this.mSettings["hello"]
       );
-      resolve();
+      resolve(createModResult(ModStatus.STOP));
     });
   }
 }

@@ -53,6 +53,7 @@ myETL.process(template);
 
 - [Installation](#installation)
 - [Features](#features)
+- [Why/when would I need this?](#whywhen-would-i-need-this)
 - [Concept](#concept)
 - [Security](#security)
 - [Usage](#usage)
@@ -60,7 +61,8 @@ myETL.process(template);
   - [Control Flow](#control-flow)
   - [Tags](#tags)
   - [Events](#events)
-  - [Results](#results) - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
+  - [Results](#results)
+        - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
 - [Developing Mods](#developing-mods)
 - [License](#license)
 
@@ -71,7 +73,7 @@ myETL.process(template);
 This is a [Node.js](https://nodejs.org/en/) module available through the [npm registry](https://www.npmjs.com/).
 
 Before installing, [download and install Node.js](https://nodejs.org/en/download/).
-Node.js 0.10 or higher is required.
+Node.js 10.0 or higher is required.
 
 Installation is done using the [`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
 
@@ -84,13 +86,41 @@ $ npm install @lpezet/etl-js
     * Template-based process (JSON, YAML) to express steps and activities as part of ETL
     * Extensible behavior via mods
     * Tags allowing more dynamic behavior
+    * Leverage your familiar/preapproved existing tools (program binaries like mysql, mysqlimport, etc., linux binaries, etc.)
+
+# Why/when would I need this?
+
+**ETL-JS** is a simple **ETL glue** represented by an **ETL-JS Template**. Typically, you'd use **ETL-JS** to help with your existing ETL processes.
+
+**ETL-JS** will **NOT** help you figure out how to dump data from MySQL. And while using **ETL-JS** to learn how to export MySQL data might help in the long run, you might get more frustrated short term and give up quickly. It would be better to figure out first how to get your data out of MySQL using whatever tool you have at your disposal (the closer to the product the better) before looking into **ETL-JS**.
+
+The best here is to first figure out how to get those datasets and processes you need, out of your sub-systems, using those sub-system tools or other third party tools you already have (e.g. mysqlimport, pgLoader, HPCC Systems Spray/De-spray, etc.).
+
+Once you have all that, you need to figure out how to coordinate it all.
+If you can already do it all easily with the same tool(s), **ETL-JS** may not be of much help (_but read on, who knows_).
+If you start scripting/coding (bash, JS, python, etc.) to stich things up then stop and take a good look at **ETL-JS**.
+
+Here's a way to see it:
+
+1. (_bash, curl_) Download a file from a website, an (s)ftp site or secure site
+2. (_bash, unzip, grep/sed_) Do some slight processing with it (e.g. extract, rename files or even filter content of some files)
+3. (_mysql_) Load that into another system
+4. (_mysql_) Run some queries/process in that system
+5. (_mysql_) Export the final result(s)
+6. (_bash, awscli_) Potentially doing something with the results (e.g. email/share, upload to AWS S3)
+
+In parenthesis are the tools I would use to accomplish those steps. You can easily see that it's a mix of things: standard linux binaries (curl, unzip, grep/sed), a database binary (mysql), and AWS Command Line Interface (awscli).
+I could script it all in either bash or in NodeJS. I could then add it to a source repository and share this ETL process.
+To make it more readable I could save the queries in different files (instead of a giant convoluted bash/JS script), make the MySQL server IP/Port more configurable (to switch between CI/QA/Prod environment), start handling foreseable errors (file missing, not compressed, no data to export, etc.), and at that point I'd have quite a lot of code and files to manage already. Also the essence of the process will get lost in all those lines of code and files.
+
+A good and clear example of an **ETL-JS Template** can be found here: [Precipitation & snowfall summary for specific weather stations](https://github.com/lpezet/etl-js-cli/blob/master/examples/prcp_snow_chart.yml).
 
 # Concept
 
-ETL-JS has been born from the need to script different activities as part of simple yet important extract, load, and transform processes.
-The idea is to be able to share and easily repeat activities over and over as needed, and leverage existing tools as much as possible.
+**ETL-JS** has been born from the need to script different activities as part of simple yet important extract, load, and transform processes.
+The idea is to be able to share and easily repeat activities over and over as needed, and leverage existing tools.
 
-An ETL template is basically composed of an _etl_ (legacy) or _etlSets_ and its activities as such:
+An ETL template is basically composed of an _etlSets_ element and its activities as such:
 
 ```yml
 etlSets:
@@ -107,8 +137,8 @@ activity2:
     some: "some"
 ```
 
-Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ can contain additional steps within them.
-Templates can also simply contain a single activity, as shown earlier in the introduction.
+Each _activity_ contains _step_ handled by [Mods](#mods). Each _mod_ typically perfom one or more tasks.
+A template can just be a single activity, as shown earlier in the introduction.
 Something like this will therefore suffice:
 
 ```yml
@@ -169,7 +199,7 @@ step2:
 ```
 
 This ETL template makes use of tags, which will be explained a little later.
-WARNING: This template will effectively download a JPG file. Open it as your own risk.
+**WARNING**: This template will effectively download a JPG file. Open it as your own risk.
 
 Run template:
 

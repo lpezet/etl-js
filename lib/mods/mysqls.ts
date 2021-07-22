@@ -29,9 +29,31 @@ export type MySQLState = {
 
 export type MySQLOptions = {
   // eslint-disable-next-line camelcase
+  auto_rehash?: boolean;
+  // eslint-disable-next-line camelcase
+  auto_vertical_output?: boolean;
+  batch?: boolean;
+  // eslint-disable-next-line camelcase
   bind_address?: string;
+  // eslint-disable-next-line camelcase
+  binary_as_hex?: boolean;
+  // eslint-disable-next-line camelcase
+  binary_mode?: boolean;
+  // eslint-disable-next-line camelcase
+  character_sets_dir?: string;
+  // eslint-disable-next-line camelcase
+  column_names?: boolean;
+  // eslint-disable-next-line camelcase
+  column_type_info?: boolean;
+  comments?: boolean;
   columns?: boolean;
   compress?: boolean;
+  // eslint-disable-next-line camelcase
+  connect_expired_password?: boolean;
+  // eslint-disable-next-line camelcase
+  connect_timeout?: number;
+  // eslint-disable-next-line camelcase
+  // db_name?: string; // not really a mysql option but using it here.
   debug?: string;
   // eslint-disable-next-line camelcase
   debug_check?: boolean;
@@ -48,8 +70,10 @@ export type MySQLOptions = {
   // eslint-disable-next-line camelcase
   defaults_group_suffix?: string;
   // delete: null;
+  delimiter?: string;
   // eslint-disable-next-line camelcase
   enable_cleartext_plugin?: boolean;
+  execute?: string;
   // eslint-disable-next-line camelcase
   fields_enclosed_by?: string;
   // eslint-disable-next-line camelcase
@@ -63,6 +87,28 @@ export type MySQLOptions = {
   get_server_public_key?: boolean;
   host?: string;
   // ignore: null;
+  html?: boolean;
+  // eslint-disable-next-line camelcase
+  ignore_spaces?: boolean;
+  // eslint-disable-next-line camelcase
+  line_numbers?: boolean;
+  // eslint-disable-next-line camelcase
+  local_infile?: boolean;
+  // eslint-disable-next-line camelcase
+  max_allowed_packet?: string;
+  // eslint-disable-next-line camelcase
+  max_join_size?: number;
+  // eslint-disable-next-line camelcase
+  named_commands?: boolean;
+  // eslint-disable-next-line camelcase
+  net_buffer_length?: string;
+  // eslint-disable-next-line camelcase
+  no_auto_rehash?: boolean;
+  // eslint-disable-next-line camelcase
+  no_beep?: boolean;
+  // eslint-disable-next-line camelcase
+  one_database?: boolean;
+  pager?: string;
   // eslint-disable-next-line camelcase
   ignore_lines?: number;
   // eslint-disable-next-line camelcase
@@ -83,6 +129,31 @@ export type MySQLOptions = {
   port?: number;
   protocol?: string;
   // replace: null;
+  quick?: boolean;
+  raw?: boolean;
+  reconnect?: boolean;
+  // eslint-disable-next-line camelcase
+  i_am_a_dummy?: boolean;
+  // eslint-disable-next-line camelcase
+  safe_updates?: boolean;
+  // eslint-disable-next-line camelcase
+  select_limit?: number;
+  // eslint-disable-next-line camelcase
+  show_warnings?: boolean;
+  // eslint-disable-next-line camelcase
+  sigint_ignore?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_auto_rehash?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_column_names?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_line_numbers?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_named_commands?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_pager?: boolean;
+  // eslint-disable-next-line camelcase
+  skip_reconnect?: boolean;
   // eslint-disable-next-line camelcase
   secure_auth?: boolean;
   // eslint-disable-next-line camelcase
@@ -109,6 +180,15 @@ export type MySQLOptions = {
   ssl_key?: string;
   // eslint-disable-next-line camelcase
   ssl_mode?: string;
+  syslog?: boolean;
+  table?: boolean;
+  tee?: string;
+  // eslint-disable-next-line camelcase
+  tls_ciphersuites?: string;
+  unbuffered?: boolean;
+  vertical?: boolean;
+  wait?: boolean;
+  xml?: boolean;
   // eslint-disable-next-line camelcase
   tls_cipheruites?: string;
   // eslint-disable-next-line camelcase
@@ -116,6 +196,11 @@ export type MySQLOptions = {
   // eslint-disable-next-line camelcase
   use_threads?: boolean;
   user?: string;
+};
+
+export type MySQLOptionsWithDBName = MySQLOptions & {
+  // eslint-disable-next-line camelcase
+  db_name: string;
 };
 
 export type MySQLSettings = ModSettings & {
@@ -280,7 +365,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   _wrapRun(
     pParent: string,
     pKey: string,
-    pConfig: any,
+    pConfig: MySQLOptionsWithDBName,
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
@@ -309,7 +394,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
     pPreviousData: any,
     pParent: string,
     pKey: string,
-    pConfig: any,
+    pConfig: MySQLOptionsWithDBName,
     pExecutor: Executor,
     pContext: Context,
     pTemplateIndex: number
@@ -320,8 +405,9 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
       };
       try {
         const oCmdArgs = [];
-        for (const i in pConfig) {
-          if (pConfig[i] == null) continue;
+        (Object.keys(pConfig) as (keyof MySQLOptions)[]).forEach(i => {
+          // for (const i in pConfig) {
+          if (pConfig[i] == null) return;
           switch (i) {
             case "auto_rehash":
               if (pConfig[i]) oCmdArgs.push("--auto-rehash");
@@ -395,8 +481,8 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
               break;
             case "execute": {
               // TODO: need to escape?
-              let oExecuteRaw = pConfig[i];
-              if (oExecuteRaw.indexOf("{{") >= 0) {
+              let oExecuteRaw = pConfig[i] || "";
+              if (oExecuteRaw.includes("{{")) {
                 const oExecuteRaws = this._evaluate(oExecuteRaw, pContext);
                 // TODO: check index vs length
                 if (oExecuteRaws && oExecuteRaws.length > pTemplateIndex) {
@@ -407,6 +493,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
               oCmdArgs.push(
                 "--execute='" + escapeSingleQuotes(oExecuteRaw) + "'"
               );
+
               break;
             }
             case "force":
@@ -597,9 +684,9 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
               break;
           }
           // console.log('i=' + i + ', config=' + pConfig[i]);
-        }
+        });
         let oDBName = pConfig["db_name"];
-        if (oDBName.indexOf("{{") >= 0) {
+        if (oDBName.includes("{{")) {
           const oDBNames = this._evaluate(oDBName, pContext);
           if (oDBNames && oDBNames.length > pTemplateIndex) {
             oDBName = oDBNames[pTemplateIndex];
@@ -665,7 +752,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
         const oData = { mysqls: {} };
         const oPromises: ((res: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
-          const oConfig = pParams.config[i];
+          const oConfig = pParams.config[i] as MySQLOptionsWithDBName;
           let oKeys: string[] = [i];
           if (i.includes("{{")) {
             const v = this._evaluate(i, pParams.context);

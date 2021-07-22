@@ -3,6 +3,7 @@ import { IETL } from "./etl";
 import { Executor } from "./executors";
 import { Logger, createLogger } from "./logger";
 import Mod, { ModParameters, ModResult, ModStatus } from "./mod";
+import Context from "./context";
 
 const LOGGER: Logger = createLogger("etljs::activity");
 
@@ -28,7 +29,7 @@ export interface ActivityParameters {
   template: any;
   // previousActivityData: any;
   // results: any;
-  context: any;
+  context: Context;
 }
 
 export enum ActivityStatus {
@@ -102,7 +103,7 @@ const wrapStep = (
             pActivityResult.state[pKey] = pData;
             // console.log("######## handle!!!!");
             // console.log(JSON.stringify(pData));
-            pData = pData || {};
+            // pData = pData || {};
             // Reset ETL context
             pContext.etl.activityId = null;
             pContext.etl.activityIndex = 0;

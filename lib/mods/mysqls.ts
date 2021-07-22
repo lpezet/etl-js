@@ -1,4 +1,10 @@
-import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
+import {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModSettings,
+  ModStatus
+} from "../mod";
 import { Executor } from "../executors";
 import Context from "../context";
 import { Logger, createLogger } from "../logger";
@@ -21,36 +27,119 @@ export type MySQLState = {
   mysqls: any;
 };
 
+export type MySQLOptions = {
+  // eslint-disable-next-line camelcase
+  bind_address?: string;
+  columns?: boolean;
+  compress?: boolean;
+  debug?: string;
+  // eslint-disable-next-line camelcase
+  debug_check?: boolean;
+  // eslint-disable-next-line camelcase
+  debug_info?: boolean;
+  // eslint-disable-next-line camelcase
+  default_auth?: string;
+  // eslint-disable-next-line camelcase
+  default_character_set?: string;
+  // eslint-disable-next-line camelcase
+  defaults_extra_file?: string;
+  // eslint-disable-next-line camelcase
+  defaults_file?: string;
+  // eslint-disable-next-line camelcase
+  defaults_group_suffix?: string;
+  // delete: null;
+  // eslint-disable-next-line camelcase
+  enable_cleartext_plugin?: boolean;
+  // eslint-disable-next-line camelcase
+  fields_enclosed_by?: string;
+  // eslint-disable-next-line camelcase
+  fields_escaped_by?: string;
+  // eslint-disable-next-line camelcase
+  fields_optionally_enclosed_by?: string;
+  // eslint-disable-next-line camelcase
+  fields_terminated_by?: string;
+  force?: boolean;
+  // eslint-disable-next-line camelcase
+  get_server_public_key?: boolean;
+  host?: string;
+  // ignore: null;
+  // eslint-disable-next-line camelcase
+  ignore_lines?: number;
+  // eslint-disable-next-line camelcase
+  lines_terminated_by?: string;
+  local?: boolean;
+  // eslint-disable-next-line camelcase
+  // lock_tables: null;
+  // eslint-disable-next-line camelcase
+  login_path?: string;
+  // eslint-disable-next-line camelcase
+  low_priority?: boolean;
+  // eslint-disable-next-line camelcase
+  no_defaults?: boolean;
+  password?: string;
+  pipe?: boolean;
+  // eslint-disable-next-line camelcase
+  plugin_dir?: string;
+  port?: number;
+  protocol?: string;
+  // replace: null;
+  // eslint-disable-next-line camelcase
+  secure_auth?: boolean;
+  // eslint-disable-next-line camelcase
+  server_public_key_path?: string;
+  // eslint-disable-next-line camelcase
+  shared_memory_base_name?: string;
+  silent?: boolean;
+  socket?: string;
+  // eslint-disable-next-line camelcase
+  ssl_ca?: string;
+  // eslint-disable-next-line camelcase
+  ssl_capath?: string;
+  // eslint-disable-next-line camelcase
+  ssl_cert?: string;
+  // eslint-disable-next-line camelcase
+  ssl_cipher?: string;
+  // eslint-disable-next-line camelcase
+  ssl_crl?: string;
+  // eslint-disable-next-line camelcase
+  ssl_crlpath?: string;
+  // eslint-disable-next-line camelcase
+  ssl_fips_mode?: string;
+  // eslint-disable-next-line camelcase
+  ssl_key?: string;
+  // eslint-disable-next-line camelcase
+  ssl_mode?: string;
+  // eslint-disable-next-line camelcase
+  tls_cipheruites?: string;
+  // eslint-disable-next-line camelcase
+  tls_version?: string;
+  // eslint-disable-next-line camelcase
+  use_threads?: boolean;
+  user?: string;
+};
+
+export type MySQLSettings = ModSettings & {
+  settings?: {
+    [key: string]: MySQLOptions;
+  };
+};
+
 const asPromised = function(
   pPreviousData: any,
   pKey: string,
-  func: Function,
+  func: (value: any) => void,
   data: any
 ): void {
   if (!pPreviousData.mysqls[pKey]) pPreviousData.mysqls[pKey] = {};
   pPreviousData.mysqls[pKey] = data;
-  // if ( data['exit'] ) {
-  //	pPreviousData['_exit'] = data['exit'];
-  //	pPreviousData['_exit_from'] = pKey;
-  // }
-  /*
-      if ( result ) {
-          pPreviousData[pKey]['result'] = result;
-      }
-      if ( error ) {
-          pPreviousData[pKey]['error'] = error;
-      }
-      */
-  // console.log('asPromised:');
-  // console.dir( pPreviousData );
   func(pPreviousData);
 };
 
-export default class MySQLsMod extends AbstractMod<any, any> {
+export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   mSettings: any;
   mTemplateEngine: TemplateEngine;
-  constructor(pSettings?: any) {
-    super("mysqls", pSettings || {});
+  constructor(pSettings?: MySQLSettings) {
+    super("mysqls", pSettings);
     this.mTemplateEngine = new TemplateEngine();
   }
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
@@ -62,11 +151,14 @@ export default class MySQLsMod extends AbstractMod<any, any> {
         if (pConfig[i] == null) pConfig[i] = pSettings[i];
       }
     };
-    if (this.mSettings[pKey]) applySettings(pConfig, this.mSettings[pKey]);
-    else if (this.mSettings[pParent]) {
-      applySettings(pConfig, this.mSettings[pParent]);
-    } else if (this.mSettings["*"]) {
-      applySettings(pConfig, this.mSettings["*"]);
+    if (this.mSettings.settings) {
+      if (this.mSettings.settings[pKey]) {
+        applySettings(pConfig, this.mSettings.settings[pKey]);
+      } else if (this.mSettings.settings[pParent]) {
+        applySettings(pConfig, this.mSettings.settings[pParent]);
+      } else if (this.mSettings.settings["*"]) {
+        applySettings(pConfig, this.mSettings.settings["*"]);
+      }
     }
   }
   _readOptions(
@@ -240,13 +332,13 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--binary-mode");
               break;
             case "bind_address":
-              oCmdArgs.push("--bind-address=" + pConfig[i]);
+              oCmdArgs.push(`--bind-address=${pConfig[i]}`);
               break;
             case "character_sets_dir":
-              oCmdArgs.push("--character-sets-dir=" + pConfig[i]);
+              oCmdArgs.push(`--character-sets-dir=${pConfig[i]}`);
               break;
             case "column_names":
-              oCmdArgs.push("--columns=" + pConfig[i]);
+              oCmdArgs.push(`--columns=${pConfig[i]}`);
               break;
             case "column_type_info":
               if (pConfig[i]) oCmdArgs.push("--column-type-info");
@@ -261,11 +353,11 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--connect-expired-password");
               break;
             case "connect_timeout":
-              oCmdArgs.push("--connect_timeout=" + pConfig[i]);
+              oCmdArgs.push(`--connect_timeout=${pConfig[i]}`);
               break;
             // case "database":
             case "debug":
-              oCmdArgs.push("--debug=" + pConfig[i]);
+              oCmdArgs.push(`--debug=${pConfig[i]}`);
               break;
             case "debug_check":
               if (pConfig[i]) oCmdArgs.push("--debug-check");
@@ -274,22 +366,22 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--debug-info");
               break;
             case "default_auth":
-              oCmdArgs.push("--default-auth=" + pConfig[i]);
+              oCmdArgs.push(`--default-auth=${pConfig[i]}`);
               break;
             case "default_character_set":
-              oCmdArgs.push("--default-character-set=" + pConfig[i]);
+              oCmdArgs.push(`--default-character-set=${pConfig[i]}`);
               break;
             case "defaults_extra_file":
-              oCmdArgs.push("--defaults-extra-file=" + pConfig[i]);
+              oCmdArgs.push(`--defaults-extra-file=${pConfig[i]}`);
               break;
             case "defaults_file":
-              oCmdArgs.push("--defaults-file=" + pConfig[i]);
+              oCmdArgs.push(`--defaults-file=${pConfig[i]}`);
               break;
             case "defaults_group_suffix":
-              oCmdArgs.push("--defaults-group-suffix=" + pConfig[i]);
+              oCmdArgs.push(`--defaults-group-suffix=${pConfig[i]}`);
               break;
             case "delimiter":
-              oCmdArgs.push("--delimiter=" + pConfig[i]);
+              oCmdArgs.push(`--delimiter=${pConfig[i]}`);
               break;
             case "enable_cleartext_plugin":
               if (pConfig[i]) oCmdArgs.push("--enable-cleartext-plugin");
@@ -330,22 +422,22 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--line-numbers");
               break;
             case "local_infile":
-              oCmdArgs.push("--local-infile=" + pConfig[i]);
+              oCmdArgs.push(`--local-infile=${pConfig[i]}`);
               break;
             case "login_path":
-              oCmdArgs.push("--login-path=" + pConfig[i]);
+              oCmdArgs.push(`--login-path=${pConfig[i]}`);
               break;
             case "max_allowed_packet":
-              oCmdArgs.push("--max_allowed_packet=" + pConfig[i]);
+              oCmdArgs.push(`--max_allowed_packet=${pConfig[i]}`);
               break;
             case "max_join_size":
-              oCmdArgs.push("--max_join_size=" + pConfig[i]);
+              oCmdArgs.push(`--max_join_size=${pConfig[i]}`);
               break;
             case "named_commands":
               if (pConfig[i]) oCmdArgs.push("--named-commands");
               break;
             case "net_buffer_length":
-              oCmdArgs.push("--net_buffer_length=" + pConfig[i]);
+              oCmdArgs.push(`--net_buffer_length=${pConfig[i]}`);
               break;
             case "no_auto_rehash":
               if (pConfig[i]) oCmdArgs.push("--no-auto-rehash");
@@ -360,24 +452,24 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--one-database");
               break;
             case "pager":
-              oCmdArgs.push("--pager=" + pConfig[i]);
+              oCmdArgs.push(`--pager=${pConfig[i]}`);
               break;
             case "password":
-              oCmdArgs.push("--password=" + pConfig[i]);
+              oCmdArgs.push(`--password=${pConfig[i]}`);
               break;
             case "pipe":
               if (pConfig[i]) oCmdArgs.push("--pipe");
               break;
             case "plugin_dir":
-              oCmdArgs.push("--plugin-dir=" + pConfig[i]);
+              oCmdArgs.push(`--plugin-dir=${pConfig[i]}`);
               break;
             case "port":
-              oCmdArgs.push("--port=" + pConfig[i]);
+              oCmdArgs.push(`--port=${pConfig[i]}`);
               break;
             // case "print-defaults":
             // case "prompt": // ???
             case "protocol":
-              oCmdArgs.push("--protocol=" + pConfig[i]);
+              oCmdArgs.push(`--protocol=${pConfig[i]}`);
               break;
             case "quick":
               if (pConfig[i]) oCmdArgs.push("--quick");
@@ -398,13 +490,13 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--secure-auth");
               break;
             case "select_limit":
-              oCmdArgs.push("--select_limit=" + pConfig[i]);
+              oCmdArgs.push(`--select_limit=${pConfig[i]}`);
               break;
             case "server_public_key_path":
-              oCmdArgs.push("--server-public-key-path=" + pConfig[i]);
+              oCmdArgs.push(`--server-public-key-path=${pConfig[i]}`);
               break;
             case "shared_memory_base_name":
-              oCmdArgs.push("--shared-memory-base-name=" + pConfig[i]);
+              oCmdArgs.push(`--shared-memory-base-name=${pConfig[i]}`);
               break;
             case "show_warnings":
               if (pConfig[i]) oCmdArgs.push("--show-warnings");
@@ -434,34 +526,34 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--skip-reconnect");
               break;
             case "socket":
-              oCmdArgs.push("--socket=" + pConfig[i]);
+              oCmdArgs.push(`--socket=${pConfig[i]}`);
               break;
             case "ssl_ca":
-              oCmdArgs.push("--ssl-ca=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-ca=${pConfig[i]}`);
               break;
             case "ssl_capath":
-              oCmdArgs.push("--ssl-capath=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-capath=${pConfig[i]}`);
               break;
             case "ssl_cert":
-              oCmdArgs.push("--ssl-cert=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-cert=${pConfig[i]}`);
               break;
             case "ssl_cipher":
-              oCmdArgs.push("--ssl-cipher=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-cipher=${pConfig[i]}`);
               break;
             case "ssl_crl":
-              oCmdArgs.push("--ssl-crl=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-crl=${pConfig[i]}`);
               break;
             case "ssl_crlpath":
-              oCmdArgs.push("--ssl-crlpath=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-crlpath=${pConfig[i]}`);
               break;
             case "ssl_fips_mode":
-              oCmdArgs.push("--ssl-fips_mode=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-fips_mode=${pConfig[i]}`);
               break;
             case "ssl_key":
-              oCmdArgs.push("--ssl-key=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-key=${pConfig[i]}`);
               break;
             case "ssl_mode":
-              oCmdArgs.push("--ssl-mode=" + pConfig[i]);
+              oCmdArgs.push(`--ssl-mode=${pConfig[i]}`);
               break;
             case "syslog":
               if (pConfig[i]) oCmdArgs.push("--syslog");
@@ -470,19 +562,19 @@ export default class MySQLsMod extends AbstractMod<any, any> {
               if (pConfig[i]) oCmdArgs.push("--table");
               break;
             case "tee":
-              oCmdArgs.push("--tee=" + pConfig[i]);
+              oCmdArgs.push(`--tee=${pConfig[i]}`);
               break;
             case "tls_ciphersuites":
-              oCmdArgs.push("--tls-ciphersuites=" + pConfig[i]);
+              oCmdArgs.push(`--tls-ciphersuites=${pConfig[i]}`);
               break;
             case "tls_version":
-              oCmdArgs.push("--tls-version=" + pConfig[i]);
+              oCmdArgs.push(`--tls-version=${pConfig[i]}`);
               break;
             case "unbuffered":
               if (pConfig[i]) oCmdArgs.push("--unbuffered");
               break;
             case "user":
-              oCmdArgs.push("--user=" + pConfig[i]);
+              oCmdArgs.push(`--user=${pConfig[i]}`);
               break;
             case "vertical":
               if (pConfig[i]) oCmdArgs.push("--vertical");

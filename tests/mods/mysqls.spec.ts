@@ -37,7 +37,7 @@ describe("mysqls", function() {
   it("mod", function(done) {
     const oTested = new MySQLsMod();
     oTested.register(new ETLMock());
-    assert.deepEqual(oTested.mSettings, { test: true });
+    assert.deepEqual(oTested.mSettings, { disabled: false, test: true });
     done();
   });
 
@@ -50,11 +50,14 @@ describe("mysqls", function() {
     }
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      root: {
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        bind_address: "127.0.0.1",
-        silent: true
-      }
+      settings: {
+        "*": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          bind_address: "127.0.0.1",
+          silent: true
+        }
+      },
+      disabled: false
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -109,11 +112,14 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      root: {
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        bind_address: "127.0.0.1",
-        silent: true
-      }
+      settings: {
+        root: {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          bind_address: "127.0.0.1",
+          silent: true
+        }
+      },
+      disabled: false
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -156,11 +162,15 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      "/downloads/test.csv": {
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        bind_address: "127.0.0.1",
-        silent: true
-      }
+      settings: {
+        "/downloads/test.csv": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          bind_address: "127.0.0.1",
+          silent: true
+        }
+      },
+      disabled: false
+      // }
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -203,11 +213,14 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      "*": {
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        bind_address: "127.0.0.1",
-        silent: true
-      }
+      settings: {
+        "*": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          bind_address: "127.0.0.1",
+          silent: true
+        }
+      },
+      disabled: false
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -274,7 +287,7 @@ describe("mysqls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oSettings = {};
+    const oSettings = { disabled: false };
     const oTested = new MySQLsMod(oSettings);
     oTested._run = function() {
       throw new Error("Error generated for testing purposes.");
@@ -317,7 +330,7 @@ describe("mysqls", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oSettings = {};
+    const oSettings = { disabled: false };
     const oTested = new MySQLsMod(oSettings);
     oTested._wrapRun = function() {
       throw new Error("Error generated for testing purposes.");
@@ -359,7 +372,7 @@ describe("mysqls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oSettings = {};
+    const oSettings = { disabled: false };
     const oTested = new MySQLsMod(oSettings);
 
     const oTemplate = {
@@ -427,7 +440,7 @@ describe("mysqls", function() {
     }
 
     const oExecutor = new ExecutorClass();
-    const oTested = new MySQLsMod(new ETLMock());
+    const oTested = new MySQLsMod();
 
     const oConfig = loadFile("./mysqls/basic.yml");
 
@@ -487,7 +500,7 @@ describe("mysqls", function() {
       }
     }
     const oExecutor = new ExecutorClass();
-    const oTested = new MySQLsMod(new ETLMock());
+    const oTested = new MySQLsMod();
     const oConfig = loadFile("./mysqls/basic_false.yml");
     oTested
       .handle({

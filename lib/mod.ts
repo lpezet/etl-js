@@ -4,7 +4,7 @@ import { IETL } from "./etl";
 
 export type ModSettings = {
   disabled: boolean;
-  [key: string]: any;
+  // [key: string]: any;
 };
 
 export interface ModParameters {
@@ -36,6 +36,12 @@ export default interface Mod<T> {
   handle(pParams: ModParameters): Promise<ModResult<T>>;
 }
 
+/**
+ * @param pStatus status
+ * @param pState state
+ * @param pError error
+ * @return ModResult
+ */
 export function createModResult<T>(
   pStatus: ModStatus,
   pState?: T,
@@ -48,12 +54,12 @@ export function createModResult<T>(
   };
 }
 export abstract class AbstractMod<T, S extends ModSettings> implements Mod<T> {
-  mSettings?: S;
+  mSettings: S;
   mModName: string;
   mDisabled: boolean;
   mETL: IETL | null;
   constructor(pModName: string, pSettings?: S) {
-    this.mSettings = pSettings;
+    this.mSettings = pSettings || ({ disabled: false } as S);
     this.mModName = pModName;
     this.mDisabled = pSettings?.disabled || false;
     this.mETL = null;

@@ -61,8 +61,7 @@ myETL.process(template);
   - [Control Flow](#control-flow)
   - [Tags](#tags)
   - [Events](#events)
-  - [Results](#results)
-        - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
+  - [Results](#results) - [_OBSOLETE: rework done, need doc to be updated. Advice is to NOT rely on Mod results, but use the Content with vars & env for tags._](#_obsolete-rework-done-need-doc-to-be-updated-advice-is-to-not-rely-on-mod-results-but-use-the-content-with-vars--env-for-tags_)
 - [Developing Mods](#developing-mods)
 - [License](#license)
 
@@ -113,7 +112,7 @@ In parenthesis are the tools I would use to accomplish those steps. You can easi
 I could script it all in either bash or in NodeJS. I could then add it to a source repository and share this ETL process.
 To make it more readable I could save the queries in different files (instead of a giant convoluted bash/JS script), make the MySQL server IP/Port more configurable (to switch between CI/QA/Prod environment), start handling foreseable errors (file missing, not compressed, no data to export, etc.), and at that point I'd have quite a lot of code and files to manage already. Also the essence of the process will get lost in all those lines of code and files.
 
-A good and clear example of an **ETL-JS Template** can be found here: [Precipitation & snowfall summary for specific weather stations](https://github.com/lpezet/etl-js-cli/blob/master/examples/prcp_snow_chart.yml).
+A good and concrete example of an **ETL-JS Template** can be found here: [Precipitation & snowfall summary for specific weather stations](https://github.com/lpezet/etl-js-cli/blob/master/examples/prcp_snow_chart.yml).
 
 # Concept
 

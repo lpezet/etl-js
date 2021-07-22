@@ -3,7 +3,7 @@ import { EventEmitter } from "events";
 import * as Promises from "./promises";
 import Context from "./context";
 import { Executor } from "./executors";
-import { createLogger } from "./logger";
+import { Logger, createLogger } from "./logger";
 import * as utils from "./utils";
 import {
   ActivityParameters,
@@ -12,7 +12,7 @@ import {
   DefaultActivity
 } from "./activity";
 
-const LOGGER = createLogger("etljs::main");
+const LOGGER: Logger = createLogger("etljs::main");
 
 const EXIT_OR_SKIP_CONDITION = function(
   _pValue: any,

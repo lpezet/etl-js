@@ -1,10 +1,10 @@
 import * as Promises from "./promises";
 import { IETL } from "./etl";
 import { Executor } from "./executors";
-import { createLogger } from "./logger";
+import { Logger, createLogger } from "./logger";
 import Mod, { ModParameters, ModResult, ModStatus } from "./mod";
 
-const LOGGER = createLogger("etljs::activity");
+const LOGGER: Logger = createLogger("etljs::activity");
 
 const EXIT_OR_SKIP_CONDITION = function(
   _pValue: ModResult<any>,
@@ -252,10 +252,7 @@ export class DefaultActivity implements Activity {
       if (unknownModuleFound) {
         return Promise.reject(
           new Error(
-            "Found unknown module(s) for activity [" +
-              oActivityId +
-              "]: " +
-              unknownMods
+            `Found unknown module(s) for activity [${oActivityId}]: ${unknownMods}`
           )
         );
       }

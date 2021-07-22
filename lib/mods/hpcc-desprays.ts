@@ -1,11 +1,11 @@
 import * as Promises from "../promises";
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import TemplateEngine from "../templating/engine";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 import { Executor } from "../executors";
 import Context from "../context";
 
-const LOGGER = createLogger("etljs::hpcc-desprays");
+const LOGGER: Logger = createLogger("etljs::hpcc-desprays");
 
 export type HPCCDespraysState = {
   desprays: any[];

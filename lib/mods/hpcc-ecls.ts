@@ -2,12 +2,12 @@ import * as path from "path";
 import * as fs from "fs";
 import * as Promises from "../promises";
 import TemplateEngine from "../templating/engine";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import Context from "../context";
 import { Executor } from "../executors";
 
-const LOGGER = createLogger("etljs::hpcc-ecls");
+const LOGGER: Logger = createLogger("etljs::hpcc-ecls");
 
 const TEMP_ECL_FILE = "/tmp/etl-js.ecl";
 

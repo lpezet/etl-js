@@ -1,11 +1,11 @@
 import * as Promises from "../promises";
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import TemplateEngine from "../templating/engine";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 import { Executor } from "../executors";
 import Context from "../context";
 
-const LOGGER = createLogger("etljs::files");
+const LOGGER: Logger = createLogger("etljs::files");
 
 export type FilesState = {
   results: any[];

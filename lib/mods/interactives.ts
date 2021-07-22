@@ -1,11 +1,11 @@
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import { Executor } from "../executors";
 import Context from "../context";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 import * as Promises from "../promises";
 import * as readline from "readline";
 
-const LOGGER = createLogger("etljs::interactives");
+const LOGGER: Logger = createLogger("etljs::interactives");
 
 export type Data = {
   error?: Error | null;

@@ -4,9 +4,9 @@ import * as util from "util";
 import * as Promises from "../promises";
 import Context from "../context";
 import { Executor } from "../executors";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 
-const LOGGER = createLogger("etljs::commands");
+const LOGGER: Logger = createLogger("etljs::commands");
 
 export type Data = {
   error?: Error;

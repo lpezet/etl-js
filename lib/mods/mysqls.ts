@@ -1,11 +1,11 @@
 import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import { Executor } from "../executors";
 import Context from "../context";
-import { createLogger } from "../logger";
+import { Logger, createLogger } from "../logger";
 import * as Promises from "../promises";
 import TemplateEngine from "../templating/engine";
 
-const LOGGER = createLogger("etljs::mysqlimports");
+const LOGGER: Logger = createLogger("etljs::mysqlimports");
 
 export type Data = {
   error?: Error | null;

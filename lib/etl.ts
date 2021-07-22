@@ -63,7 +63,7 @@ const doCreateActivity = (
   pTotalActivities: number,
   pActivityId: string,
   pActivity: any,
-  pContext: any,
+  pContext: Context,
   pETLResult: ETLResult,
   pETL: IETL
 ): ActivityWrap => {

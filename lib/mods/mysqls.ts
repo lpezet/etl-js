@@ -407,7 +407,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
         const oCmdArgs = [];
         (Object.keys(pConfig) as (keyof MySQLOptions)[]).forEach(i => {
           // for (const i in pConfig) {
-          if (pConfig[i] == null) return;
+          if (pConfig[i] === null || pConfig[i] === undefined) return;
           switch (i) {
             case "auto_rehash":
               if (pConfig[i]) oCmdArgs.push("--auto-rehash");

@@ -145,18 +145,29 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
-  _applySettings(pParent: string, pKey: string, pConfig: any): void {
-    const applySettings = function(pConfig: any, pSettings: any): void {
-      for (const i in pSettings) {
-        if (pConfig[i] == null) pConfig[i] = pSettings[i];
-      }
+  _applySettings(pParent: string, pKey: string, pConfig: MySQLOptions): void {
+    const applySettings = function(
+      pConfig: MySQLOptions,
+      pSettings: MySQLOptions
+    ): void {
+      const oSettings: MySQLOptions = {};
+      Object.assign(oSettings, pSettings);
+      (Object.keys(pSettings) as (keyof MySQLOptions)[]).forEach(i => {
+        if (pConfig[i] !== null) {
+          delete oSettings[i];
+        }
+      });
+      Object.assign(pConfig, oSettings);
     };
     if (this.mSettings.settings) {
       if (this.mSettings.settings[pKey]) {
+        console.log("Applying settings with key: " + pKey);
         applySettings(pConfig, this.mSettings.settings[pKey]);
       } else if (this.mSettings.settings[pParent]) {
+        console.log("Applying settings with parent: " + pParent);
         applySettings(pConfig, this.mSettings.settings[pParent]);
       } else if (this.mSettings.settings["*"]) {
+        console.log("Applying settings with *");
         applySettings(pConfig, this.mSettings.settings["*"]);
       }
     }
@@ -164,7 +175,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   _readOptions(
     pParent: string,
     pKey: string,
-    pConfig: any,
+    pConfig: MySQLOptions,
     _pExecutor: Executor,
     _pContext: Context,
     _pTemplateIndex: number
@@ -261,13 +272,9 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
     };
 
     // WARNING: defaults will be affected here, don't make it a global thing, or change logic here, by first copying defaults into empty object.
-    const oConfig: any = oOptions;
-    Object.keys(pConfig).forEach(i => {
-      oConfig[i.toLowerCase()] = pConfig[i];
-    });
-
+    const oConfig: MySQLOptions = oOptions;
+    Object.assign(oConfig, pConfig);
     this._applySettings(pParent, pKey, oConfig);
-
     return oConfig;
   }
   _wrapRun(

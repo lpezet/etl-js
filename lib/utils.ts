@@ -14,6 +14,9 @@ type ETLSetStackItem = {
   tries: number;
 };
 
+/**
+ * @param pETLs
+ */
 export function resolveEtlSets(pETLs: ETLSets): any {
   const oStack: ETLSetStackItem[] = [];
   Object.keys(pETLs).forEach(i => {
@@ -80,6 +83,10 @@ export function resolveEtlSets(pETLs: ETLSets): any {
   return oResolved;
 }
 
+/**
+ * @param pConfig
+ * @param pParameters
+ */
 export function resolveActivities(pConfig: any, pParameters?: any): any {
   if (pConfig["etl"]) return pConfig["etl"];
   if (pConfig["etlSets"]) {

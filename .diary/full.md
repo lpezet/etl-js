@@ -4,21 +4,15 @@
 
 Maybe the context itself is just:
 
-```json
-{
-  "local": {
-    // ....current activity stuff....
-  },
-  "global": {
-    // ...previous activities stuff...
-  },
-  "env": {
-    // ...env stuff...
-  },
-  "params": {
-    // ...params stuff...
-  }
-}
+```yaml
+local:
+#....current activity stuff....
+global:
+  #...previous activities stuff...
+env:
+  # ...env stuff...
+params:
+  #...params stuff...
 ```
 
 OR
@@ -31,16 +25,12 @@ env YEAR=2018 etl-js run my.yml
 
 Right now we have:
 
-```json
-{
-  "etl": {
-    "exit": false
-  },
-  "step1": {
-    // ...
-  }
-  // ...
-}
+```yaml
+etl:
+  exit: false
+  step1:
+    # ...
+  # ...
 ```
 
 Proposal:
@@ -171,16 +161,15 @@ We could do something like:
 
 And then in the ETL template:
 
-```json
-    {
-    	"mods": [ "my-etl-js-plugin" ],
-    	"etl": [ "step1" ],
-    	"step1": {
-    		"my-etl-js-plugin": {
-    			...
-    		}
-    	}
-    }
+```yaml
+mods:
+	- my-etl-js-plugin
+etl:
+	- step1
+step1:
+	my-etl-js-plugin:
+		# ...
+	# ...
 ```
 
 It's a bit awkward to mix custom stuff and "reserved" stuff. For example, we need to make sure mods name do not conflict with "etl", "etlSet", and "mods" (if we use it). Maybe look for a different structure?
@@ -188,19 +177,19 @@ It's a bit awkward to mix custom stuff and "reserved" stuff. For example, we nee
 Idea one: turn "etl" into the container for steps for etl. Like so:
 
 ```yaml
-    mods:
-    	- lpezet@something
-    	- commands
-    	- file
-    etlSets:
-    	mySet1:
-    		- step1
-    etl:
-    	step1:
-    		lpezet@something:
-    			...
-    	step2:
-    		...
+mods:
+	- lpezet@something
+	- commands
+	- file
+etlSets:
+	mySet1:
+		- step1
+etl:
+	step1:
+		lpezet@something:
+			...
+	step2:
+		...
 ```
 
 Note on plugins/mods: maybe enforce namespace in modules. Those without are built-in (e.g. commands, files, etc.). Custom ones must be with namespace (e.g. lpezet@my-etl-js-plugin) or an error (or WARNING?) is thrown.

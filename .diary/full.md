@@ -513,7 +513,7 @@ root:
 
 This `hpcc-frictionless` Mod would 1) download the data files (some conventions or use targetDir value for where to put those files), 2) load the files into HPCC with the convention `logicalFilenamePrefix::resource_name::raw`, and 3) create new logical file `logicalFilenamePrefix::resource_name::pressed` (like olive oil) with the schema from datapackage.json.
 
-# (02/18/2021) New architecture
+## (02/18/2021) New architecture
 
 Working on re-coding ETL.
 Work started in "rearch" (re-architecture) folder(s) (including in tests/).
@@ -639,7 +639,7 @@ activity1:
 
 Here `wrap` could embed anything and here we end up having 2 sets of commands and 2 sets of files under the same activity.
 
-# (02/21/2021) Following on 2/18/2021
+## (02/21/2021) Following on 2/18/2021
 
 I forgot that the new `Activity` structure is as such:
 
@@ -695,7 +695,7 @@ Ideas:
 4. Errors thrown within a `step` should be caught by `Activity` and relayed in ActivityResult. This should stop the overall process (unless specified otherwise)
 5. Errors from Promise.reject() within a `step` should be caught by `Activity` and relayed in ActivityResult.
 
-# (05/30/2021) Skip & Repeat
+## (05/30/2021) Skip & Repeat
 
 Add `SKIP` in `ModStatus` and `REPEAT1` and `REPEATALL` as well.
 

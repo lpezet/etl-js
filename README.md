@@ -378,6 +378,17 @@ A separate documention is provided to develop new mods. It can be found [here](M
 
 [MIT](LICENSE)
 
+# Publishing
+
+To publish next version of `etl-js`, run the following:
+
+```bash
+npm version patch
+git push --tags origin master
+npm run dist
+npm publish dist/ --access public
+```
+
 [npm-image]: https://badge.fury.io/js/%40lpezet%2Fetl-js.svg
 [npm-url]: https://npmjs.com/package/@lpezet/etl-js
 [travis-image]: https://travis-ci.org/lpezet/etl-js.svg?branch=master

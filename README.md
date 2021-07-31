@@ -386,7 +386,7 @@ To publish next version of `etl-js`, run the following:
 npm version patch
 git push --tags origin master
 npm run dist
-npm publish dist/ --access public
+npm publish --access public
 ```
 
 [npm-image]: https://badge.fury.io/js/%40lpezet%2Fetl-js.svg

@@ -86,9 +86,10 @@ export function resolveEtlSets(pETLs: ETLSets): any {
 /**
  * @param pConfig
  * @param pParameters
+ * @return array of activity keys
  */
-export function resolveActivities(pConfig: any, pParameters?: any): any {
-  if (pConfig["etl"]) return pConfig["etl"];
+export function resolveActivities(pConfig: any, pParameters?: any): string[] {
+  if (pConfig["etl"]) return (pConfig["etl"] as Array<string>).map(k => k);
   if (pConfig["etlSets"]) {
     const oResolvedETLs = resolveEtlSets(pConfig["etlSets"] as ETLSets);
     const etlSet =

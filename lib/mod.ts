@@ -18,6 +18,7 @@ export enum ModStatus {
   CONTINUE,
   STOP,
   REPEAT,
+  SKIP,
   EXIT
 }
 

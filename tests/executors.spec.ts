@@ -7,18 +7,17 @@ import * as fs from "fs";
 import * as crypto from "crypto";
 import * as ssh2 from "ssh2";
 import { ParsedKey } from "ssh2-streams";
-
-/*
 import { configureLogger } from "../lib/logger";
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
 const setupSshServer = function(): ssh2.Server {
   const utils = ssh2.utils;

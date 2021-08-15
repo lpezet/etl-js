@@ -10,6 +10,32 @@ describe("utils", function() {
     done();
   });
 
+  it("deepCloningResolveActivities", function() {
+    const oETLLegacy = {
+      etl: ["activity1", "activity2", "activity3"]
+    };
+    const oETLSet = {
+      etlSets: {
+        prepare: ["activity1", "activity2"],
+        process: ["activity3"],
+        default: ["activity4", "activity5"]
+      }
+    };
+    let oActual = null;
+
+    oActual = utils.resolveActivities(oETLLegacy);
+    oActual.shift();
+    assert.deepEqual(oETLLegacy.etl, ["activity1", "activity2", "activity3"]); // i.e. didn't shift
+
+    oActual = utils.resolveActivities(oETLSet, { etlSet: "prepare" });
+    oActual.shift();
+    assert.deepEqual(oETLSet.etlSets.prepare, ["activity1", "activity2"]); // i.e. didn't shift
+
+    oActual = utils.resolveActivities(oETLSet); // default
+    oActual.shift();
+    assert.deepEqual(oETLSet.etlSets.default, ["activity4", "activity5"]); // i.e. didn't shift
+  });
+
   it("resolveActivities", function() {
     const oSimpleActivities = {
       etlSets: {
@@ -22,10 +48,10 @@ describe("utils", function() {
     let oActual = null;
 
     oActual = utils.resolveActivities(oSimpleActivities);
-    assert.sameOrderedMembers(oActual, ["activity4"]);
+    assert.deepEqual(oActual, ["activity4"]);
 
     oActual = utils.resolveActivities(oSimpleActivities, { etlSet: "process" });
-    assert.sameOrderedMembers(oActual, ["activity3"]);
+    assert.deepEqual(oActual, ["activity3"]);
   });
 
   it("resolveEtlSets", function() {

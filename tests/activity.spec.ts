@@ -5,20 +5,17 @@ import { Executor, NoOpExecutor } from "../lib/executors";
 import { ActivityParameters, DefaultActivity } from "../lib/activity";
 import { emptyContext } from "../lib/context";
 import Mod, { ModParameters, ModResult } from "../lib/mod";
-
-/*
-import { configureLogger } from "../../lib/logger";
-
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
-
+import { configureLogger } from "../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 describe("activity", function() {
   beforeEach(function(done: () => void) {
     done();
@@ -45,7 +42,7 @@ describe("activity", function() {
     }
     */
     processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
-      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
+      return Promise.resolve({ status: ETLStatus.DONE, activities: [] });
     }
   }
 
@@ -69,6 +66,7 @@ describe("activity", function() {
       .process(oParams)
       .then(result => {
         assert.deepEqual(result, {
+          id: "activity1",
           status: 0,
           state: { tester: { status: 0, state: undefined, error: undefined } }
         });
@@ -107,14 +105,19 @@ describe("activity", function() {
     };
     oTested
       .process(oParams)
-      .then(result => {
-        // console.log(result);
-        assert.equal(result.status, 3);
-        assert.isNotNull(result.error);
-        done();
-      })
-      .catch(err => {
-        done(err);
+      .then(
+        () => {
+          // console.log(result);
+          // assert.equal(result.status, ActivityStatus.ERROR);
+          // assert.isNotNull(result.error);
+          done(new Error("Expected Promise.reject()."));
+        },
+        () => {
+          done();
+        }
+      )
+      .catch(() => {
+        done(new Error("Expected Promise.reject() instead of thrown error."));
       });
   });
 
@@ -135,11 +138,16 @@ describe("activity", function() {
     };
     oTested
       .process(oParams)
-      .then(() => {
-        done(new Error("Expected error."));
-      })
+      .then(
+        () => {
+          done(new Error("Expected Promise.reject()."));
+        },
+        () => {
+          done();
+        }
+      )
       .catch(() => {
-        done();
+        done(new Error("Expected Promise.reject() instead of thrown error."));
       });
   });
 
@@ -159,11 +167,17 @@ describe("activity", function() {
     };
     oTested
       .process(oParams)
-      .then(() => {
-        done(new Error("Expected error."));
-      })
+      .then(
+        () => {
+          done(new Error("Expected Promise.reject()."));
+        },
+        () => {
+          done();
+        }
+      )
+      // TODO: should it just be a rejection???
       .catch(() => {
-        done();
+        done(new Error("Expected Promise.reject() instead of thrown error."));
       });
   });
 });

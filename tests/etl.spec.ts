@@ -1,5 +1,6 @@
 import { assert } from "chai";
-import ETL, { ETLResult, ETLStatus, IETL } from "../lib/etl";
+import * as fs from "fs";
+import ETL, { ETLResult, IETL, ProcessState } from "../lib/etl";
 import Mod, {
   AbstractMod,
   ModParameters,
@@ -10,21 +11,20 @@ import Mod, {
 import TestMod from "./etl/test";
 import { Callback, Executor, NoOpExecutor } from "../lib/executors";
 import ModMod from "./etl/mod";
+import { configureLogger } from "../lib/logger";
 
-/*
-import { configureLogger } from "../../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
-
-describe("etl2", function() {
+describe("etl", function() {
   beforeEach(function(done: () => void) {
     done();
   });
@@ -53,6 +53,127 @@ describe("etl2", function() {
     });
   }
 
+  it("resumeFromState", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oTested = new ETL(oExecutor);
+    class MyModClass extends AbstractMod<any, any> {
+      mCalled: boolean;
+      constructor(pName: string) {
+        super(pName);
+        this.mCalled = false;
+      }
+      called(): boolean {
+        return this.mCalled;
+      }
+      handle(_pParams: ModParameters): Promise<ModResult<any>> {
+        this.mCalled = true;
+        return Promise.resolve(createModResult(ModStatus.CONTINUE));
+      }
+    }
+    const oMod: MyModClass = new MyModClass("stateMod");
+    oMod.register(oTested);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+
+    const oState: ProcessState = {
+      template: {
+        etlSets: {
+          default: ["abc", "cde", "fgh"]
+        },
+        abc: {
+          tester: {
+            dontmatter: true
+          }
+        },
+        cde: {
+          stateMod: {
+            dontmatter: true
+          }
+        },
+        fgh: {
+          tester: {
+            dontmatter: true
+          }
+        }
+      },
+      activityKeys: ["cde", "fgh"],
+      activityIndex: 1,
+      totalActivities: 3,
+      context: {
+        env: {},
+        vars: {
+          myMod: "been there"
+        },
+        etl: {
+          activityId: null,
+          activityIndex: 0,
+          stepName: null
+        }
+      },
+      etlResult: {
+        status: 0,
+        activities: []
+      }
+    };
+    oTested
+      .processFromState(oState)
+      .then(() => {
+        assert.isTrue(oMod.called());
+        assert.equal(oTester.calls(), 1);
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+  it("saveStateOnStop", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oTested = new ETL(oExecutor);
+    class MyModClass extends AbstractMod<any, any> {
+      handle({ context }: ModParameters): Promise<ModResult<any>> {
+        context.vars["myMod"] = "been there";
+        return Promise.resolve(createModResult(ModStatus.STOP));
+      }
+    }
+    const oMod: Mod<any> = new MyModClass("stateMod");
+    oMod.register(oTested);
+    const oTester = new TestMod();
+    oTester.register(oTested);
+    const oETL = {
+      etlSets: {
+        default: ["abc", "cde", "fgh"]
+      },
+      abc: {
+        tester: {
+          dontmatter: true
+        }
+      },
+      cde: {
+        stateMod: {
+          dontmatter: true
+        }
+      },
+      fgh: {
+        tester: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested
+      .processTemplate(oETL, {})
+      .then(() => {
+        assert.isTrue(fs.existsSync("etl.state"));
+        assert.equal(oTester.calls(), 1);
+        // const content = fs.readFileSync("etl.state");
+        // console.log("Sate file content:");
+        // console.log(content.toString());
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   it("etlSetsDefault", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);
@@ -69,19 +190,15 @@ describe("etl2", function() {
         }
       }
     };
-    oTested.processTemplate(oETL, {}).then(
-      function() {
-        try {
-          assert.equal(oTester.calls(), 1);
-          done();
-        } catch (pError) {
-          done(pError);
-        }
-      },
-      function(pError: Error) {
+    oTested
+      .processTemplate(oETL, {})
+      .then(() => {
+        assert.equal(oTester.calls(), 1);
+        done();
+      })
+      .catch(pError => {
         done(pError);
-      }
-    );
+      });
   });
 
   it("noEtlSets", function(done) {
@@ -353,7 +470,7 @@ describe("etl2", function() {
       }
       handle(_pParams: ModParameters): Promise<ModResult<any>> {
         return new Promise(function(resolve, _reject) {
-          resolve(createModResult(ModStatus.STOP));
+          resolve(createModResult(ModStatus.SKIP));
         });
       }
     }
@@ -588,15 +705,11 @@ describe("etl2", function() {
       oTested
         .processTemplate(oETL)
         .then(function(_pData: any) {
-          try {
-            assert.deepEqual(oActualActivitiesDone, EXPECTED_ACTIVITIES);
-            done();
-          } catch (e) {
-            done(e);
-          }
+          assert.deepEqual(oActualActivitiesDone, EXPECTED_ACTIVITIES);
+          done();
         })
-        .catch((pError: Error) => {
-          done(pError);
+        .catch(err => {
+          done(err);
         });
     });
   });
@@ -628,18 +741,13 @@ describe("etl2", function() {
       }
     };
     oTested.processTemplate(oETL).then(
-      function(pData: ETLResult) {
-        console.log("## ETLResult: ");
-        console.log(pData);
-        try {
-          assert.equal(pData.status, ETLStatus.EXIT);
-          done();
-        } catch (e) {
-          done(e);
-        }
+      () => {
+        done(new Error("Expected Promise.reject() here."));
       },
-      function(pError: Error) {
-        done(pError);
+      (_pETLResult: ETLResult) => {
+        // console.log("## ETLResult: ");
+        // console.log(pETLResult);
+        done();
       }
     );
   });
@@ -725,6 +833,8 @@ describe("etl2", function() {
     const oTested = new ETL(oExecutor, oSettings);
     const oTester = new TestMod();
     oTester.register(oTested);
+    const oModer = new ModMod();
+    oModer.register(oTested);
     const oETL = {
       etlSets: {
         default: ["abc", "def"]
@@ -732,6 +842,10 @@ describe("etl2", function() {
       abc: {
         steps: {
           step0: {
+            tester: {},
+            moder: {}
+          },
+          step1: {
             tester: {}
           }
         }
@@ -743,7 +857,7 @@ describe("etl2", function() {
     oTested.processTemplate(oETL, {}).then(
       function() {
         try {
-          assert.equal(oTester.calls(), 2);
+          assert.equal(oTester.calls(), 3);
           done();
         } catch (pError) {
           done(pError);

@@ -17,8 +17,9 @@ export default class ModMod extends AbstractMod<any, any> {
     return new Promise((resolve, _reject) => {
       this.mCalls++;
       LOGGER.debug(
-        "[%s] In mod mod. Settings: hello=%s",
+        "[%s] [%s] Settings: hello=%s",
         pParams.parent,
+        this.name,
         this.mSettings["hello"]
       );
       resolve(createModResult(ModStatus.STOP));

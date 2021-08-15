@@ -1,26 +1,24 @@
-import * as Promises from "./promises";
 import { IETL } from "./etl";
 import { Executor } from "./executors";
 import { Logger, createLogger } from "./logger";
-import Mod, { ModParameters, ModResult, ModStatus } from "./mod";
+import { ModParameters, ModResult, ModStatus } from "./mod";
 import Context from "./context";
 
 const LOGGER: Logger = createLogger("etljs::activity");
-
+/*
 const EXIT_OR_SKIP_CONDITION = function(
   _pValue: ModResult<any>,
   _pChainName: string
 ): boolean {
-  /*
   console.log(
     "##########ACTIVITY: EXIT_OR_SKIP_CONDITION: Chain=%s, pValue=%j",
     _pChainName,
     _pValue
   );
-  */
   // return pValue && (pValue["skip"] || pValue["exit"]);
   return false;
 };
+*/
 
 export interface ActivityParameters {
   activityIndex: number;
@@ -36,10 +34,33 @@ export enum ActivityStatus {
   CONTINUE,
   STOP,
   REPEAT,
-  EXIT
+  EXIT,
+  ERROR
 }
 
+const translateModStatus = (pStatus: ModStatus): ActivityStatus => {
+  switch (pStatus) {
+    case ModStatus.CONTINUE:
+      return ActivityStatus.CONTINUE;
+    case ModStatus.EXIT:
+      return ActivityStatus.EXIT;
+    case ModStatus.REPEAT:
+      throw new Error(
+        "ModStatus REPEAT doesn't translate to Activity status (activity should repeat mod instead...no?)"
+      );
+    case ModStatus.STOP:
+      return ActivityStatus.STOP;
+    case ModStatus.SKIP:
+      return ActivityStatus.CONTINUE; // here we skipped the rest of the mods, but we're still going
+    default:
+      throw new Error(
+        `ModStatus ${pStatus} not supported here. Update code???`
+      );
+  }
+};
+
 export interface ActivityResult {
+  id: string;
   status: ActivityStatus;
   state?: any;
   error?: Error;
@@ -49,8 +70,8 @@ export interface Activity {
   process(pParams: ActivityParameters): Promise<ActivityResult>;
 }
 
-type StepWrap<T> = (pPreviousModResult: ModResult<T>) => Promise<ModResult<T>>;
-
+// type StepWrap<T> = (pPreviousModResult: ModResult<T>) => Promise<ModResult<T>>;
+/*
 const wrapStep = (
   pActivityIndex: number,
   pActivityId: string,
@@ -64,10 +85,11 @@ const wrapStep = (
   return function(pPreviousModResult: ModResult<any>): Promise<ModResult<any>> {
     try {
       if (
-        pPreviousModResult.status == ModStatus.STOP ||
-        pPreviousModResult.status == ModStatus.EXIT
+        pPreviousModResult.status === ModStatus.STOP ||
+        pPreviousModResult.status === ModStatus.EXIT ||
+        pPreviousModResult.status === ModStatus.SKIP
       ) {
-        if (pPreviousModResult.status == ModStatus.EXIT) {
+        if (pPreviousModResult.status === ModStatus.EXIT) {
           pActivityResult.status = ActivityStatus.EXIT;
         }
         LOGGER.debug("[%s] Skipping step [%s] (skip/exit).", pActivityId, pKey);
@@ -109,16 +131,16 @@ const wrapStep = (
             pContext.etl.activityIndex = 0;
             pContext.etl.stepName = null;
             // Setting skip/exit
-            /*
-            pPreviousModResult.state = pPreviousModResult.state || {};
-            pPreviousModResult.state.skip =
-              pPreviousModResult.state?.skip || Boolean(pData.state?.skip);
-            pPreviousModResult.state.exit =
-              pPreviousModResult.state?.exit || Boolean(pData.state?.exit);
+            
+            // pPreviousModResult.state = pPreviousModResult.state || {};
+            // pPreviousModResult.state.skip =
+            //  pPreviousModResult.state?.skip || Boolean(pData.state?.skip);
+            // pPreviousModResult.state.exit =
+            //  pPreviousModResult.state?.exit || Boolean(pData.state?.exit);
             // pCurrentActivityData.results.push( { step: pKey, results: pData } );
             // pPreviousModResult.steps[pKey] = pData;
             // console.log('######## handle end!!!!');
-            */
+            
             return pData;
             // return pPreviousModResult;
           })
@@ -135,7 +157,7 @@ const wrapStep = (
     }
   };
 };
-
+*/
 export class DefaultActivity implements Activity {
   mETL: IETL;
   constructor(pETL: IETL) {
@@ -156,18 +178,188 @@ export class DefaultActivity implements Activity {
     }
     return oExecutor;
   }
+  _processStep(
+    pParams: ActivityParameters,
+    pModKey: string,
+    pModTemplate: any,
+    // pRemainingSteps: string[],
+    // pStepKeys: string[],
+    // pStepsTemplate: any,
+    pExecutor: Executor
+  ): Promise<ModResult<any>> {
+    const oActivityId = pParams.activityId;
+    // const oTemplate = pParams.template;
+    // const oStepKey = pStepKeys.shift();
+    LOGGER.debug("[%s] Processing mod [%s]", oActivityId, pModKey);
+
+    if (pModKey === undefined) {
+      return Promise.reject(
+        new Error("Must pass non-empty array of step/mod keys (2).")
+      );
+    }
+    const oMod = this.mETL.getMod(pModKey);
+    if (!oMod) {
+      LOGGER.error("[%s] ...mod [%s] unknown.", oActivityId, pModKey);
+      return Promise.reject(
+        new Error(`Unknown module [${pModKey}] in activity [${oActivityId}].`)
+      );
+    }
+    if (oMod.isDisabled()) {
+      LOGGER.info(
+        "[%s] Mod [%s] disabled. Continuing...",
+        oActivityId,
+        pModKey
+      );
+      return Promise.resolve({ status: ModStatus.CONTINUE });
+    }
+    // TODO: This is not ideal. Find another way?
+    pParams.context.etl.activityId = oActivityId;
+    pParams.context.etl.activityIndex = pParams.activityIndex; // TODO!!! Should we have a "sub index"?? like dot notation: 1.1, 1.2, 1.3, etc.;
+    pParams.context.etl.stepName = pModKey;
+    const oModParameters: ModParameters = {
+      parent: oActivityId,
+      config: pModTemplate,
+      executor: pExecutor,
+      context: pParams.context
+    };
+    return oMod.handle(oModParameters).then((pData: ModResult<any>) => {
+      // TODO: Append to activity state and such
+      pParams.context.etl.activityId = null;
+      pParams.context.etl.activityIndex = 0;
+      pParams.context.etl.stepName = null;
+      return pData;
+      /*
+      if (pRemainingSteps.length == 0) {
+        LOGGER.debug("[%s] No more mods to process.", oActivityId);
+        return pData;
+      } else {
+        LOGGER.debug(
+          "[%s] Processing next step (stack: %s)...",
+          oActivityId,
+          pStepKeys
+        );
+        return this._processSteps(
+          pParams,
+          pStepKeys,
+          pStepsTemplate,
+          pExecutor,
+          pActivityResult
+        );
+      }
+      */
+    });
+  }
+  _processSteps(
+    pParams: ActivityParameters,
+    pStepKeys: string[],
+    pStepsTemplate: any,
+    pExecutor: Executor,
+    pActivityResult: ActivityResult
+  ): Promise<ModResult<any>> {
+    const oActivityId = pParams.activityId;
+    const oTemplate = pStepsTemplate;
+    const oStepKey = pStepKeys.shift();
+    if (oStepKey === undefined) {
+      return Promise.reject(
+        new Error("Must pass non-empty array of step/mod keys.")
+      );
+    }
+    // legacy structure
+    if (oStepKey === "executor") {
+      return this._processSteps(
+        pParams,
+        pStepKeys,
+        pStepsTemplate,
+        pExecutor,
+        pActivityResult
+      );
+    }
+    LOGGER.debug(
+      "[%s] Processing step [%s] (stack: %s)...",
+      oActivityId,
+      oStepKey,
+      pStepKeys
+    );
+    const stepRegex = /step.*/i;
+    const oMatches = stepRegex.exec(oStepKey);
+    if (oMatches && oMatches.length > 0) {
+      const oStepsTemplate = oTemplate[oStepKey];
+      const oStepKeys = Object.keys(oTemplate[oStepKey]);
+      return this._processSteps(
+        pParams,
+        oStepKeys,
+        oStepsTemplate,
+        pExecutor,
+        pActivityResult
+      ).then(pData => {
+        if (pStepKeys.length > 0) {
+          return this._processSteps(
+            pParams,
+            pStepKeys,
+            pStepsTemplate,
+            pExecutor,
+            pActivityResult
+          );
+        } else {
+          return pData;
+        }
+      });
+    } else {
+      return this._processStep(
+        pParams,
+        oStepKey,
+        oTemplate[oStepKey],
+        pExecutor
+      ).then((pData: ModResult<any>) => {
+        pActivityResult.state[oStepKey] = pData;
+        LOGGER.debug(
+          "[%s] Got results from [%s] (status=%s)...",
+          oActivityId,
+          oStepKey,
+          ModStatus[pData.status]
+        );
+        if (pStepKeys.length > 0 && pData.status === ModStatus.CONTINUE) {
+          LOGGER.debug(
+            "[%s] ...processing next step from %s...",
+            oActivityId,
+            pStepKeys
+          );
+          return this._processSteps(
+            pParams,
+            pStepKeys,
+            pStepsTemplate,
+            pExecutor,
+            pActivityResult
+          );
+        } else {
+          return pData;
+        }
+      });
+    }
+  }
   process(pParams: ActivityParameters): Promise<ActivityResult> {
-    const oProcesses: ((
-      pPrevResult: ModResult<any>
-    ) => Promise<ModResult<any>>)[] = [];
+    // const oProcesses: ((
+    //   pPrevResult: ModResult<any>
+    // ) => Promise<ModResult<any>>)[] = [];
     const oActivityId = pParams.activityId;
     const oTemplate = pParams.template;
     const oActivityIndex = pParams.activityIndex;
+    const oActivityResult: ActivityResult = {
+      id: oActivityId,
+      status: ActivityStatus.CONTINUE,
+      state: {}
+    };
+    let oStepsTemplate = pParams.template;
+    LOGGER.debug(
+      "[%s] Processing activity #%s...",
+      oActivityId,
+      oActivityIndex
+    );
     try {
       // TODO: Rename pPreviousStepData into pContext
       // pPreviousStepData[ pActivityId ] = {};
-      let unknownModuleFound = false;
-      const unknownMods: string[] = [];
+      // const unknownModuleFound = false;
+      // const unknownMods: string[] = [];
       const oExecutor: Executor | null = this._resolveExecutor(
         oActivityId,
         oTemplate
@@ -178,20 +370,59 @@ export class DefaultActivity implements Activity {
           new Error("No executor found for activity [" + oActivityId + "].")
         );
       }
-      let oActivities: any = oTemplate["steps"];
-      if (!oActivities) {
+      let oStepKeys: string[] = [];
+      if (oTemplate["steps"] != undefined) {
+        oStepsTemplate = oTemplate["steps"];
+        oStepKeys = Object.keys(oStepsTemplate);
+      } else {
         LOGGER.warn(
           "[%s] Using legacy structure for activity. Now expecting activityName: { steps: { ... } }.",
           oActivityId
         );
-        oActivities = oTemplate;
+        oStepKeys = Object.keys(oTemplate);
       }
-      const oActivityResult: ActivityResult = {
-        status: ActivityStatus.CONTINUE,
-        state: {}
-      };
+      LOGGER.debug("[%s] Processing steps %s...", oActivityId, oStepKeys);
+      // Processing steps
 
-      Object.keys(oActivities).forEach(i => {
+      if (oStepKeys.length === 0) {
+        LOGGER.debug("[%s] No steps. Returning.");
+        return Promise.resolve(oActivityResult);
+      }
+      return this._processSteps(
+        pParams,
+        oStepKeys,
+        oStepsTemplate,
+        oExecutor,
+        oActivityResult
+      )
+        .then((pData: ModResult<any>) => {
+          // TODO: anything to do with pData???
+          LOGGER.info(
+            "[%s] Activity completed (%s/%s).",
+            oActivityId,
+            oActivityIndex + 1,
+            pParams.totalActivities
+          );
+          LOGGER.debug(
+            "[%s] Activity results: %j",
+            oActivityId,
+            oActivityResult
+          );
+          oActivityResult.status = translateModStatus(pData.status);
+          return oActivityResult;
+        })
+        .catch((pError: Error) => {
+          LOGGER.error("[%s] Errors during activity.", oActivityId, pError);
+          return Promise.reject(pError);
+          /*
+          oActivityResult.status = ActivityStatus.ERROR;
+          oActivityResult.error = pError;
+          // throw pError;
+          return oActivityResult;
+          */
+        });
+      /*
+      Object.keys(oSteps).forEach(i => {
         if (i === "executor") return; // legacy structure
         LOGGER.debug("[%s] Encountered [%s]...", oActivityId, i);
         let oMod = this.mETL.getMod(i);
@@ -258,7 +489,7 @@ export class DefaultActivity implements Activity {
         );
       }
       // Promises.seq( oProcesses, pPreviousActivityData )
-
+      
       return Promises.chain(
         oProcesses,
         {
@@ -268,12 +499,13 @@ export class DefaultActivity implements Activity {
         EXIT_OR_SKIP_CONDITION,
         { name: "steps" }
       )
-        .then((_pModResult: ModResult<any>) => {
+        .then((pModResult: ModResult<any>) => {
           // console.log('############ chained !!!!!');
+          oActivityResult.status = translateModStatus(pModResult.status);
           LOGGER.info(
             "[%s] Activity completed (%s/%s).",
             oActivityId,
-            oActivityIndex,
+            oActivityIndex + 1,
             pParams.totalActivities
           );
           LOGGER.debug(
@@ -284,38 +516,6 @@ export class DefaultActivity implements Activity {
           // console.log(' pData=' );
           // console.log( JSON.stringify( pData ) );
 
-          /*
-                  console.log('etl._process: (2) pPreviousStepData = ');
-                  console.log(util.inspect(pPreviousStepData, false, null, true))
-                  console.log('etl._process: (2) pDataResults = ');
-                  console.log(util.inspect(pDataResults, false, null, true))
-                  console.log('etl._process: (2) pData = ');
-                  console.log(util.inspect(pData, false, null, true))
-                  */
-
-          // TODO: no need then:
-          /*
-          const oResult = {
-            activity: oActivityId,
-            steps: pData["steps"],
-            exit: Boolean(pData["exit"]),
-            skip: Boolean(pData["skip"])
-          };
-          if (pData["exit"]) pResult.exit = pData["exit"];
-          pResult.activities.push(oResult);
-          // pResult[ pActivityId ] = pData;
-          // TODO: replace with:
-          // resolve( pPreviousStepData );
-          this.emit(
-            "activityDone",
-            oActivityId,
-            null,
-            pData,
-            pActivityIndex,
-            pTotalActivities
-          );
-          return oResult;
-          */
           return oActivityResult;
         })
         .catch((pError: Error) => {
@@ -328,21 +528,16 @@ export class DefaultActivity implements Activity {
           oActivityResult.error = pError;
           // console.log("#### ActivityResult = ");
           // console.log(oActivityResult);
-          /*
-          this.emit(
-            "activityDone",
-            oActivityId,
-            pError,
-            null,
-            oActivityIndex,
-            pParams.totalActivities
-          );
-          */
           // return Promise.reject(pError);
           return oActivityResult; // Promise.resolve(oActivityResult);
         });
+        */
     } catch (e) {
       LOGGER.error("[%s] Unexpected error during activity.", oActivityId, e);
+      // oActivityResult.status = ActivityStatus.ERROR;
+      // oActivityResult.error = e;
+      // TODO: not sure about that here...should we just let the error through???
+      // return Promise.resolve(oActivityResult);
       return Promise.reject(e);
     }
   }

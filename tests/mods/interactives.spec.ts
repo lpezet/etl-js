@@ -28,7 +28,7 @@ describe("interactives", function() {
       if (pCallback) pCallback({ test: true });
     }
     processTemplate(_pTemplate: any, _pParameters?: any): Promise<ETLResult> {
-      return Promise.resolve({ status: ETLStatus.DONE, activities: {} });
+      return Promise.resolve({ status: ETLStatus.DONE, activities: [] });
     }
   }
   class FakeStream extends EventEmitter {

@@ -212,7 +212,7 @@ class ETL extends AbstractETL {
         );
         // console.log("######## _wrap_activity_process!!!! : ");
         // console.log(JSON.stringify(pData));
-        console.log(pActivityResult);
+        // console.log(pActivityResult);
         if (
           pActivityResult.status === ActivityStatus.STOP ||
           pActivityResult.status === ActivityStatus.EXIT

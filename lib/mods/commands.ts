@@ -174,7 +174,7 @@ export default class CommandsMod extends AbstractMod<CommandsState, any> {
                   !!stderr,
                   !!stdout
                 );
-                if (error) console.log(error.code);
+                // if (error) console.log(error.code);
                 if (error) {
                   LOGGER.error(
                     "[%s] Command [%s] exited.",
@@ -233,7 +233,7 @@ export default class CommandsMod extends AbstractMod<CommandsState, any> {
                 pCmd,
                 pCmdOptions
               );
-              data.error = e;
+              data.error = e as Error;
               if (oCmdSpecs["ignore_errors"]) {
                 resolve(data);
               } else {
@@ -317,7 +317,7 @@ export default class CommandsMod extends AbstractMod<CommandsState, any> {
                   }
                 }
               } catch (e) {
-                data.error = e;
+                data.error = e as Error;
                 if (oCmdSpecs["exit_on_test_failed"]) data.exit = true;
                 if (oCmdSpecs["skip_on_test_failed"]) data.skip = true;
                 data.pass = false;

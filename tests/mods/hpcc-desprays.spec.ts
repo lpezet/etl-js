@@ -7,19 +7,17 @@ import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
 import Context, { emptyContext } from "../../lib/context";
 import Mod, { ModResult } from "../../lib/mod";
 import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
-
-/*
-import { configureLogger } from "../../../lib/logger";
-
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
+import { configureLogger } from "../../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
 describe("hpcc-desprays", function() {
   beforeEach(function(done: () => void) {

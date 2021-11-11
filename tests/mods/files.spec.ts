@@ -5,18 +5,18 @@ import { AbstractETL, ETLResult, ETLStatus } from "../../lib/etl";
 import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import Context, { emptyContext } from "../../lib/context";
 import Mod, { ModResult } from "../../lib/mod";
-/*
-import { configureLogger } from "../../../lib/logger";
+import { configureLogger } from "../../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
 describe("files", function() {
   beforeEach(function(done: () => void) {
     done();

@@ -5,19 +5,17 @@ import CommandsMod, { CommandsState } from "../../lib/mods/commands";
 import { loadFile } from "../utils";
 import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import Context, { emptyContext } from "../../lib/context";
-
-/*
-import { configureLogger } from "../../../lib/logger";
-
-configureLogger({
-  appenders: {
-    console: { type: "console", layout: { type: "colored" } }
-  },
-  categories: {
-    default: { appenders: ["console"], level: "all" }
-  }
-});
-*/
+import { configureLogger } from "../../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
 describe("commands", function() {
   beforeEach(function(done: () => void) {

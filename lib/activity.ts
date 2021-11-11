@@ -28,6 +28,7 @@ export interface ActivityParameters {
   // previousActivityData: any;
   // results: any;
   context: Context;
+  state?: any;
 }
 
 export enum ActivityStatus {
@@ -275,11 +276,13 @@ export class DefaultActivity implements Activity {
       );
     }
     LOGGER.debug(
-      "[%s] Processing step [%s] (stack: %s)...",
+      "[%s] Processing step [%s] (stack: %s) (state: %s)...",
       oActivityId,
       oStepKey,
-      pStepKeys
+      pStepKeys,
+      pActivityResult.state
     );
+    // pActivityResult.state = { oStepKey: {} };
     const stepRegex = /step.*/i;
     const oMatches = stepRegex.exec(oStepKey);
     if (oMatches && oMatches.length > 0) {
@@ -324,6 +327,7 @@ export class DefaultActivity implements Activity {
             oActivityId,
             pStepKeys
           );
+          // pActivityResult.state = {};
           return this._processSteps(
             pParams,
             pStepKeys,
@@ -413,7 +417,8 @@ export class DefaultActivity implements Activity {
         })
         .catch((pError: Error) => {
           LOGGER.error("[%s] Errors during activity.", oActivityId, pError);
-          return Promise.reject(pError);
+          oActivityResult.error = pError;
+          return Promise.reject(oActivityResult);
           /*
           oActivityResult.status = ActivityStatus.ERROR;
           oActivityResult.error = pError;

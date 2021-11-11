@@ -14,10 +14,32 @@ export interface ModParameters {
   context: Context;
 }
 
+// TODO: This is NOT really a "status" but a "what to do next". We say "CONTINUE" because we're actually "DONE".
+// This creates confusion and make it looking at a "state" not very intuitive.
+// For exmaple:
+/*
+const oState = {
+  id: "activity1",
+  status: ActivityStatus.STOP,
+  state: {
+    stoppable: {
+      status: ModStatus.CONTINUE,
+      state: undefined,
+      error: undefined
+    },
+    stoppable2: {
+      status: ModStatus.STOP,
+      state: undefined,
+      error: undefined
+    }
+  }
+};
+*/
+// It's not intuitive to see right away that "stopabble" is DONE, and we need to restart from stoppable2 cause it said "STOP".
 export enum ModStatus {
-  CONTINUE,
-  STOP,
-  REPEAT,
+  CONTINUE, // change to DONE
+  STOP, // this is to stop the current process to continue "offline". But in a "resuming state" point of view, should it be more like "IN_PROGRESS"?
+  REPEAT, //
   SKIP,
   EXIT
 }

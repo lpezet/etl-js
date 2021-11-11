@@ -3,7 +3,7 @@ import Context from "./context";
 import { IETL } from "./etl";
 
 export type ModSettings = {
-  disabled: boolean;
+  disabled?: boolean;
   // [key: string]: any;
 };
 

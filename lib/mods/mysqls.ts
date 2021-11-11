@@ -207,11 +207,11 @@ export type MySQLOptionsWithDBName = MySQLOptions & {
   db_name: string;
 };
 
-export type MySQLSettings = ModSettings & {
-  settings?: {
-    [key: string]: MySQLOptions;
-  };
-};
+export type MySQLSettings =
+  | ModSettings
+  | {
+      [key: string]: MySQLOptions;
+    };
 
 const asPromised = function(
   pPreviousData: any,
@@ -234,7 +234,11 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   _evaluate(pTemplate: string, pContext: Context): string[] | null {
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
-  _applySettings(pParent: string, pKey: string, pConfig: MySQLOptions): void {
+  _applySettingsOld(
+    pParent: string,
+    pKey: string,
+    pConfig: MySQLOptions
+  ): void {
     const applySettings = function(
       pConfig: MySQLOptions,
       pSettings: MySQLOptions
@@ -259,6 +263,19 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
         LOGGER.debug("Applying settings with *");
         applySettings(pConfig, this.mSettings.settings["*"]);
       }
+    }
+  }
+  _applySettings(pParent: string, pKey: string, pConfig: any): void {
+    const applySettings = function(pConfig: any, pSettings: any): void {
+      for (const i in pSettings) {
+        if (pConfig[i] == null) pConfig[i] = pSettings[i];
+      }
+    };
+    if (this.mSettings[pKey]) applySettings(pConfig, this.mSettings[pKey]);
+    else if (this.mSettings[pParent]) {
+      applySettings(pConfig, this.mSettings[pParent]);
+    } else if (this.mSettings["*"]) {
+      applySettings(pConfig, this.mSettings["*"]);
     }
   }
   _readOptions(

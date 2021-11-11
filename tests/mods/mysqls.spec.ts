@@ -188,14 +188,12 @@ describe("mysqls", function() {
     }
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      settings: {
-        "*": {
-          // eslint-disable-next-line @typescript-eslint/camelcase
-          bind_address: "127.0.0.1",
-          silent: true
-        }
-      },
-      disabled: false
+      disabled: false,
+      "*": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        bind_address: "127.0.0.1",
+        silent: true
+      }
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -250,12 +248,10 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      settings: {
-        root: {
-          // eslint-disable-next-line @typescript-eslint/camelcase
-          bind_address: "127.0.0.1",
-          silent: true
-        }
+      root: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        bind_address: "127.0.0.1",
+        silent: true
       },
       disabled: false
     };
@@ -300,15 +296,11 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      settings: {
-        "/downloads/test.csv": {
-          // eslint-disable-next-line @typescript-eslint/camelcase
-          bind_address: "127.0.0.1",
-          silent: true
-        }
-      },
-      disabled: false
-      // }
+      "*": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        bind_address: "127.0.0.1",
+        silent: true
+      }
     };
     const oTested = new MySQLsMod(oSettings);
 
@@ -351,12 +343,10 @@ describe("mysqls", function() {
 
     const oExecutor = new ExecutorClass();
     const oSettings = {
-      settings: {
-        "*": {
-          // eslint-disable-next-line @typescript-eslint/camelcase
-          bind_address: "127.0.0.1",
-          silent: true
-        }
+      "*": {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        bind_address: "127.0.0.1",
+        silent: true
       },
       disabled: false
     };

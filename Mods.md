@@ -55,7 +55,7 @@ None. Simply leverages `readline` to prompt message and read answer.
 root:
   interactives:
     sayhello:
-      prompt: _prompt_ 
+      prompt: _prompt_
       var: _key_
 ```
 
@@ -65,7 +65,7 @@ root:
 root:
   interactives:
     sayhello:
-      prompt: "Name please:" 
+      prompt: "Name please:"
       var: "name"
 ```
 
@@ -98,7 +98,6 @@ my_extract:
       source: https://a.b.c/file1.zip
 ```
 
-
 ## Commands Mod
 
 You can use the Commands Mod to execute commands. Commands are executed in the order provided.
@@ -109,17 +108,16 @@ None. This mod simply provides access to bash environment.
 
 ### Specs
 
-| Property   | Required? | Default value | Description |
-| ---------- | --------- | ------------- | ----------- |
-| **command** | required | | String specifying the command to run. Tags can be used |
-| **cwd** | optional  | | Working directory |
-| **env** | optional | | Sets environment variables for the command. This property overwrites, rather than appends, the existing environment. |
-| **test** | optional | | A test command that determines whether to run the **command** specified. If the test fails (or in error, based on exit code), the **command** is skipped. For Linux, the test command must return an exit code of 0 for the test to pass. For Windows, the test command must return an %ERRORLEVEL% of 0. |
-| **ignore_errors** | optional | false | If true, errors when executing **command** (not the test) are ignored and process continues as if **command** executed fine. |
-| **exit_on_error** | optional | false | Whether or not to exit the entire process upon error. |
-| **var** | optional | | Save result of command into context under **var** key. |
-| **result_as_json** | optional | false | Whether or not to parse **command** result (stdout) as JSON. This can be used with **var** to save JSON into context and make it available to other mods. |
-
+| Property           | Required? | Default value | Description                                                                                                                                                                                                                                                                                               |
+| ------------------ | --------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **command**        | required  |               | String specifying the command to run. Tags can be used                                                                                                                                                                                                                                                    |
+| **cwd**            | optional  |               | Working directory                                                                                                                                                                                                                                                                                         |
+| **env**            | optional  |               | Sets environment variables for the command. This property overwrites, rather than appends, the existing environment.                                                                                                                                                                                      |
+| **test**           | optional  |               | A test command that determines whether to run the **command** specified. If the test fails (or in error, based on exit code), the **command** is skipped. For Linux, the test command must return an exit code of 0 for the test to pass. For Windows, the test command must return an %ERRORLEVEL% of 0. |
+| **ignore_errors**  | optional  | false         | If true, errors when executing **command** (not the test) are ignored and process continues as if **command** executed fine.                                                                                                                                                                              |
+| **exit_on_error**  | optional  | false         | Whether or not to exit the entire process upon error.                                                                                                                                                                                                                                                     |
+| **var**            | optional  |               | Save result of command into context under **var** key.                                                                                                                                                                                                                                                    |
+| **result_as_json** | optional  | false         | Whether or not to parse **command** result (stdout) as JSON. This can be used with **var** to save JSON into context and make it available to other mods.                                                                                                                                                 |
 
 Note that, if the command used in **test** is in error, the command will be skipped. This means both **ignore_errors** and **exit_on_error** are ignored in this situation.
 
@@ -139,7 +137,7 @@ The following template will first run a test to decide whether or not to run the
 commands:
   000_say_hello:
     command: echo "Now do something"
-    test: [ $((`date +%d`%2)) -eq 0 ]
+    test: [$((`date +%d`%2)) -eq 0]
 ```
 
 The following template make use of the **var** property to use the value in a subsequent command:
@@ -239,7 +237,6 @@ root:
         OUTPUT(ds);
 ```
 
-
 ## Sprays Mod
 
 Use the HPCC Systems Distributed File Utility (DFU) (`dfuplus`) to load file into HPCC Systems Cluster.
@@ -253,7 +250,7 @@ The program `dfuplus`, specifically, is used here.
 
 ```yaml
 root:
-  sprays:
+  hpcc-sprays:
   	# required
     format: _format_,
     destinationgroup: null,
@@ -288,7 +285,7 @@ The following example sprays the file `/tmp/2018.csv` onto the cluster:
 
 ```yaml
 load:
-  sprays:
+  hpcc-sprays:
     "noaa::ghcn::daily::2018::raw":
       format: csv
       destinationGroup: "mythor"
@@ -309,7 +306,6 @@ The program `mysql`, specifically, is used here.
 
 ### Specs
 
-
 ```yaml
 root:
   mysqls:
@@ -319,9 +315,7 @@ root:
     binary_as_hex: _binary_as_hex_
     binary_mode: _binary_mode_
   	bind_address: _bind_address_
-    
-    v TODO v
-  	columns: _columns_
+    columns: _columns_
     compress: _compress_
     debug: _debug_
     debug_check: _debug_check_
@@ -348,6 +342,7 @@ root:
     login_path: _login_path_
     low_priority: _low_priority_
     no_defaults: _no_defaults_
+    output: _file_to_output_results_to
     password: _password_
     pipe: _pipe_
     plugin_dir: _plugin_dir_
@@ -358,8 +353,6 @@ root:
     server_public_key_path: _server_public_key_path_
     shared_memory_base_name: _shared_memory_base_name_
     silent: _silent_
-    ^ TODO ^
-    
     skip_named_commands: _skip_named_commands_
     skip_pager: _skip_pager_
     skip_reconnect: _skip_reconnect_
@@ -385,6 +378,36 @@ root:
     xml: _xml_
 ```
 
+### Examples
+
+Querying some records and saving the results in a file:
+
+```yaml
+query:
+  mysqls:
+    user_report:
+      db_name: reports
+      execute: |
+        SELECT
+          email,
+          COUNT(DISTINCT(attempts)) as total_attempts,
+          SUM(IF(failed,1,0)) as total_failed_attempts
+        FROM
+          user_logs;
+      output: /opt/example/user_reports.txt
+```
+
+Creating a table (no output necessary):
+
+```yaml
+ddl:
+  mysqls:
+    create_users_tables:
+      db_name: idp
+      execute: |
+        DROP TABLE IF EXISTS users;
+        CREATE TABLE users (id BIGINT NOT NULL PRIMARY KEY, email VARCHAR(200), first_name VARCHAR(255), last_name VARCHAR(255), UNIQUE INDEX (email));
+```
 
 ## MySQLImports Mod
 

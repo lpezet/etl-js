@@ -191,7 +191,7 @@ const ssh2WriteToFile = (
         });
         wStream.end("" + pContent);
       } catch (ex) {
-        pCallback(ex, "", "", server, conn);
+        pCallback(ex as Error, "", "", server, conn);
       }
     });
   });

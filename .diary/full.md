@@ -771,7 +771,7 @@ activity2:
     some: "some"
 ```
 
-## Entry for 11/10/2021
+## (11/10/2021) Fixing/Improving mysqls mod
 
 Need to work on implementation of `mysqls` mod.
 

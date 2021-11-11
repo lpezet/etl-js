@@ -41,6 +41,144 @@ describe("mysqls", function() {
     done();
   });
 
+  it("outputNoLongerFromKey", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        assert.notInclude(pCmd, "dirname");
+        pCallback(null, "", "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod();
+
+    const oTemplate = {
+      root: {
+        doSomething: {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb",
+          execute: "SELECT * FROM test WHERE year = 2015"
+        }
+      }
+    };
+
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: ModResult<MySQLState>) {
+          try {
+            assert.property(pData.state?.mysqls, "doSomething");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
+  });
+
+  it("outputWithTag", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        assert.include(pCmd, "dirname");
+        pCallback(null, "", "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod();
+
+    const oTemplate = {
+      root: {
+        "doSomething_{{ years }}": {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb",
+          execute: "SELECT * FROM test WHERE year = {{ years }}",
+          output: "/somewhere/results_{{ years }}.csv"
+        }
+      }
+    };
+
+    const oContext: Context = {
+      years: [2018, 2019, 2020],
+      ...emptyContext()
+    };
+
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(pData: ModResult<MySQLState>) {
+          try {
+            assert.property(pData.state?.mysqls, "doSomething_2018");
+            assert.property(pData.state?.mysqls, "doSomething_2019");
+            assert.property(pData.state?.mysqls, "doSomething_2020");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
+  });
+
+  it("outputNoTag", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        assert.include(pCmd, "dirname");
+        pCallback(null, "", "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod();
+
+    const oTemplate = {
+      root: {
+        doSomething: {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb",
+          execute: "SELECT * FROM test WHERE year = {{ years }}",
+          output: "/somewhere/results.csv"
+        }
+      }
+    };
+
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: emptyContext()
+      })
+      .then(
+        function(pData: ModResult<MySQLState>) {
+          try {
+            assert.property(pData.state?.mysqls, "doSomething");
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
+  });
+
   it("tagsMultipleValues", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
@@ -101,7 +239,7 @@ describe("mysqls", function() {
       );
   });
 
-  it("apply_settings_parent", function(done) {
+  it("applySettingsParent", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
@@ -151,7 +289,7 @@ describe("mysqls", function() {
       );
   });
 
-  it("apply_settings_key", function(done) {
+  it("applySettingsKey", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");
@@ -202,7 +340,7 @@ describe("mysqls", function() {
       );
   });
 
-  it("apply_settings_all", function(done) {
+  it("applySettingsAll", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
         assert.include(pCmd, "--bind-address=127.0.0.1");

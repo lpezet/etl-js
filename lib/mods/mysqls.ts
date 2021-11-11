@@ -198,6 +198,8 @@ export type MySQLOptions = {
   // eslint-disable-next-line camelcase
   use_threads?: boolean;
   user?: string;
+  // CUSTOM options
+  output?: string;
 };
 
 export type MySQLOptionsWithDBName = MySQLOptions & {
@@ -248,13 +250,13 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
     };
     if (this.mSettings.settings) {
       if (this.mSettings.settings[pKey]) {
-        console.log("Applying settings with key: " + pKey);
+        LOGGER.debug("Applying settings with key: " + pKey);
         applySettings(pConfig, this.mSettings.settings[pKey]);
       } else if (this.mSettings.settings[pParent]) {
-        console.log("Applying settings with parent: " + pParent);
+        LOGGER.debug("Applying settings with parent: " + pParent);
         applySettings(pConfig, this.mSettings.settings[pParent]);
       } else if (this.mSettings.settings["*"]) {
-        console.log("Applying settings with *");
+        LOGGER.debug("Applying settings with *");
         applySettings(pConfig, this.mSettings.settings["*"]);
       }
     }
@@ -407,6 +409,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
       };
       try {
         const oCmdArgs = [];
+        let output: string | null = null;
         (Object.keys(pConfig) as (keyof MySQLOptionsWithDBName)[]).forEach(
           i => {
             // for (const i in pConfig) {
@@ -547,6 +550,19 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
                 break;
               case "one_database":
                 if (pConfig[i]) oCmdArgs.push("--one-database");
+                break;
+              case "output":
+                // eslint-disable-next-line no-case-declarations
+                let oOutputRaw = pConfig[i] || "";
+                if (oOutputRaw.includes("{{")) {
+                  const oOutputRaws = this._evaluate(oOutputRaw, pContext);
+                  // TODO: check index vs length
+                  if (oOutputRaws && oOutputRaws.length > pTemplateIndex) {
+                    oOutputRaw = oOutputRaws[pTemplateIndex];
+                  }
+                  // TODO: else, log???
+                }
+                output = oOutputRaw;
                 break;
               case "pager":
                 oCmdArgs.push(`--pager=${pConfig[i]}`);
@@ -698,11 +714,14 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
           // TODO: else, log????
         }
         oCmdArgs.push(oDBName);
+        let oCmd = "/usr/bin/mysql " + oCmdArgs.join(" ");
         // oCmdArgs.push( pKey );
         // TODO: if "table_name" given in config, maybe rename file before running mysqlimport command...or so a "ln -s" maybe???
-        const oEnsureFolderExists = `[ ! -d $(dirname "${pKey}") ] && mkdir -p $(dirname "${pKey}");`;
-        const oCmd =
-          oEnsureFolderExists + "/usr/bin/mysql " + oCmdArgs.join(" ");
+        if (output) {
+          const oEnsureFolderExists = `[ ! -d $(dirname "${pKey}") ] && mkdir -p $(dirname "${pKey}");`;
+          oCmd = oEnsureFolderExists + oCmd;
+        }
+
         pExecutor.exec(oCmd, { context: pKey }, function(
           error,
           stdout,
@@ -735,7 +754,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
       } catch (e) {
         // reject( e );
         const data: Data = {
-          error: e,
+          error: e as Error,
           exit: false,
           pass: true
         };

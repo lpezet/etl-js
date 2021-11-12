@@ -5,7 +5,7 @@ import { Logger, createLogger } from "../logger";
 import * as Promises from "../promises";
 import * as readline from "readline";
 
-const LOGGER: Logger = createLogger("etljs::interactives");
+const LOGGER: Logger = createLogger("etljs::mods::interactives");
 
 export type Data = {
   error?: Error | null;

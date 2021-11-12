@@ -7,7 +7,7 @@ import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import Context from "../context";
 import { Executor } from "../executors";
 
-const LOGGER: Logger = createLogger("etljs::hpcc-ecls");
+const LOGGER: Logger = createLogger("etljs::mods::hpcc-ecls");
 
 const TEMP_ECL_FILE = "/tmp/etl-js.ecl";
 

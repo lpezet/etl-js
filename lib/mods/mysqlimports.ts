@@ -5,7 +5,7 @@ import { Logger, createLogger } from "../logger";
 import * as Promises from "../promises";
 import TemplateEngine from "../templating/engine";
 
-const LOGGER: Logger = createLogger("etljs::mysqlimports");
+const LOGGER: Logger = createLogger("etljs::mods::mysqlimports");
 
 export type Data = {
   error?: Error | null;

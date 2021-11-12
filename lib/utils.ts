@@ -15,7 +15,8 @@ type ETLSetStackItem = {
 };
 
 /**
- * @param pETLs
+ * @param pETLs etl sets
+ * @return any
  */
 export function resolveEtlSets(pETLs: ETLSets): any {
   const oStack: ETLSetStackItem[] = [];
@@ -84,8 +85,8 @@ export function resolveEtlSets(pETLs: ETLSets): any {
 }
 
 /**
- * @param pConfig
- * @param pParameters
+ * @param pConfig config
+ * @param pParameters params
  * @return array of activity keys
  */
 export function resolveActivities(pConfig: any, pParameters?: any): string[] {

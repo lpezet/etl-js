@@ -41,6 +41,54 @@ describe("mysqls", function() {
     done();
   });
 
+  it("var", function(done) {
+    const oExpectedResult = "123456789";
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        pCallback(null, oExpectedResult, "");
+      }
+    }
+    const oExecutor = new ExecutorClass();
+    const oTested = new MySQLsMod();
+    const oContext = emptyContext();
+    const oTemplate = {
+      root: {
+        doSomething: {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          db_name: "testdb",
+          execute: "SELECT COUNT(*) FROM test WHERE year = 2015",
+          var: "testVar"
+        }
+      }
+    };
+
+    oTested
+      .handle({
+        parent: "root",
+        config: oTemplate["root"],
+        executor: oExecutor,
+        context: oContext
+      })
+      .then(
+        function(_pData: ModResult<MySQLState>) {
+          try {
+            assert.deepEqual(oContext, {
+              env: {},
+              vars: { testVar: oExpectedResult },
+              etl: { activityId: null, activityIndex: 0, stepName: null }
+            });
+            done();
+          } catch (e) {
+            done(e);
+          }
+        },
+        function(pError: Error) {
+          // console.log( pError );
+          done(pError);
+        }
+      );
+  });
+
   it("outputNoLongerFromKey", function(done) {
     class ExecutorClass extends NoOpExecutor {
       exec(pCmd: string, _pCmdOpts: any, pCallback: Callback): void {

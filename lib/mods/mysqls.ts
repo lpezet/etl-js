@@ -11,7 +11,7 @@ import { Logger, createLogger } from "../logger";
 import * as Promises from "../promises";
 import TemplateEngine from "../templating/engine";
 
-const LOGGER: Logger = createLogger("etljs::mysqlimports");
+const LOGGER: Logger = createLogger("etljs::mods::mysqls");
 
 export type Data = {
   error?: Error | null;
@@ -199,7 +199,8 @@ export type MySQLOptions = {
   use_threads?: boolean;
   user?: string;
   // CUSTOM options
-  output?: string;
+  output?: string; // to store output into file
+  var?: string; // to store output into variable
 };
 
 export type MySQLOptionsWithDBName = MySQLOptions & {
@@ -341,6 +342,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
       plugin_dir: null,
       port: null,
       protocol: null,
+      raw: null,
       replace: null,
       // eslint-disable-next-line @typescript-eslint/camelcase
       secure_auth: null,
@@ -348,6 +350,8 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
       server_public_key_path: null,
       // eslint-disable-next-line @typescript-eslint/camelcase
       shared_memory_base_name: null,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      skip_column_names: null,
       silent: null,
       socket: null,
       // eslint-disable-next-line @typescript-eslint/camelcase
@@ -764,6 +768,17 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
             // resolve( stdout );
             func = resolve;
             data.result = data._stdout;
+          }
+
+          if (pConfig["var"]) {
+            const oVarKey = pConfig["var"];
+            LOGGER.debug(
+              "[%s] Saving result of mysql [%] to var [%s].",
+              pParent,
+              pKey,
+              oVarKey
+            );
+            pContext.vars[oVarKey] = data.result;
           }
 
           asPromised(pPreviousData, pKey, func, data);

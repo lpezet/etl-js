@@ -30,6 +30,12 @@ export {
   Data as InteractivesData
 } from "./mods/interactives";
 export {
+  default as TestsMod,
+  Data as TestData,
+  Specs as TestSpecs,
+  State as TestsState
+} from "./mods/tests";
+export {
   Logger,
   Configuration as LoggerConfiguration,
   createLogger,

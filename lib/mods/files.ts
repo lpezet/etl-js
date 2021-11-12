@@ -5,7 +5,7 @@ import { Logger, createLogger } from "../logger";
 import { Executor } from "../executors";
 import Context from "../context";
 
-const LOGGER: Logger = createLogger("etljs::files");
+const LOGGER: Logger = createLogger("etljs::mods::files");
 
 export type FilesState = {
   results: any[];

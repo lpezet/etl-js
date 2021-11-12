@@ -6,7 +6,7 @@ import Context from "../context";
 import { Executor } from "../executors";
 import { Logger, createLogger } from "../logger";
 
-const LOGGER: Logger = createLogger("etljs::commands");
+const LOGGER: Logger = createLogger("etljs::mods::commands");
 
 export type Data = {
   error?: Error;

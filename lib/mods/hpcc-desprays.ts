@@ -5,7 +5,7 @@ import { Logger, createLogger } from "../logger";
 import { Executor } from "../executors";
 import Context from "../context";
 
-const LOGGER: Logger = createLogger("etljs::hpcc-desprays");
+const LOGGER: Logger = createLogger("etljs::mods::hpcc-desprays");
 
 export type HPCCDespraysState = {
   desprays: any[];

@@ -5,7 +5,7 @@ import { AbstractMod, ModParameters, ModResult, ModStatus } from "../mod";
 import Context from "../context";
 import { Executor } from "../executors";
 
-const LOGGER: Logger = createLogger("etljs::image-charts");
+const LOGGER: Logger = createLogger("etljs::mods::image-charts");
 
 export type ImageChartsState = {
   charts: any[];

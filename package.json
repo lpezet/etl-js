@@ -10,7 +10,7 @@
     "prepublish": "npm run dist",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts lib/ tests/",
-    "mocha-single": "nyc --reporter=html mocha",
+    "mocha-single": "nyc --check-coverage=false --reporter=html mocha",
     "release": "release-it",
     "fix": "eslint -ext .ts lib/ tests/ --fix",
     "pretest": "npm run lint",
@@ -60,6 +60,7 @@
   },
   "homepage": "https://github.com/lpezet/etl-js#readme",
   "dependencies": {
+    "filtrex": "^2.2.3",
     "google-auth-library": "^6.0.1",
     "jmespath": "^0.15.0",
     "jsonpath-plus": "^4.0.0",

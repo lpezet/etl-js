@@ -291,12 +291,11 @@ class ETL extends AbstractETL {
         return pState.etlResult;
       })
       .catch((pError: Error) => {
-        // console.log("### ETL: ERROR");
         LOGGER.error(
           "Errors during ETL process:\n",
           JSON.stringify(pError, null, 2)
         );
-        return Promise.reject(pState.etlResult);
+        return Promise.reject(pError);
       });
   }
   processTemplate(pTemplate: any, pParameters?: any): Promise<ETLResult> {

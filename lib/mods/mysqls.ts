@@ -773,7 +773,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
           if (pConfig["var"]) {
             const oVarKey = pConfig["var"];
             LOGGER.debug(
-              "[%s] Saving result of mysql [%] to var [%s].",
+              "[%s] Saving result of mysql [%s] to var [%s].",
               pParent,
               pKey,
               oVarKey

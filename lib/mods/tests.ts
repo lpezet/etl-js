@@ -151,7 +151,7 @@ export default class TestsMod extends AbstractMod<any, any> {
   }
   handle(pParams: ModParameters): Promise<ModResult<State>> {
     return new Promise((resolve, reject) => {
-      LOGGER.debug("[%s] Processing Tests...", pParams.parent);
+      LOGGER.info("[%s] Processing tests...", pParams.parent);
       try {
         const oResult = {
           status: ModStatus.CONTINUE,
@@ -173,7 +173,7 @@ export default class TestsMod extends AbstractMod<any, any> {
         });
         Promises.seq(oPromises, oResult)
           .then(function(pData) {
-            LOGGER.debug("[%s] Done processing tests.", pParams.parent);
+            LOGGER.info("[%s] Done processing tests.", pParams.parent);
             resolve(pData);
           })
           .catch(pError => {

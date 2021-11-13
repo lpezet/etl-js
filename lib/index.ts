@@ -39,7 +39,8 @@ export {
   Logger,
   Configuration as LoggerConfiguration,
   createLogger,
-  configureLogger
+  configureLogger,
+  loggerShutdown
 } from "./logger";
 export { default as Mod } from "./mod";
 export {

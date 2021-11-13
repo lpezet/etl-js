@@ -714,7 +714,7 @@ describe("etl", function() {
     });
   });
 
-  it("modThrowingError", function(done) {
+  it("errorModThrowingUp", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oSettings = {};
     const oTested = new ETL(oExecutor, oSettings);
@@ -727,6 +727,49 @@ describe("etl", function() {
       }
       handle(_pParams: ModParameters): Promise<ModResult<any>> {
         throw new Error("Error generated for testing purposes.");
+      }
+    }
+    new AwesomeMod().register(oTested);
+    const oETL = {
+      etl: ["step1", "step2"],
+      step1: {
+        awesome: {
+          doSomething: {
+            result: "a"
+          }
+        }
+      }
+    };
+    oTested.processTemplate(oETL).then(
+      () => {
+        done(new Error("Expected Promise.reject() here."));
+      },
+      (_pETLResult: ETLResult) => {
+        // console.log("## ETLResult: ");
+        // console.log(pETLResult);
+        done();
+      }
+    );
+  });
+
+  it("errorModRejecting", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oSettings = {};
+    const oTested = new ETL(oExecutor, oSettings);
+    class AwesomeMod implements Mod<any> {
+      register(pETL: IETL): void {
+        pETL.mod("awesome", this);
+      }
+      isDisabled(): boolean {
+        return false;
+      }
+      handle(_pParams: ModParameters): Promise<ModResult<any>> {
+        const something: any = {
+          key1: "something here",
+          error: new Error("Error for testing purposes"),
+          a: { b: { c: ["d", "e", "f", "g", "h"] } }
+        };
+        return Promise.reject(something);
       }
     }
     new AwesomeMod().register(oTested);

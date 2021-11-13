@@ -412,7 +412,11 @@ export class DefaultActivity implements Activity {
           return oActivityResult;
         })
         .catch((pError: Error) => {
-          LOGGER.error("[%s] Errors during activity.", oActivityId, pError);
+          LOGGER.error(
+            "[%s] Errors during activity:\n",
+            oActivityId,
+            JSON.stringify(pError, null, 2)
+          );
           return Promise.reject(pError);
           /*
           oActivityResult.status = ActivityStatus.ERROR;
@@ -533,7 +537,7 @@ export class DefaultActivity implements Activity {
         });
         */
     } catch (e) {
-      LOGGER.error("[%s] Unexpected error during activity.", oActivityId, e);
+      LOGGER.error("[%s] Unexpected error during activity:\n", oActivityId, e);
       // oActivityResult.status = ActivityStatus.ERROR;
       // oActivityResult.error = e;
       // TODO: not sure about that here...should we just let the error through???

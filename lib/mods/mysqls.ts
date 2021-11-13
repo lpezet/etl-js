@@ -833,19 +833,18 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
           });
         });
 
-        Promises.seq(oPromises, oData).then(
-          function(_pData) {
+        Promises.seq(oPromises, oData)
+          .then(function(_pData) {
             LOGGER.info("[%s] Done running mysqls.", pParams.parent);
             resolve({
               status: ModStatus.CONTINUE,
               state: oData
             });
-          },
-          function(pError) {
+          })
+          .catch(pError => {
             LOGGER.error("[%s] Error running mysqls.", pParams.parent, pError);
             reject(pError);
-          }
-        );
+          });
       } catch (e) {
         LOGGER.error(
           "[%s] Unexpected error running mysqls.",

@@ -224,6 +224,14 @@ const asPromised = function(
   pPreviousData.mysqls[pKey] = data;
   func(pPreviousData);
 };
+const _trimLastLineBreak = function(pValue: any): any {
+  if (pValue && (typeof pValue === "string" || pValue instanceof String)) {
+    if (pValue.endsWith("\n") || pValue.endsWith("\r")) {
+      return pValue.replace(/(\r\n|\n|\r)$/, "");
+    }
+  }
+  return pValue;
+};
 
 export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   mSettings: any;
@@ -778,7 +786,8 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
               pKey,
               oVarKey
             );
-            pContext.vars[oVarKey] = data.result;
+            const varResult = _trimLastLineBreak(data.result);
+            pContext.vars[oVarKey] = varResult;
           }
 
           asPromised(pPreviousData, pKey, func, data);

@@ -1,7 +1,11 @@
 environment:
   matrix:
-    - nodejs_version: "10.0"
+    - nodejs_version: "10.24"
     - nodejs_version: "11.0"
+    - nodejs_version: "12.0"
+    - nodejs_version: "13.7"
+    - nodejs_version: "14.0"
+    - nodejs_version: "15.0"
 cache:
   - node_modules
 install:

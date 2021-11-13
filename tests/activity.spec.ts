@@ -1,10 +1,17 @@
 import { assert } from "chai";
 import { AbstractETL, ETLResult, ETLStatus, IETL } from "../lib/etl";
 import TestMod from "./etl/test";
+import CollectMod from "./etl/collect";
 import { Executor, NoOpExecutor } from "../lib/executors";
 import { ActivityParameters, DefaultActivity } from "../lib/activity";
 import { emptyContext } from "../lib/context";
-import Mod, { ModParameters, ModResult } from "../lib/mod";
+import Mod, {
+  AbstractMod,
+  ModParameters,
+  ModResult,
+  ModStatus,
+  createModResult
+} from "../lib/mod";
 import { configureLogger } from "../lib/logger";
 if (process.env.DEBUG) {
   configureLogger({
@@ -70,6 +77,62 @@ describe("activity", function() {
           status: 0,
           state: { tester: { status: 0, state: undefined, error: undefined } }
         });
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it("context", function(done) {
+    const oETL: IETL = new ETLMock();
+    const oCollector = new CollectMod();
+    oCollector.register(oETL);
+    class MyModClass extends AbstractMod<any, any> {
+      mCalled: boolean;
+      constructor(pName: string) {
+        super(pName);
+        this.mCalled = false;
+      }
+      called(): boolean {
+        return this.mCalled;
+      }
+      handle(pParams: ModParameters): Promise<ModResult<any>> {
+        this.mCalled = true;
+        const contextKey = pParams.config["key"];
+        const contextResult = pParams.context[contextKey];
+        return Promise.resolve(
+          createModResult(ModStatus.CONTINUE, contextResult)
+        );
+      }
+    }
+    const oMod: MyModClass = new MyModClass("contextMod");
+    oMod.register(oETL);
+    const oTested = new DefaultActivity(oETL);
+    const oParams: ActivityParameters = {
+      activityId: "activity1",
+      activityIndex: 0,
+      context: emptyContext(),
+      template: {
+        collects: {
+          collectMe: {
+            result: 123,
+            var: "result_collected"
+          }
+        },
+        contextMod: {
+          key: "result_collected"
+        }
+      },
+      totalActivities: 1
+    };
+    oTested
+      .process(oParams)
+      .then(_result => {
+        // console.log(JSON.stringify(result));
+        // console.log(JSON.stringify(oParams.context));
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        assert.deepEqual(oParams.context.vars, { result_collected: 123 });
         done();
       })
       .catch(err => {

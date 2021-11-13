@@ -191,7 +191,11 @@ export class DefaultActivity implements Activity {
     // const oTemplate = pParams.template;
     // const oStepKey = pStepKeys.shift();
     LOGGER.debug("[%s] Processing mod [%s]", oActivityId, pModKey);
-
+    LOGGER.debug(
+      "[%s] Context variables right now: [%j]",
+      oActivityId,
+      pParams.context.vars
+    );
     if (pModKey === undefined) {
       return Promise.reject(
         new Error("Must pass non-empty array of step/mod keys (2).")

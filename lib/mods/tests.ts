@@ -130,10 +130,12 @@ export default class TestsMod extends AbstractMod<any, any> {
                 rawResult,
                 a
               );
-              data.result.push({ assertion: a, result: result });
+              const dataResult: any = { assertion: a, result: result };
+              data.result.push(dataResult);
               if (!result) {
                 func = reject;
                 data.exit = true;
+                dataResult["vars"] = oVars;
               }
               return result;
               // TODO: kepp adding to data to get a trace of assertions that passed for example
@@ -169,16 +171,15 @@ export default class TestsMod extends AbstractMod<any, any> {
             )
           );
         });
-        Promises.seq(oPromises, oResult).then(
-          function(pData) {
+        Promises.seq(oPromises, oResult)
+          .then(function(pData) {
             LOGGER.debug("[%s] Done processing tests.", pParams.parent);
             resolve(pData);
-          },
-          function(pError) {
-            LOGGER.error("[%s] Error during tests.", pParams.parent, pError);
+          })
+          .catch(pError => {
+            LOGGER.error("[%s] Error during tests.", pParams.parent); // , pError);
             reject(pError);
-          }
-        );
+          });
       } catch (e) {
         reject(e);
         LOGGER.error(

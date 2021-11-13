@@ -112,7 +112,6 @@ describe("tests", function() {
         context: oContext
       })
       .then(function(_pResults: ModResult<State>) {
-        console.log(JSON.stringify(_pResults));
         done();
       })
       .catch((pError: Error) => {

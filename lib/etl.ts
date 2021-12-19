@@ -117,10 +117,10 @@ class ETL extends AbstractETL {
   ) {
     super(pExecutors, pSettings);
   }
-  _createContext(): Context {
+  _createContext(vars?: any): Context {
     const oContext: Context = {
       env: {},
-      vars: {},
+      vars: vars || {},
       etl: { activityId: null, activityIndex: 0, stepName: null }
     };
     Object.keys(process.env).forEach(i => {
@@ -250,7 +250,7 @@ class ETL extends AbstractETL {
       pETLResult.activities.push({
         id: oActivityId,
         status: ActivityStatus.EXIT,
-        error: e
+        error: e as Error
       });
       return Promise.reject(e); // TODO: check e
     }
@@ -307,13 +307,14 @@ class ETL extends AbstractETL {
         activities: []
       };
       const oETLActivities = utils.resolveActivities(pTemplate, pParameters);
+      const oVariables = pTemplate["variables"] || {};
       LOGGER.info("...processing activities: %j", oETLActivities);
       if (!oETLActivities) {
         LOGGER.warn("Nothing to run.");
         return Promise.resolve(oResult);
       }
       const oTotalActivities = oETLActivities.length;
-      const oContext: Context = this._createContext();
+      const oContext: Context = this._createContext(oVariables);
       const oState: ProcessState = {
         template: pTemplate,
         parameters: pParameters,

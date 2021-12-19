@@ -53,6 +53,54 @@ describe("etl", function() {
     });
   }
 
+  it("variables", function(done) {
+    const oExecutor: Executor = new NoOpExecutor();
+    const oTested = new ETL(oExecutor);
+    class MyModClass extends AbstractMod<any, any> {
+      handle({ context }: ModParameters): Promise<ModResult<any>> {
+        return Promise.resolve(
+          createModResult(ModStatus.STOP, {
+            var1: context.vars["var1"],
+            var2: context.vars["var2"]
+          })
+        );
+      }
+    }
+    const oMod: Mod<any> = new MyModClass("testMod");
+    oMod.register(oTested);
+
+    const oETL = {
+      etlSets: {
+        default: ["abc"]
+      },
+      variables: {
+        var1: "123",
+        var2: "456"
+      },
+      abc: {
+        testMod: {
+          dontmatter: true
+        }
+      }
+    };
+    oTested
+      .processTemplate(oETL, {})
+      .then(data => {
+        console.log("# Data: ");
+        console.log(data);
+        assert.equal(data.activities.length, 1);
+        const activityResult = data.activities[0];
+        console.log(activityResult.state);
+        const testModState = activityResult.state["testMod"].state;
+        assert.equal(testModState["var1"], "123");
+        assert.equal(testModState["var2"], "456");
+        done();
+      })
+      .catch(pError => {
+        done(pError);
+      });
+  });
+
   it("resumeFromState", function(done) {
     const oExecutor: Executor = new NoOpExecutor();
     const oTested = new ETL(oExecutor);

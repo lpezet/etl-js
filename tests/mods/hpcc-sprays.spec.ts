@@ -5,6 +5,18 @@ import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import { assert } from "chai";
 import { loadFile } from "../utils";
 import HPCCSpraysMod, { HPCCSpraysState } from "../../lib/mods/hpcc-sprays";
+import { configureLogger } from "../../lib/logger";
+
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
 describe("hpcc-sprays", function() {
   beforeEach(function(done: Function) {
@@ -412,10 +424,10 @@ describe("hpcc-sprays", function() {
       })
       .then(
         function() {
-          done("Update test (xml spray not supported before).");
-        },
-        function() {
           done();
+        },
+        function(e) {
+          done(e);
         }
       );
   });
@@ -499,10 +511,10 @@ describe("hpcc-sprays", function() {
       })
       .then(
         function() {
-          done();
+          done(new Error("Expected error here."));
         },
-        function(pError: Error) {
-          done(pError);
+        function() {
+          done();
         }
       );
   });
@@ -566,6 +578,67 @@ describe("hpcc-sprays", function() {
           done(pError);
         }
       );
+  });
+
+  it("supportedFormats", function(done) {
+    class ExecutorClass extends NoOpExecutor {
+      exec(_pCmd: string, _pCmdOpts: any, pCallback: Callback): void {
+        // console.log('cmd=' + pCmd );
+        pCallback(null, "", "");
+      }
+    }
+
+    const oExecutor = new ExecutorClass();
+    const oTested = new HPCCSpraysMod({
+      "*": { server: "1.2.3.4", username: "foo", password: "bar" }
+    });
+
+    const oTemplate = {
+      root: {
+        single: {
+          format: "csv",
+          sourceIP: "192.168.0.10",
+          sourcePath:
+            "/var/lib/HPCCSystems/mydropzone/noaa/ghcn/daily/by_year/2018.csv",
+          maxrecordsize: 4096,
+          srcCSVseparator: "\\,",
+          srcCSVterminator: "\\n,\\r\\n",
+          srcCSVquote: '"',
+          destinationGroup: "mythor",
+          timeout: 0,
+          espserverIPport: "http://localhost:8010/",
+          maxConnections: 1,
+          allowoverwrite: false,
+          replicate: false,
+          compress: false,
+          sourceCsvEscape: "",
+          failIfNoSourceFile: false,
+          recordStructurePresent: false,
+          quotedTerminator: false,
+          encoding: "ascii",
+          expireDays: -1
+        }
+      }
+    };
+    const tests: Promise<any>[] = [];
+    ["csv", "delimited", "xml", "json", "variable"].forEach(f => {
+      oTemplate.root.single.format = f;
+      tests.push(
+        oTested.handle({
+          parent: "root",
+          config: oTemplate.root,
+          executor: oExecutor,
+          context: emptyContext()
+        })
+      );
+    });
+    Promise.all(tests)
+      .then(() => {
+        done();
+      })
+      .catch(e => {
+        done(e);
+      });
   });
   /*
 	it('fixed',function(done){

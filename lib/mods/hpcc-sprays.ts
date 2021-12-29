@@ -87,13 +87,21 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
       */
     return this.mTemplateEngine.evaluate(pTemplate, pContext);
   }
-  _sprayError(pParent: string, pKey: string): (data: any) => Promise<any> {
+  _sprayError(
+    pParent: string,
+    pKey: string,
+    pConfig: any
+  ): (data: any) => Promise<any> {
+    let message = "";
+    const format = pConfig["format"];
+    if (!format) {
+      message = `Must specify spray format (fixed|csv|delimited|json|variable|variablebigendian|xml|recfmv|recfmb|variablebigendian) for [${pParent}:${pKey}].`;
+    } else {
+      message = `Format specified [${format}] not supported for [${pParent}:${pKey}].`;
+    }
     return function(_pPreviousData: any) {
       const data = {
-        error:
-          "Must specify spray format (fixed|csv|delimited|xml|recfmv|recfmb) for file [" +
-          pKey +
-          "].",
+        error: new Error(message),
         result: null,
         message: null,
         exit: false,
@@ -101,11 +109,7 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
         _stdout: null,
         _stderr: null
       };
-      LOGGER.error(
-        "[%s] Must specify spray format (fixed|csv|delimited|xml|recfmv|recfmb) for file [%s].",
-        pParent,
-        pKey
-      );
+      LOGGER.error(`[%s] ${message}`, pParent, pKey);
       return Promise.reject(data);
     };
   }
@@ -133,30 +137,6 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
       });
     };
   };
-  _sprayXml(
-    pParent: string,
-    _pKey: string,
-    _pSprayConfig: any,
-    _pExecutor: Executor,
-    _pContext: Context,
-    _pTemplateIndex: number
-  ): (data: any) => Promise<any> {
-    return function(_pPreviousData: any) {
-      return new Promise(function(_resolve, reject) {
-        const data = {
-          error: "Spray fixed is not yet supported.",
-          result: null,
-          message: null,
-          exit: false,
-          pass: true,
-          _stdout: null,
-          _stderr: null
-        };
-        LOGGER.error("[%s] Spray xml is not yet supported.", pParent);
-        reject(data);
-      });
-    };
-  }
   _sprayDelimited(
     pParent: string,
     pKey: string,
@@ -353,7 +333,7 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
           });
         } catch (e) {
           const data: Data = {
-            error: e,
+            error: e as Error,
             exit: false,
             pass: true
           };
@@ -445,10 +425,13 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
             }
 
             if (!oSprayConfig.format) {
-              oPromises.push(this._sprayError(pParams.parent, e));
+              oPromises.push(this._sprayError(pParams.parent, e, oSprayConfig));
             } else {
               switch (oSprayConfig.format) {
                 case "delimited":
+                case "json":
+                case "xml":
+                case "variable":
                 case "csv":
                   oPromises.push(
                     this._sprayDelimited(
@@ -461,6 +444,9 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
                     )
                   );
                   break;
+                case "recfmvb":
+                case "recfmv":
+                case "variablebigendian":
                 case "fixed":
                   oPromises.push(
                     this._sprayFixed(
@@ -473,23 +459,9 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
                     )
                   );
                   break;
-                case "xml":
-                  oPromises.push(
-                    this._sprayXml(
-                      pParams.parent,
-                      e,
-                      oSprayConfig,
-                      pParams.executor,
-                      pParams.context,
-                      j
-                    )
-                  );
-                  break;
                 default:
-                  LOGGER.error(
-                    "[%s] Spray format [%s] not supported.",
-                    pParams.parent,
-                    oSprayConfig.format
+                  oPromises.push(
+                    this._sprayError(pParams.parent, e, oSprayConfig)
                   );
                   break;
               }

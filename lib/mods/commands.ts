@@ -36,46 +36,9 @@ const CHAIN_EVAL = function(pValue: ModResult<CommandsState>): boolean {
 
 // export default class CommandsMod implements Mod {
 export default class CommandsMod extends AbstractMod<CommandsState, any> {
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("commands", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluateToIndex(
-    pTemplate: string,
-    pContext: Context,
-    pIndex: number
-  ): string {
-    const v = this._evaluate(pTemplate, pContext);
-    if (v && v.length > pIndex) return v[pIndex];
-    throw new Error(
-      "Unbalanced template (resolved to " +
-        v?.length +
-        " elements but wanted #" +
-        pIndex +
-        ")."
-    );
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-          var oContext = JSON.parse(JSON.stringify(pContext.global));
-          oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-          console.log('Merged context=');
-          console.dir( oContext );
-          var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-          console.log('Result=');
-          console.dir( oResult );
-          */
-    return this.mTemplateEngine.evaluate(pTemplate, pContext); // pContext.global );
-  }
-  _evaluateObject(pTemplate: any, pContext: Context): any {
-    const result: any = {};
-    this.mTemplateEngine.evaluateObject(pTemplate, pContext, result); // pContext.global );
-    return result;
+    super.templateEngine = new TemplateEngine();
   }
   _singleExec(
     pParent: string,
@@ -113,19 +76,15 @@ export default class CommandsMod extends AbstractMod<CommandsState, any> {
         // try {
         LOGGER.debug("[%s] Executing command [%s]...", pParent, pKey);
         let oCwd = oCmdSpecs["cwd"];
-        if (oCwd && oCwd.indexOf("{{") >= 0) {
-          oCwd = this._evaluateToIndex(oCwd, pContext, pTemplateIndex);
-        }
+        oCwd = super.evaluateSingle(oCwd, pContext, pTemplateIndex);
 
         let oTest = oCmdSpecs["test"];
-        if (oTest && oTest.indexOf("{{") >= 0) {
-          oTest = this._evaluateToIndex(oTest, pContext, pTemplateIndex);
-        }
+        oTest = super.evaluateSingle(oTest, pContext, pTemplateIndex);
+
         if (Array.isArray(oTest)) oTest = oTest[0];
         let oCmd = oCmdSpecs["command"];
-        if (oCmd && oCmd.indexOf("{{") >= 0) {
-          oCmd = this._evaluateToIndex(oCmd, pContext, pTemplateIndex);
-        }
+        oCmd = super.evaluateSingle(oCmd, pContext, pTemplateIndex);
+
         if (Array.isArray(oCmd)) oCmd = oCmd[0];
         const oEnv = oCmdSpecs["env"];
 
@@ -469,7 +428,7 @@ export default class CommandsMod extends AbstractMod<CommandsState, any> {
       } else {
         const oConfig: any = {};
         oConfig[pKey] = pSpecs;
-        const oConfigs = this._evaluateObject(oConfig, pContext);
+        const oConfigs = super.evaluateObject(oConfig, pContext);
         LOGGER.debug(
           "[%s] Found tags in command key. Original:\n%j\nAfter reduction:\n%j",
           pParent,

@@ -47,13 +47,9 @@ export type Data = {
 };
 
 export default class HPCCDespraysMod extends AbstractMod<any, any> {
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("hpcc-desprays", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   _desprayError(pParent: string, pKey: string): () => Promise<any> {
     return function() {
@@ -82,7 +78,8 @@ export default class HPCCDespraysMod extends AbstractMod<any, any> {
     pKey: string,
     pConfig: any,
     pExecutor: Executor,
-    pContext: Context
+    pContext: Context,
+    pTemplateIndex: number
   ): (
     data: ModResult<HPCCDespraysState>
   ) => Promise<ModResult<HPCCDespraysState>> {
@@ -95,9 +92,10 @@ export default class HPCCDespraysMod extends AbstractMod<any, any> {
       return new Promise((resolve, reject) => {
         try {
           const safeParseInt = function(
-            pValue: string,
+            pValue: string | null,
             pDefault: number
           ): number {
+            if (pValue === null) return pDefault;
             try {
               return parseInt(pValue);
             } catch (e) {
@@ -140,58 +138,56 @@ export default class HPCCDespraysMod extends AbstractMod<any, any> {
               );
               return;
             }
-
+            const value = super.evaluateSingle(
+              pConfig[k],
+              pContext,
+              pTemplateIndex
+            );
             switch (k) {
               // case "espserveripport": // this is from ECL SprayDelimited documentation, not from dfuplus...
               case "server":
-                if (pConfig[k]) oCmdArgs.push("server=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("server=" + value);
                 break;
               case "username":
-                if (pConfig[k]) oCmdArgs.push("username=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("username=" + value);
                 break;
               case "password":
-                if (pConfig[k]) oCmdArgs.push("password=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("password=" + value);
                 break;
               case "logicalname":
-                if (pConfig[k]) oCmdArgs.push("srcname=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("srcname=" + pConfig[k]);
                 break;
               case "destinationip":
-                if (pConfig[k]) oCmdArgs.push("dstip=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("dstip=" + pConfig[k]);
                 break;
               case "destinationpath":
-                if (pConfig[k]) {
-                  let oSrcPath = pConfig[k];
-                  // console.log('srcPath=' + oSrcPath);
-                  if (oSrcPath.indexOf("{{") >= 0) {
-                    const v = this._evaluate(oSrcPath, pContext);
-                    if (v) oSrcPath = v[0];
-                  }
-                  oCmdArgs.push("dstfile=" + oSrcPath);
+                if (value !== null) {
+                  oCmdArgs.push("dstfile=" + value);
                 }
                 break;
               case "destinationxml":
-                if (pConfig[k]) oCmdArgs.push("dstxml=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("dstxml=" + value);
                 break;
               case "maxconnections":
-                if (pConfig[k]) oCmdArgs.push("connect=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("connect=" + value);
                 break;
               case "timeout": {
-                const oTimeoutValue = safeParseInt(pConfig[k], -999);
+                const oTimeoutValue = safeParseInt(value, -999);
                 if (oTimeoutValue === 0) oCmdArgs.push("nowait=1");
                 else oCmdArgs.push("nowait=0");
                 break;
               }
               case "allowoverwrite":
-                oCmdArgs.push("overwrite=" + zeroOne(pConfig[k]));
+                oCmdArgs.push("overwrite=" + zeroOne(value));
                 break;
               case "replicate":
-                oCmdArgs.push("replicate=" + zeroOne(pConfig[k]));
+                oCmdArgs.push("replicate=" + zeroOne(value));
                 break;
               case "compress":
-                oCmdArgs.push("compress=" + zeroOne(pConfig[k]));
+                oCmdArgs.push("compress=" + zeroOne(value));
                 break;
               case "splitprefix":
-                if (pConfig[k]) oCmdArgs.push("splitprefix=" + pConfig[k]);
+                if (value !== null) oCmdArgs.push("splitprefix=" + value);
                 break;
               default:
                 LOGGER.warn(
@@ -303,40 +299,36 @@ export default class HPCCDespraysMod extends AbstractMod<any, any> {
         };
         const oPromises: ((data: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
-          let oLogicalFileName = i;
-          if (oLogicalFileName.includes("{{")) {
-            const v = this._evaluate(oLogicalFileName, pParams.context);
-            if (v && v.length >= 1) oLogicalFileName = v[0];
-            // TODO: log in case length not right or v null
-          }
-          const oDesprayConfig = this._readConfig(
-            pParams.parent,
-            i,
-            pParams.config[i]
-          );
-          if (!oDesprayConfig.logicalname) {
-            oDesprayConfig.logicalname = oLogicalFileName;
-          }
+          const oLogicalFileNames = super.evaluate(i, pParams.context) || [i];
+          oLogicalFileNames.forEach((f: string, j: number) => {
+            const oDesprayConfig = this._readConfig(
+              pParams.parent,
+              i,
+              pParams.config[i]
+            );
+            if (!oDesprayConfig.logicalname) {
+              oDesprayConfig.logicalname = f;
+            }
 
-          if (
-            (!oDesprayConfig.destinationpath ||
-              !oDesprayConfig.destinationip) &&
-            !oDesprayConfig.destinationxml
-          ) {
-            oPromises.push(
-              this._desprayError(pParams.parent, oLogicalFileName)
-            );
-          } else {
-            oPromises.push(
-              this._despray(
-                pParams.parent,
-                oLogicalFileName,
-                oDesprayConfig,
-                pParams.executor,
-                pParams.context
-              )
-            );
-          }
+            if (
+              (!oDesprayConfig.destinationpath ||
+                !oDesprayConfig.destinationip) &&
+              !oDesprayConfig.destinationxml
+            ) {
+              oPromises.push(this._desprayError(pParams.parent, f));
+            } else {
+              oPromises.push(
+                this._despray(
+                  pParams.parent,
+                  f,
+                  oDesprayConfig,
+                  pParams.executor,
+                  pParams.context,
+                  j
+                )
+              );
+            }
+          });
         });
         Promises.seq(oPromises, oResult).then(
           function(pData: ModResult<HPCCDespraysState>) {

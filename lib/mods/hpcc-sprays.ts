@@ -66,26 +66,9 @@ const asPromised = function(
 */
 
 export default class HPCCSpraysMod extends AbstractMod<any, any> {
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("hpcc-sprays", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-      var oContext = JSON.parse(JSON.stringify(pContext.global));
-      oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-      console.log('Merged context=');
-      console.dir( oContext );
-      var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-      console.log('Result=');
-      console.dir( oResult );
-      */
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   _sprayError(
     pParent: string,
@@ -154,9 +137,10 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
       return new Promise((resolve, reject) => {
         try {
           const safeParseInt = function(
-            pValue: string,
+            pValue: string | null,
             pDefault: number
           ): number {
+            if (pValue === null) return pDefault;
             try {
               return parseInt(pValue);
             } catch (e) {
@@ -206,91 +190,92 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
             if (!DEFAULT_ATTRS[k] && !CSV_ATTRS[k]) return; // TODO: log???
             // if ( ! pSprayConfig[k] ) continue; //TODO: sure?
 
+            const value = super.evaluateSingle(
+              pSprayConfig[k],
+              pContext,
+              pTemplateIndex
+            );
             switch (k) {
               // case "espserveripport": // this is from ECL SprayDelimited documentation, not from dfuplus...
               case "server":
-                oCmdArgs.push("server=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("server=" + value);
                 break;
               case "username":
-                oCmdArgs.push("username=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("username=" + value);
                 break;
               case "password":
-                oCmdArgs.push("password=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("password=" + value);
                 break;
               case "sourceip":
-                oCmdArgs.push("srcip=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("srcip=" + value);
                 break;
               case "sourcepath":
-                if (pSprayConfig[k]) {
-                  let oSrcPath = pSprayConfig[k];
-                  // console.log('srcPath=' + oSrcPath);
-                  if (oSrcPath.indexOf("{{") >= 0) {
-                    const oSrcPaths = this._evaluate(oSrcPath, pContext);
-                    if (oSrcPaths && oSrcPaths.length > pTemplateIndex) {
-                      oSrcPath = oSrcPaths[pTemplateIndex];
-                    } // TODO: else, log????
-                  }
-                  oCmdArgs.push("srcfile=" + oSrcPath);
-                }
+                if (value !== null) oCmdArgs.push("srcfile=" + value);
                 break;
               case "format":
-                oCmdArgs.push("format=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("format=" + value);
                 break;
               case "maxconnections":
-                oCmdArgs.push("connect=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("connect=" + value);
                 break;
               case "timeout": {
-                const oTimeoutValue = safeParseInt(pSprayConfig[k], -999);
+                const oTimeoutValue = safeParseInt(value, -999);
                 if (oTimeoutValue === 0) oCmdArgs.push("nowait=1");
                 else oCmdArgs.push("nowait=0");
                 break;
               }
               case "destinationlogicalname":
-                oCmdArgs.push("dstname=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("dstname=" + value);
                 break;
               case "destinationgroup":
-                oCmdArgs.push("dstcluster=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("dstcluster=" + value);
                 break;
               case "allowoverwrite":
-                oCmdArgs.push("overwrite=" + zeroOne(pSprayConfig[k]));
+                oCmdArgs.push("overwrite=" + zeroOne(value));
                 break;
               case "replicate":
-                oCmdArgs.push("replicate=" + zeroOne(pSprayConfig[k]));
+                oCmdArgs.push("replicate=" + zeroOne(value));
                 break;
               case "compress":
-                oCmdArgs.push("compress=" + zeroOne(pSprayConfig[k]));
+                oCmdArgs.push("compress=" + zeroOne(value));
                 break;
               case "failifnosourcefile":
-                oCmdArgs.push("failifnosourcefile=" + zeroOne(pSprayConfig[k]));
+                oCmdArgs.push("failifnosourcefile=" + zeroOne(value));
                 break;
               case "expiredays":
-                oCmdArgs.push("expiredays=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("expiredays=" + value);
                 break;
               case "quotedterminator":
-                oCmdArgs.push("quotedTerminator=" + zeroOne(pSprayConfig[k]));
+                if (value !== null) {
+                  oCmdArgs.push("quotedTerminator=" + zeroOne(value));
+                }
                 break;
               case "recordstructurepresent":
-                oCmdArgs.push(
-                  "recordstructurepresent=" + zeroOne(pSprayConfig[k])
-                );
+                if (value !== null) {
+                  oCmdArgs.push("recordstructurepresent=" + zeroOne(value));
+                }
                 break;
               case "encoding":
-                oCmdArgs.push("encoding=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("encoding=" + value);
                 break;
               case "srccsvseparator":
-                oCmdArgs.push("srccsvseparator=" + reEscape(pSprayConfig[k]));
+                if (value !== null) {
+                  oCmdArgs.push("srccsvseparator=" + reEscape(value));
+                }
                 break;
               case "srccsvterminator":
-                oCmdArgs.push("srccsvterminator=" + reEscape(pSprayConfig[k]));
+                if (value !== null) {
+                  oCmdArgs.push("srccsvterminator=" + reEscape(value));
+                }
                 break;
               case "srccsvquote":
-                oCmdArgs.push("quote=\\" + pSprayConfig[k]); // TODO: is that right to escape here?
+                if (value !== null) oCmdArgs.push("quote=\\" + value); // TODO: is that right to escape here?
                 break;
               case "maxrecordsize":
-                oCmdArgs.push("maxrecordsize=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("maxrecordsize=" + value);
                 break;
               case "sourcecsvescape":
-                oCmdArgs.push("escape=" + pSprayConfig[k]);
+                if (value !== null) oCmdArgs.push("escape=" + value);
                 break;
               default:
                 LOGGER.warn(
@@ -408,12 +393,7 @@ export default class HPCCSpraysMod extends AbstractMod<any, any> {
         };
         const oPromises: ((res: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
-          const oLogicalFileName = i;
-          let oLogicalFileNames = [oLogicalFileName];
-          if (oLogicalFileName.includes("{{")) {
-            const v = this._evaluate(oLogicalFileName, pParams.context);
-            if (v && v.length >= 1) oLogicalFileNames = v;
-          }
+          const oLogicalFileNames = super.evaluate(i, pParams.context) || [i];
           oLogicalFileNames.forEach((e: string, j: number) => {
             const oSprayConfig = this._readConfig(
               pParams.parent,

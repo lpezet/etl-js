@@ -49,10 +49,9 @@ export type Data = {
 };
 
 export default class FilesMod extends AbstractMod<any, any> {
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("files", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
+    super.templateEngine = new TemplateEngine();
   }
   _handlePerms(
     pParent: string,
@@ -180,9 +179,6 @@ export default class FilesMod extends AbstractMod<any, any> {
       });
     };
   }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
-  }
   _download(
     pParent: string,
     pExecutor: Executor,
@@ -192,13 +188,9 @@ export default class FilesMod extends AbstractMod<any, any> {
     pContext: Context
   ): (data: ModResult<FilesState>) => Promise<ModResult<FilesState>> {
     let oSources = [pSource];
-    if (pSource.includes("{{")) {
-      oSources = this._evaluate(pSource, pContext) || [];
-    }
+    oSources = super.evaluate(pSource, pContext) || oSources;
     let oTargets = [pTarget];
-    if (pTarget.includes("{{")) {
-      oTargets = this._evaluate(pTarget, pContext) || [];
-    }
+    oTargets = super.evaluate(pTarget, pContext) || oTargets;
     // TODO: check when oSources and oTargets.length == 0
     if (oSources.length !== oTargets.length) {
       return function() {

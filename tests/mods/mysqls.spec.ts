@@ -5,6 +5,17 @@ import MySQLsMod, { MySQLState } from "../../lib/mods/mysqls";
 import { Callback, Executor, NoOpExecutor } from "../../lib/executors";
 import { loadFile } from "../utils";
 import Context, { emptyContext } from "../../lib/context";
+import { configureLogger } from "../../lib/logger";
+if (process.env.DEBUG) {
+  configureLogger({
+    appenders: {
+      console: { type: "console", layout: { type: "colored" } }
+    },
+    categories: {
+      default: { appenders: ["console"], level: "all" }
+    }
+  });
+}
 
 describe("mysqls", function() {
   beforeEach(function(done: Function) {

@@ -235,13 +235,9 @@ const _trimLastLineBreak = function(pValue: any): any {
 
 export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
   mSettings: any;
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: MySQLSettings) {
     super("mysqls", pSettings);
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   _applySettingsOld(
     pParent: string,
@@ -443,289 +439,281 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
           i => {
             // for (const i in pConfig) {
             if (pConfig[i] === null || pConfig[i] === undefined) return;
+            const rawValue = pConfig[i];
+            let value = rawValue;
+            if (typeof value === "string") {
+              value =
+                super.evaluateSingle(
+                  rawValue as string,
+                  pContext,
+                  pTemplateIndex
+                ) || rawValue;
+            }
             switch (i) {
               case "auto_rehash":
-                if (pConfig[i]) oCmdArgs.push("--auto-rehash");
+                if (value) oCmdArgs.push("--auto-rehash");
                 break;
               case "auto_vertical_output":
-                if (pConfig[i]) oCmdArgs.push("--auto-vertical-output");
+                if (value) oCmdArgs.push("--auto-vertical-output");
                 break;
               case "batch":
-                if (pConfig[i]) oCmdArgs.push("--batch");
+                if (value) oCmdArgs.push("--batch");
                 break;
               case "binary_as_hex":
-                if (pConfig[i]) oCmdArgs.push("--binary-as-hex");
+                if (value) oCmdArgs.push("--binary-as-hex");
                 break;
               case "binary_mode":
-                if (pConfig[i]) oCmdArgs.push("--binary-mode");
+                if (value) oCmdArgs.push("--binary-mode");
                 break;
               case "bind_address":
-                oCmdArgs.push(`--bind-address=${pConfig[i]}`);
+                oCmdArgs.push(`--bind-address=${value}`);
                 break;
               case "character_sets_dir":
-                oCmdArgs.push(`--character-sets-dir=${pConfig[i]}`);
+                oCmdArgs.push(`--character-sets-dir=${value}`);
                 break;
               case "column_names":
-                oCmdArgs.push(`--columns=${pConfig[i]}`);
+                oCmdArgs.push(`--columns=${value}`);
                 break;
               case "column_type_info":
-                if (pConfig[i]) oCmdArgs.push("--column-type-info");
+                if (value) oCmdArgs.push("--column-type-info");
                 break;
               case "comments":
-                if (pConfig[i]) oCmdArgs.push("--comments");
+                if (value) oCmdArgs.push("--comments");
                 break;
               case "compress":
-                if (pConfig[i]) oCmdArgs.push("--compress");
+                if (value) oCmdArgs.push("--compress");
                 break;
               case "connect_expired_password":
-                if (pConfig[i]) oCmdArgs.push("--connect-expired-password");
+                if (value) oCmdArgs.push("--connect-expired-password");
                 break;
               case "connect_timeout":
-                oCmdArgs.push(`--connect_timeout=${pConfig[i]}`);
+                oCmdArgs.push(`--connect_timeout=${value}`);
                 break;
               // case "database":
               case "debug":
-                oCmdArgs.push(`--debug=${pConfig[i]}`);
+                oCmdArgs.push(`--debug=${value}`);
                 break;
               case "debug_check":
-                if (pConfig[i]) oCmdArgs.push("--debug-check");
+                if (value) oCmdArgs.push("--debug-check");
                 break;
               case "debug_info":
-                if (pConfig[i]) oCmdArgs.push("--debug-info");
+                if (value) oCmdArgs.push("--debug-info");
                 break;
               case "default_auth":
-                oCmdArgs.push(`--default-auth=${pConfig[i]}`);
+                oCmdArgs.push(`--default-auth=${value}`);
                 break;
               case "default_character_set":
-                oCmdArgs.push(`--default-character-set=${pConfig[i]}`);
+                oCmdArgs.push(`--default-character-set=${value}`);
                 break;
               case "defaults_extra_file":
-                oCmdArgs.push(`--defaults-extra-file=${pConfig[i]}`);
+                oCmdArgs.push(`--defaults-extra-file=${value}`);
                 break;
               case "defaults_file":
-                oCmdArgs.push(`--defaults-file=${pConfig[i]}`);
+                oCmdArgs.push(`--defaults-file=${value}`);
                 break;
               case "defaults_group_suffix":
-                oCmdArgs.push(`--defaults-group-suffix=${pConfig[i]}`);
+                oCmdArgs.push(`--defaults-group-suffix=${value}`);
                 break;
               case "delimiter":
-                oCmdArgs.push(`--delimiter=${pConfig[i]}`);
+                oCmdArgs.push(`--delimiter=${value}`);
                 break;
               case "enable_cleartext_plugin":
-                if (pConfig[i]) oCmdArgs.push("--enable-cleartext-plugin");
+                if (value) oCmdArgs.push("--enable-cleartext-plugin");
                 break;
               case "execute": {
-                // TODO: need to escape?
-                let oExecuteRaw = pConfig[i] || "";
-                if (oExecuteRaw.includes("{{")) {
-                  const oExecuteRaws = this._evaluate(oExecuteRaw, pContext);
-                  // TODO: check index vs length
-                  if (oExecuteRaws && oExecuteRaws.length > pTemplateIndex) {
-                    oExecuteRaw = oExecuteRaws[pTemplateIndex];
-                  }
-                  // TODO: else, log???
+                if (value !== null) {
+                  oCmdArgs.push(
+                    "--execute='" + escapeSingleQuotes(value as string) + "'"
+                  );
                 }
-                oCmdArgs.push(
-                  "--execute='" + escapeSingleQuotes(oExecuteRaw) + "'"
-                );
-
                 break;
               }
               case "force":
-                if (pConfig[i]) oCmdArgs.push("--force");
+                if (value) oCmdArgs.push("--force");
                 break;
               case "get_server_public_key":
-                if (pConfig[i]) oCmdArgs.push("--get-server-public-key");
+                if (value) oCmdArgs.push("--get-server-public-key");
                 break;
               case "host":
-                oCmdArgs.push("--host=" + pConfig[i]);
+                oCmdArgs.push("--host=" + value);
                 break;
               case "html":
-                if (pConfig[i]) oCmdArgs.push("--html");
+                if (value) oCmdArgs.push("--html");
                 break;
               case "ignore_spaces":
-                if (pConfig[i]) oCmdArgs.push("--ignore-spaces");
+                if (value) oCmdArgs.push("--ignore-spaces");
                 break;
               // case "init_command":
               case "line_numbers":
-                if (pConfig[i]) oCmdArgs.push("--line-numbers");
+                if (value) oCmdArgs.push("--line-numbers");
                 break;
               case "local_infile":
-                oCmdArgs.push(`--local-infile=${pConfig[i]}`);
+                oCmdArgs.push(`--local-infile=${value}`);
                 break;
               case "login_path":
-                oCmdArgs.push(`--login-path=${pConfig[i]}`);
+                oCmdArgs.push(`--login-path=${value}`);
                 break;
               case "max_allowed_packet":
-                oCmdArgs.push(`--max_allowed_packet=${pConfig[i]}`);
+                oCmdArgs.push(`--max_allowed_packet=${value}`);
                 break;
               case "max_join_size":
-                oCmdArgs.push(`--max_join_size=${pConfig[i]}`);
+                oCmdArgs.push(`--max_join_size=${value}`);
                 break;
               case "named_commands":
-                if (pConfig[i]) oCmdArgs.push("--named-commands");
+                if (value) oCmdArgs.push("--named-commands");
                 break;
               case "net_buffer_length":
-                oCmdArgs.push(`--net_buffer_length=${pConfig[i]}`);
+                oCmdArgs.push(`--net_buffer_length=${value}`);
                 break;
               case "no_auto_rehash":
-                if (pConfig[i]) oCmdArgs.push("--no-auto-rehash");
+                if (value) oCmdArgs.push("--no-auto-rehash");
                 break;
               case "no_beep":
-                if (pConfig[i]) oCmdArgs.push("--no-beep");
+                if (value) oCmdArgs.push("--no-beep");
                 break;
               case "no_defaults":
-                if (pConfig[i]) oCmdArgs.push("--no-defaults");
+                if (value) oCmdArgs.push("--no-defaults");
                 break;
               case "one_database":
-                if (pConfig[i]) oCmdArgs.push("--one-database");
+                if (value) oCmdArgs.push("--one-database");
                 break;
               case "output":
                 // eslint-disable-next-line no-case-declarations
-                let oOutputRaw = pConfig[i] || "";
-                if (oOutputRaw.includes("{{")) {
-                  const oOutputRaws = this._evaluate(oOutputRaw, pContext);
-                  // TODO: check index vs length
-                  if (oOutputRaws && oOutputRaws.length > pTemplateIndex) {
-                    oOutputRaw = oOutputRaws[pTemplateIndex];
-                  }
-                  // TODO: else, log???
-                }
-                output = oOutputRaw;
+                output = value as string;
                 break;
               case "pager":
-                oCmdArgs.push(`--pager=${pConfig[i]}`);
+                oCmdArgs.push(`--pager=${value}`);
                 break;
               case "password":
-                oCmdArgs.push(`--password=${pConfig[i]}`);
+                oCmdArgs.push(`--password=${value}`);
                 break;
               case "pipe":
-                if (pConfig[i]) oCmdArgs.push("--pipe");
+                if (value) oCmdArgs.push("--pipe");
                 break;
               case "plugin_dir":
-                oCmdArgs.push(`--plugin-dir=${pConfig[i]}`);
+                oCmdArgs.push(`--plugin-dir=${value}`);
                 break;
               case "port":
-                oCmdArgs.push(`--port=${pConfig[i]}`);
+                oCmdArgs.push(`--port=${value}`);
                 break;
               // case "print-defaults":
               // case "prompt": // ???
               case "protocol":
-                oCmdArgs.push(`--protocol=${pConfig[i]}`);
+                oCmdArgs.push(`--protocol=${value}`);
                 break;
               case "quick":
-                if (pConfig[i]) oCmdArgs.push("--quick");
+                if (value) oCmdArgs.push("--quick");
                 break;
               case "raw":
-                if (pConfig[i]) oCmdArgs.push("--raw");
+                if (value) oCmdArgs.push("--raw");
                 break;
               case "reconnect":
-                if (pConfig[i]) oCmdArgs.push("--reconnect");
+                if (value) oCmdArgs.push("--reconnect");
                 break;
               case "i_am_a_dummy":
-                if (pConfig[i]) oCmdArgs.push("--i-am-a-dummy");
+                if (value) oCmdArgs.push("--i-am-a-dummy");
                 break;
               case "safe_updates":
-                if (pConfig[i]) oCmdArgs.push("--safe-updates");
+                if (value) oCmdArgs.push("--safe-updates");
                 break;
               case "secure_auth":
-                if (pConfig[i]) oCmdArgs.push("--secure-auth");
+                if (value) oCmdArgs.push("--secure-auth");
                 break;
               case "select_limit":
-                oCmdArgs.push(`--select_limit=${pConfig[i]}`);
+                oCmdArgs.push(`--select_limit=${value}`);
                 break;
               case "server_public_key_path":
-                oCmdArgs.push(`--server-public-key-path=${pConfig[i]}`);
+                oCmdArgs.push(`--server-public-key-path=${value}`);
                 break;
               case "shared_memory_base_name":
-                oCmdArgs.push(`--shared-memory-base-name=${pConfig[i]}`);
+                oCmdArgs.push(`--shared-memory-base-name=${value}`);
                 break;
               case "show_warnings":
-                if (pConfig[i]) oCmdArgs.push("--show-warnings");
+                if (value) oCmdArgs.push("--show-warnings");
                 break;
               case "sigint_ignore":
-                if (pConfig[i]) oCmdArgs.push("--sigint-ignore");
+                if (value) oCmdArgs.push("--sigint-ignore");
                 break;
               case "silent":
-                if (pConfig[i]) oCmdArgs.push("--silent");
+                if (value) oCmdArgs.push("--silent");
                 break;
               case "skip_auto_rehash":
-                if (pConfig[i]) oCmdArgs.push("--skip-auto-rehash");
+                if (value) oCmdArgs.push("--skip-auto-rehash");
                 break;
               case "skip_column_names":
-                if (pConfig[i]) oCmdArgs.push("--skip-column-names");
+                if (value) oCmdArgs.push("--skip-column-names");
                 break;
               case "skip_line_numbers":
-                if (pConfig[i]) oCmdArgs.push("--skip-line-numbers");
+                if (value) oCmdArgs.push("--skip-line-numbers");
                 break;
               case "skip_named_commands":
-                if (pConfig[i]) oCmdArgs.push("--skip-named-commands");
+                if (value) oCmdArgs.push("--skip-named-commands");
                 break;
               case "skip_pager":
-                if (pConfig[i]) oCmdArgs.push("--skip-pager");
+                if (value) oCmdArgs.push("--skip-pager");
                 break;
               case "skip_reconnect":
-                if (pConfig[i]) oCmdArgs.push("--skip-reconnect");
+                if (value) oCmdArgs.push("--skip-reconnect");
                 break;
               case "socket":
-                oCmdArgs.push(`--socket=${pConfig[i]}`);
+                oCmdArgs.push(`--socket=${value}`);
                 break;
               case "ssl_ca":
-                oCmdArgs.push(`--ssl-ca=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-ca=${value}`);
                 break;
               case "ssl_capath":
-                oCmdArgs.push(`--ssl-capath=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-capath=${value}`);
                 break;
               case "ssl_cert":
-                oCmdArgs.push(`--ssl-cert=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-cert=${value}`);
                 break;
               case "ssl_cipher":
-                oCmdArgs.push(`--ssl-cipher=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-cipher=${value}`);
                 break;
               case "ssl_crl":
-                oCmdArgs.push(`--ssl-crl=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-crl=${value}`);
                 break;
               case "ssl_crlpath":
-                oCmdArgs.push(`--ssl-crlpath=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-crlpath=${value}`);
                 break;
               case "ssl_fips_mode":
-                oCmdArgs.push(`--ssl-fips_mode=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-fips_mode=${value}`);
                 break;
               case "ssl_key":
-                oCmdArgs.push(`--ssl-key=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-key=${value}`);
                 break;
               case "ssl_mode":
-                oCmdArgs.push(`--ssl-mode=${pConfig[i]}`);
+                oCmdArgs.push(`--ssl-mode=${value}`);
                 break;
               case "syslog":
-                if (pConfig[i]) oCmdArgs.push("--syslog");
+                if (value) oCmdArgs.push("--syslog");
                 break;
               case "table":
-                if (pConfig[i]) oCmdArgs.push("--table");
+                if (value) oCmdArgs.push("--table");
                 break;
               case "tee":
-                oCmdArgs.push(`--tee=${pConfig[i]}`);
+                oCmdArgs.push(`--tee=${value}`);
                 break;
               case "tls_ciphersuites":
-                oCmdArgs.push(`--tls-ciphersuites=${pConfig[i]}`);
+                oCmdArgs.push(`--tls-ciphersuites=${value}`);
                 break;
               case "tls_version":
-                oCmdArgs.push(`--tls-version=${pConfig[i]}`);
+                oCmdArgs.push(`--tls-version=${value}`);
                 break;
               case "unbuffered":
-                if (pConfig[i]) oCmdArgs.push("--unbuffered");
+                if (value) oCmdArgs.push("--unbuffered");
                 break;
               case "user":
-                oCmdArgs.push(`--user=${pConfig[i]}`);
+                oCmdArgs.push(`--user=${value}`);
                 break;
               case "vertical":
-                if (pConfig[i]) oCmdArgs.push("--vertical");
+                if (value) oCmdArgs.push("--vertical");
                 break;
               case "wait":
-                if (pConfig[i]) oCmdArgs.push("--wait");
+                if (value) oCmdArgs.push("--wait");
                 break;
               case "xml":
-                if (pConfig[i]) oCmdArgs.push("--xml");
+                if (value) oCmdArgs.push("--xml");
                 break;
               default:
                 break;
@@ -735,13 +723,8 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
         );
         // must be last
         let oDBName = pConfig["db_name"];
-        if (oDBName.includes("{{")) {
-          const oDBNames = this._evaluate(oDBName, pContext);
-          if (oDBNames && oDBNames.length > pTemplateIndex) {
-            oDBName = oDBNames[pTemplateIndex];
-          }
-          // TODO: else, log????
-        }
+        oDBName =
+          super.evaluateSingle(oDBName, pContext, pTemplateIndex) || oDBName;
         oCmdArgs.push(oDBName);
         let oCmd = "/usr/bin/mysql " + oCmdArgs.join(" ");
         // oCmdArgs.push( pKey );
@@ -812,11 +795,7 @@ export default class MySQLsMod extends AbstractMod<MySQLState, MySQLSettings> {
         const oPromises: ((res: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
           const oConfig = pParams.config[i] as MySQLOptionsWithDBName;
-          let oKeys: string[] = [i];
-          if (i.includes("{{")) {
-            const v = this._evaluate(i, pParams.context);
-            if (v) oKeys = v;
-          }
+          const oKeys: string[] = super.evaluate(i, pParams.context) || [i];
           oKeys.forEach((e, j) => {
             const oOptions = this._readOptions(
               pParams.parent,

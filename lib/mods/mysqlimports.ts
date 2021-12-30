@@ -38,13 +38,9 @@ const asPromised = function(
 
 export default class MySQLImportsMod extends AbstractMod<any, any> {
   mSettings: any;
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("mysqlimports", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   _applySettings(pParent: string, pKey: string, pConfig: any): void {
     const applySettings = function(pConfig: any, pSettings: any): void {
@@ -380,20 +376,8 @@ export default class MySQLImportsMod extends AbstractMod<any, any> {
           // console.log('i=' + i + ', config=' + pConfig[i]);
         }
         let oDBName: string = pConfig["db_name"];
-        if (oDBName.includes("{{")) {
-          const oDBNames = this._evaluate(oDBName, pContext) || [];
-          if (oDBNames.length < pTemplateIndex + 1) {
-            return reject(
-              new Error(
-                "Unbalanced template. Template index at " +
-                  pTemplateIndex +
-                  ", total db names = " +
-                  oDBNames.length
-              )
-            );
-          }
-          oDBName = oDBNames[pTemplateIndex];
-        }
+        oDBName =
+          super.evaluateSingle(oDBName, pContext, pTemplateIndex) || oDBName;
         oCmdArgs.push(oDBName);
         oCmdArgs.push(pKey);
 
@@ -450,9 +434,7 @@ export default class MySQLImportsMod extends AbstractMod<any, any> {
         const oPromises: ((res: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
           const oConfig = pParams.config[i];
-          const oKeys: string[] = !i.includes("{{")
-            ? [i]
-            : this._evaluate(i, pParams.context) || [];
+          const oKeys = super.evaluate(i, pParams.context) || [i];
           oKeys.forEach((e, j) => {
             const oOptions = this._readOptions(
               pParams.parent,

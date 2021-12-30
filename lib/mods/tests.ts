@@ -55,13 +55,9 @@ const asPromised = function(
 
 export default class TestsMod extends AbstractMod<any, any> {
   mSettings: any;
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("tests", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   /*
   pSpecs is expected to be like:
@@ -104,10 +100,7 @@ export default class TestsMod extends AbstractMod<any, any> {
             const oVarSpecs = pSpecs.vars;
             Object.keys(pSpecs.vars).forEach(i => {
               const oKey = i;
-              const oRawValues = this._evaluate(oVarSpecs[i], pContext);
-              if (oRawValues && oRawValues.length > 0) {
-                oVars[oKey] = oRawValues[0];
-              }
+              oVars[oKey] = super.evaluateSingle(oVarSpecs[i], pContext, 0);
             });
           }
           LOGGER.debug(

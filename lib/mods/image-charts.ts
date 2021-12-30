@@ -82,26 +82,9 @@ const getDataFileContent = function(
 };
 
 export default class ImageChartsMod extends AbstractMod<any, any> {
-  mTemplateEngine: TemplateEngine;
   constructor(pSettings?: any) {
     super("image-charts", pSettings || {});
-    this.mTemplateEngine = new TemplateEngine();
-  }
-  _evaluate(pTemplate: string, pContext: Context): string[] | null {
-    // TODO: Not sure I want to do this. This would make "files" handling "context" that might be different than other mods.
-    // For example, "files" might accept $._current and others may not. Best if using path in template is the same across everything.
-    // Having said that, a mod then cannot access the results of another mod within the same activity...
-
-    /*
-      var oContext = JSON.parse(JSON.stringify(pContext.global));
-      oContext['_current'] = JSON.parse(JSON.stringify(pContext.local));
-      console.log('Merged context=');
-      console.dir( oContext );
-      var oResult = this.mTemplateEngine.evaluate( pTemplate, oContext );
-      console.log('Result=');
-      console.dir( oResult );
-      */
-    return this.mTemplateEngine.evaluate(pTemplate, pContext);
+    super.templateEngine = new TemplateEngine();
   }
   _exec(
     pParent: string,
@@ -128,10 +111,7 @@ export default class ImageChartsMod extends AbstractMod<any, any> {
               case "chtt": {
                 let oTitle = pSpecs[i];
                 if (oTitle) {
-                  if (oTitle.indexOf("{{") >= 0) {
-                    const v = this._evaluate(oTitle, pContext);
-                    if (v) oTitle = v[0];
-                  }
+                  oTitle = super.evaluateSingle(oTitle, pContext, 0);
                   oChartArgs.push("chtt=" + oTitle);
                 }
                 break;
@@ -148,11 +128,7 @@ export default class ImageChartsMod extends AbstractMod<any, any> {
             }
           });
           let oChartDataFile = pSpecs["data"];
-          if (oChartDataFile.indexOf("{{") >= 0) {
-            const v = this._evaluate(oChartDataFile, pContext);
-            if (v && v.length >= 1) oChartDataFile = v[0];
-            // TODO: else, log???
-          }
+          oChartDataFile = super.evaluateSingle(oChartDataFile, pContext, 0);
           const oCmdOptions: any = {};
           oCmdOptions["context"] = pKey;
 
@@ -233,11 +209,7 @@ export default class ImageChartsMod extends AbstractMod<any, any> {
         };
         const oPromises: ((data: any) => Promise<any>)[] = [];
         Object.keys(pParams.config).forEach(i => {
-          let oKey = i;
-          if (oKey.includes("{{")) {
-            const v = this._evaluate(oKey, pParams.context);
-            if (v) oKey = v[0];
-          }
+          const oKey = super.evaluateSingle(i, pParams.context, 0) || i;
           oPromises.push(
             this._exec(
               pParams.parent,

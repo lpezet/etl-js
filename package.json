@@ -63,7 +63,7 @@
     "filtrex": "^2.2.3",
     "google-auth-library": "^6.0.1",
     "jmespath": "^0.15.0",
-    "jsonpath-plus": "^4.0.0",
+    "jsonpath-plus": "^10.3.0",
     "log4js": "^6.1.2",
     "open": "^7.0.4",
     "server-destroy": "^1.0.1",
